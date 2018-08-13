@@ -17,9 +17,6 @@ DEBUG                      = True
 HEADLESS                   = True
 
 
-## TODO
-#
-#  
 
 
 
@@ -48,37 +45,51 @@ def __main(arg0, arg1):
     if not os.path.exists(DRIVERS_DIR):
         os.mkdir(DRIVERS_DIR)
     rewards = Rewards(os.path.join(DRIVERS_DIR, DRIVER), config.credentials["email"], config.credentials["password"], DEBUG, HEADLESS)
+    completion = hist_log.get_completion()
 
 
-    if arg1 in ["w", "web"]:
-        print("\n\t{}\n".format("You selected web search"))
-        rewards.complete_web_search(hist_log.get_search_hist())
-        if not hist_log.get_completion().is_web_search_completed():
-            hist_log.write(rewards.completion, rewards.search_hist)
-    elif arg1 in ["m", "mobile"]:
-        print("\n\t{}\n".format("You selected mobile search"))
-        rewards.complete_mobile_search(hist_log.get_search_hist())
-        if not hist_log.get_completion().is_mobile_search_completed():
-            hist_log.write(rewards.completion, rewards.search_hist)
-    elif arg1 in ["b", "both"]:
-        print("\n\t{}\n".format("You selected both searches"))
-        rewards.complete_both_searches(hist_log.get_search_hist())
-        if not hist_log.get_completion().is_both_searches_completed():
-            hist_log.write(rewards.completion, rewards.search_hist)
-    elif arg1 in ["o", "other"]:
-        print("\n\t{}\n".format("You selected offers"))
-        rewards.complete_offers()
-        if not hist_log.get_completion().is_offers_completed():
-            hist_log.write(rewards.completion, rewards.search_hist)
-    elif arg1 in ["a", "all"]:
-        print("\n\t{}\n".format("You selected all"))
-        rewards.complete_all(hist_log.get_search_hist())
-        if not hist_log.get_completion().is_all_completed():
-            hist_log.write(rewards.completion, rewards.search_hist)
-    else:
-        print("\n\t{}\n".format("You selected remianing"))
-        try:
-            completion = hist_log.get_completion()
+    try:
+        if arg1 in ["w", "web"]:
+            print("\n\t{}\n".format("You selected web search"))
+            if not completion.is_web_search_completed():    
+                if not completion.is_edge_search_completed():
+                    rewards.complete_edge_and_web_search(hist_log.get_search_hist())
+                else:
+                    rewards.complete_web_search(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Web search already completed')
+        elif arg1 in ["m", "mobile"]:
+            print("\n\t{}\n".format("You selected mobile search"))
+            if not completion.is_mobile_search_completed():
+                rewards.complete_mobile_search(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Mobile search already completed')
+        elif arg1 in ["b", "both"]:
+            print("\n\t{}\n".format("You selected both searches"))
+            if not completion.is_both_searches_completed():
+                rewards.complete_both_searches(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Both searches already completed')
+        elif arg1 in ["o", "other"]:
+            print("\n\t{}\n".format("You selected offers"))
+            if not completion.is_offers_completed():
+                rewards.complete_offers()
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Offers completed')
+        elif arg1 in ["a", "all"]:
+            print("\n\t{}\n".format("You selected all"))
+            if not completion.is_all_completed():
+                rewards.complete_all(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('All already completed')    
+        else:
+            print("\n\t{}\n".format("You selected remaining"))
+            '''
             if not completion.is_all_completed():
                 if not completion.is_any_completed():
                     rewards.complete_all(hist_log.get_search_hist())
@@ -89,38 +100,52 @@ def __main(arg0, arg1):
                 elif not completion.is_mobile_search_completed() and not completion.is_offers_completed():
                     rewards.complete_mobile_search(hist_log.get_search_hist(), print_stats=False)
                     rewards.complete_offers()
+                elif not completion.is_edge_search_completed():
+                    rewards.complete_edge_and_web_search(hist_log.get_search_hist())
                 elif not completion.is_offers_completed():
                     rewards.complete_offers()
                 elif not completion.is_mobile_search_completed():
                     rewards.complete_mobile_search(hist_log.get_search_hist())
-                else:
+                elif not completion.is_web_search_completed():
                     rewards.complete_web_search(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
+                '''
+            if not completion.is_all_completed():
+                if not completion.is_edge_search_completed():
+                    rewards.complete_edge_and_web_search(hist_log.get_search_hist())
+                elif not completion.is_web_search_completed():
+                    rewards.complete_web_search(hist_log.get_search_hist())
+                if not completion.is_offers_completed():
+                    rewards.complete_offers()
+                if not completion.is_mobile_search_completed():
+                    rewards.complete_mobile_search(hist_log.get_search_hist())
 
+                hist_log.write(rewards.completion, rewards.search_hist)
                 completion = hist_log.get_completion()
                 if not completion.is_all_completed(): # check again, log if any failed
                     logging.basicConfig(level=logging.DEBUG, format='%(message)s', filename=os.path.join(LOG_DIR, ERROR_LOG))
                     logging.debug(hist_log.get_timestamp())
                     for line in rewards.stdout:
                         logging.debug(line)
-                    logging.debug("")
+                    logging.debug("")    
 
             else:
-                print("Nothing to do")
-        except:
-            logging.basicConfig(level=logging.DEBUG, format='%(message)s', filename=os.path.join(LOG_DIR, ERROR_LOG))
-            logging.exception(hist_log.get_timestamp())
-            logging.debug("")
+                print("Nothing remaining")
+    except:
+        logging.basicConfig(level=logging.DEBUG, format='%(message)s', filename=os.path.join(LOG_DIR, ERROR_LOG))
+        logging.exception(hist_log.get_timestamp())
+        logging.debug("")
 
-            hist_log.write(rewards.completion, rewards.search_hist)
-            raise
-    
+        hist_log.write(rewards.completion, rewards.search_hist)
+        raise
+
 
 if __name__ == "__main__":
     args = sys.argv
+
     if len(args) == 1:
         out = "Enter \t{}, \n\t{}, \n\t{}, \n\t{}, \n\t{}, \n\t{} \nInput: \t"
         input_message = out.format("w for web", "m for mobile", "b for both", "o for offers", "a for all","r for remaining (default)")
+
         try:
             arg1 = raw_input(input_message) # python 2
         except:
