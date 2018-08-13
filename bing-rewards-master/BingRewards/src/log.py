@@ -16,6 +16,7 @@ class HistLog:
     __COMPLETED_TRUE       = "Successful"
     __COMPLETED_FALSE      = "Failed {}"
 
+    __EDGE_SEARCH_OPTION    = "Edge Search"
     __WEB_SEARCH_OPTION    = "Web Search"
     __MOBILE_SEARCH_OPTION = "Mobile Search"
     __OFFERS_OPTION        = "Offers"
@@ -41,28 +42,32 @@ class HistLog:
     def get_completion(self):
         # check if already ran today
         if len(self.__run_hist) > 0:
+            print(self.__run_hist[-1].split(": "))
             last_ran, completed = self.__run_hist[-1].split(": ")
 
             last_ran_pst = datetime.strptime(last_ran, self.__DATETIME_FORMAT).replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
             run_datetime_pst = self.__run_datetime.astimezone(self.__PST_TIMEZONE)
             delta_days = (run_datetime_pst.date()-last_ran_pst.date()).days
-            if ((delta_days == 0 and last_ran_pst.hour >= self.__RESET_HOUR) or 
-                (delta_days == 1 and run_datetime_pst.hour < self.__RESET_HOUR)):
-                
-                self.__search_hist = []
-
+            is_already_ran_today = ((delta_days == 0 and last_ran_pst.hour >= self.__RESET_HOUR) or (delta_days == 1 and run_datetime_pst.hour < self.__RESET_HOUR))
+            if is_already_ran_today:
                 if completed == self.__COMPLETED_TRUE:
+                    self.__completion.edge_search = True
                     self.__completion.web_search = True
                     self.__completion.mobile_search = True
                     self.__completion.offers = True
                 else:
                     #self.__run_hist.pop()
+                    if self.__EDGE_SEARCH_OPTION not in completed:
+                        self.__completion.edge_search = True
                     if self.__WEB_SEARCH_OPTION not in completed:
                         self.__completion.web_search = True
+                        self.__completion.edge_search = True
                     if self.__MOBILE_SEARCH_OPTION not in completed:
                         self.__completion.mobile_search = True
                     if self.__OFFERS_OPTION not in completed:
                         self.__completion.offers = True
+            else:
+                self.__search_hist = []
 
         if not self.__completion.is_all_completed():
             # update hist with todays time stamp
@@ -88,7 +93,9 @@ class HistLog:
                 failed = "{}".format(self.__OFFERS_OPTION)
             elif not self.__completion.is_mobile_search_completed():
                 failed = "{}".format(self.__MOBILE_SEARCH_OPTION)
-            else:
+            elif not self.__completion.is_edge_search_completed():
+                failed = "{}".format(self.__EDGE_SEARCH_OPTION)
+            elif not self.__completion.is_web_search_completed():
                 failed = "{}".format(self.__WEB_SEARCH_OPTION)
             msg = self.__COMPLETED_FALSE.format(failed) 
         else:
@@ -108,26 +115,30 @@ class HistLog:
 
 class Completion:
     def __init__(self):
+        self.edge_search         = False
         self.web_search         = False
         self.mobile_search      = False
         self.offers             = False
 
+    def is_edge_search_completed(self):
+        return self.edge_search
     def is_web_search_completed(self):
-        return self.web_search
+        return self.web_search and self.edge_search
     def is_mobile_search_completed(self):
         return self.mobile_search
     def is_both_searches_completed(self):
-        return self.web_search and self.mobile_search
+        return self.is_web_search_completed() and self.mobile_search
     def is_any_searches_completed(self):
-        return self.web_search or self.mobile_search
+        return self.is_web_search_completed() or self.mobile_search
     def is_offers_completed(self):
         return self.offers
     def is_all_completed(self):
-        return self.web_search and self.mobile_search and self.offers
+        return self.is_web_search_completed() and self.mobile_search and self.offers
     def is_any_completed(self):
-        return self.web_search or self.mobile_search or self.offers
+        return self.is_web_search_completed() or self.mobile_search or self.offers
 
     def update(self, completion):
+        self.edge_search = max(self.edge_search, completion.edge_search)
         self.web_search = max(self.web_search, completion.web_search)
         self.mobile_search = max(self.mobile_search, completion.mobile_search)
         self.offers = max(self.offers, completion.offers)
