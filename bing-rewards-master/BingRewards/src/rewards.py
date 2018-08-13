@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
+from selenium.common.exceptions import TimeoutException
 import base64
 import time
 import sys
@@ -49,6 +50,7 @@ class Rewards:
             return prefix + ">"*lvl + " "
         else:
             return prefix + " "*int(self.__SYS_OUT_TAB_LEN/2) + "<"*lvl + " "
+
     def __sys_out(self, msg, lvl, end=False, flush=False):
         if self.debug:
             if flush: # because of progress bar
@@ -59,6 +61,7 @@ class Rewards:
                 if self.stdout[-1].startswith("\r"):
                     self.stdout[-1] = self.stdout[-1][2:]
             self.stdout.append(out)
+
     def __sys_out_progress(self, current_progress, complete_progress, lvl):
         if self.debug:
             ratio = float(current_progress)/complete_progress
@@ -85,29 +88,44 @@ class Rewards:
 
         self.__sys_out("Successfully logged in", 2, True)
 
-    def __get_search_progress(self, driver, device):
+    def __get_search_progress(self, driver, device, is_edge=False):
         if len(driver.window_handles) == 1: # open new tab
             driver.execute_script('''window.open("{0}");'''.format(self.__POINTS_URL))
         driver.switch_to.window(driver.window_handles[-1])
         
-        driver.refresh()
-        progress_elements = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_all_elements_located((By.XPATH, '//*[@id="userPointsBreakdown"]/div/div[*]')))[1:]
+        try_count = 0
+        while True:
+            try:
+                driver.refresh()
+                progress_elements = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_all_elements_located((By.XPATH, '//*[@id="userPointsBreakdown"]/div/div[2]/div[*]')))
+                break
+            except TimeoutException: 
+                try_count += 1
+                time.sleep(3)
+            if try_count == 10:
+                self.__sys_out("When searching, too many time out exceptions when getting progress element", 3, True)
+                break
 
         if device == Driver.WEB_DEVICE:
-            web_progress_elements = [None, None]
+            web_progress_elements = [None, None, None]
             for element in progress_elements:
                 progress_name = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]').text.lower()
-                if "pc" in progress_name or ("daily" in progress_name and "activities" not in progress_name):
+                if "microsoft edge" in progress_name:
                     web_progress_elements[0] = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]')
-                elif "bonus" in progress_name:
+                elif "pc" in progress_name or ("daily" in progress_name and "activities" not in progress_name):
                     web_progress_elements[1] = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]')
+                elif "bonus" in progress_name:
+                    web_progress_elements[2] = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]')
 
-            if web_progress_elements[0]:
+            if is_edge and web_progress_elements[0]:
                 current_progress, complete_progress = [int(i) for i in re.findall(r'(\d+)', web_progress_elements[0].text)]
 
+            elif web_progress_elements[1]:
+                current_progress, complete_progress = [int(i) for i in re.findall(r'(\d+)', web_progress_elements[1].text)]
+
                 # get bonus points 
-                if web_progress_elements[1]:
-                    bonus_progress = [int(i) for i in re.findall(r'(\d+)', web_progress_elements[1].text)]
+                if web_progress_elements[2]:
+                    bonus_progress = [int(i) for i in re.findall(r'(\d+)', web_progress_elements[2].text)]
                     current_progress += bonus_progress[0]
                     complete_progress += bonus_progress[1]
 
@@ -130,6 +148,7 @@ class Rewards:
         driver.switch_to.window(driver.window_handles[0])
         #driver.get(self.__BING_URL)
         return current_progress, complete_progress
+
     def __update_search_queries(self, timestamp, last_request_time):
         if last_request_time:
             time.sleep(max(0, 20-(datetime.now()-last_request_time).total_seconds())) # sleep at least 20 seconds to avoid over requesting server
@@ -143,7 +162,8 @@ class Rewards:
             for related_topic in topic["relatedQueries"]:
                 self.__queries.append(related_topic["query"].lower())
         return last_request_time
-    def __search(self, driver, device):
+
+    def __search(self, driver, device, is_edge=False):
         self.__sys_out("Starting search", 2)
         driver.get(self.__BING_URL)    
 
@@ -155,14 +175,14 @@ class Rewards:
         if len(self.__queries) == 0:
             last_request_time = self.__update_search_queries(trending_date, last_request_time)
         while True:
-            current_progress, complete_progress = self.__get_search_progress(driver, device)
+            current_progress, complete_progress = self.__get_search_progress(driver, device, is_edge)
             if complete_progress > 0:
                 self.__sys_out_progress(current_progress, complete_progress, 3)
             if current_progress == complete_progress:
                 break
             elif current_progress == prev_progress:
                 try_count += 1
-                if try_count == 4:
+                if try_count == 5:
                     self.__sys_out("Failed to complete search", 2, True, True)
                     return False
             else:
@@ -210,6 +230,7 @@ class Rewards:
                 return self.__get_quiz_progress(driver, try_count+1)
             else:
                 return 0, -1
+
     def __start_quiz(self, driver):
         try_count = 0
         while True:
@@ -417,6 +438,7 @@ class Rewards:
 
         self.__sys_out("Successfully completed quiz", 3, True, True)
         return True
+
     def __poll(self, driver):
         self.__sys_out("Starting poll", 3)
         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
@@ -526,6 +548,31 @@ class Rewards:
         return min(completed)
 
 
+    def __complete_edge_search(self, close=False):
+        self.__sys_out("Starting Edge search", 1)
+
+        try:
+            driver = Driver.get_driver(self.path, Driver.WEB_DEVICE, self.headless)
+            self.__login(driver)
+        
+            is_edge_search = True
+            self.completion.edge_search = self.__search(driver, Driver.WEB_DEVICE, is_edge_search)
+            if self.completion.edge_search:
+                self.__sys_out("Successfully completed edge search", 1, True)
+            else:
+                self.__sys_out("Failed to complete edge search", 1, True)
+        except:
+            try:
+                Driver.close(driver)
+            except: # not yet initialized
+                pass
+            raise
+
+        if close:
+            Driver.close(driver)
+        else:
+            return driver
+
     def __complete_web_search(self, close=False):
         self.__sys_out("Starting web search", 1)
 
@@ -549,6 +596,7 @@ class Rewards:
             Driver.close(driver)
         else:
             return driver
+
     def __complete_mobile_search(self, close=False): 
         self.__sys_out("Starting mobile search", 1)
 
@@ -613,6 +661,14 @@ class Rewards:
         if print_stats:
             self.__print_stats(driver)
         Driver.close(driver)
+    def complete_edge_and_web_search(self, search_hist, print_stats=True):
+        self.search_hist = search_hist
+        self.__complete_edge_search(close=True)
+
+        driver = self.__complete_web_search()
+        if print_stats:
+            self.__print_stats(driver)
+        Driver.close(driver)
     def complete_web_search(self, search_hist, print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_web_search()
@@ -621,6 +677,7 @@ class Rewards:
         Driver.close(driver)
     def complete_both_searches(self, search_hist, print_stats=True):
         self.search_hist = search_hist
+        self.__complete_edge_search(close=True)
         self.__complete_web_search(close=True)
         driver = self.__complete_mobile_search()
         if print_stats:
@@ -633,7 +690,8 @@ class Rewards:
         Driver.close(driver)
     def complete_all(self, search_hist, print_stats=True):
         self.search_hist = search_hist
-        driver = self.__complete_web_search()
+        driver = self.__complete_edge_search()
+        self.__complete_web_search()
         self.__complete_offers(driver)
         Driver.close(driver)
         driver = self.__complete_mobile_search()
@@ -642,6 +700,7 @@ class Rewards:
         Driver.close(driver)
     def complete_web_search_and_offers(self, search_hist, print_stats=True):
         self.search_hist = search_hist
+        self.__complete_edge_search(close=True)
         driver = self.__complete_web_search()
         self.__complete_offers(driver)
         if print_stats:
