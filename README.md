@@ -64,4 +64,3 @@ Some of these bug fixes may also be roled out in newer builds. You can ensure yo
 ## Future Work
 - ~~Utilize Microsoft Edge's web driver to earn additional points.~~ (Solved with user agents!)
 
-
