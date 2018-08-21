@@ -1,7 +1,7 @@
 Note: Original creator wishes to remain anonymous. With the creator's permission, I am re-uploading to GitHub, and will do my best to maintain.
 
 # Bing Rewards
-An automated solution for earning daily Microsoft Rewards points.
+An automated solution for earning daily Microsoft Rewards points in all categories (Edge, Web, Mobile, and quizzes/polls).
 
 
 ## Getting Started

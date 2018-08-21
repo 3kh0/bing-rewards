@@ -2,3 +2,4 @@ config.py
 .DS_STORE
 *.pyc
 *.log
+*.swp
