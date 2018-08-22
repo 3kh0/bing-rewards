@@ -89,26 +89,7 @@ def __main(arg0, arg1):
                 print('All already completed')    
         else:
             print("\n\t{}\n".format("You selected remaining"))
-            '''
-            if not completion.is_all_completed():
-                if not completion.is_any_completed():
-                    rewards.complete_all(hist_log.get_search_hist())
-                elif not completion.is_any_searches_completed():
-                    rewards.complete_both_searches(hist_log.get_search_hist())
-                elif not completion.is_web_search_completed() and not completion.is_offers_completed():
-                    rewards.complete_web_search_and_offers(hist_log.get_search_hist())
-                elif not completion.is_mobile_search_completed() and not completion.is_offers_completed():
-                    rewards.complete_mobile_search(hist_log.get_search_hist(), print_stats=False)
-                    rewards.complete_offers()
-                elif not completion.is_edge_search_completed():
-                    rewards.complete_edge_and_web_search(hist_log.get_search_hist())
-                elif not completion.is_offers_completed():
-                    rewards.complete_offers()
-                elif not completion.is_mobile_search_completed():
-                    rewards.complete_mobile_search(hist_log.get_search_hist())
-                elif not completion.is_web_search_completed():
-                    rewards.complete_web_search(hist_log.get_search_hist())
-                '''
+            
             if not completion.is_all_completed():
                 if not completion.is_edge_search_completed():
                     rewards.complete_edge_and_web_search(hist_log.get_search_hist())
