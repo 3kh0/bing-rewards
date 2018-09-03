@@ -647,11 +647,30 @@ class Rewards:
             time.sleep(self.__WEB_DRIVER_WAIT_LONG)
             stats = driver.find_elements_by_id('$ctrl.id')
 
-            self.__sys_out("Summary", 1, flush=True)
-            self.__sys_out("Points earned: "+stats[4].text.replace(" ", ""), 2)
-            self.__sys_out("Streak count: "+stats[2].text, 2)
-            self.__sys_out(stats[3].text, 2, end=True) # streak details, ex. how many days remaining, bonus earned
-            self.__sys_out("Available points: "+stats[0].text, 2)
+            earned_index = 4
+            streak_index = 2
+            days_till_bonus_index = 3
+            avail_index = 0
+
+            if len(stats) == 6:
+                IS_LEVEL_TWO = False
+            elif len(stats) == 5:
+                IS_LEVEL_TWO = True
+
+            if IS_LEVEL_TWO:
+                self.__sys_out("Summary", 1, flush=True)
+                self.__sys_out("Points earned: "+stats[earned_index].text.replace(" ", ""), 2)
+                self.__sys_out("Streak count: "+stats[streak_index].text, 2)
+                self.__sys_out(stats[days_till_bonus_index].text, 2, end=True) # streak details, ex. how many days remaining, bonus earned
+                self.__sys_out("Available points: "+stats[avail_index].text, 2)
+
+            else:
+                self.__sys_out("Summary", 1, flush=True)
+                self.__sys_out("Points earned: "+stats[earned_index+1].text.replace(" ", ""), 2)
+                self.__sys_out("Streak count: "+stats[streak_index+1].text, 2)
+                self.__sys_out(stats[days_till_bonus_index+1].text, 2, end=True) # streak details, ex. how many days remaining, bonus earned
+                self.__sys_out("Available points: "+stats[avail_index+1].text, 2)
+
         except Exception as e: 
             print('    Error checking rewards status - ', e)
 
