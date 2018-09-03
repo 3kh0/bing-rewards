@@ -1,4 +1,4 @@
-Note: Original owner took down the code from their GitHub. He or she gave me permission to re-upload, but wishes to stay anonymous.
+Note: Original author took down the code from their GitHub. Author gave me permission to re-upload and maintain, but wishes to stay anonymous.
 
 # Bing Rewards
 An automated solution for earning daily Microsoft Rewards points in all categories (Edge browser, web, mobile, and quizzes/polls).
@@ -19,7 +19,7 @@ An automated solution for earning daily Microsoft Rewards points in all categori
 * `-r` or `--remaining`: remaining tasks (web search, mobile search or daily offers)
 
 ## Scheduling (Optional)
-You may want to use your operating system's scheduler to run the script at a recurring time. As an added bonus, the script will run completely in the background and __should NOT interfere with your daily routine.__
+You may want to use your operating system's scheduler to either run the script at a recurring time or at login. The script will run completely in the background and should NOT interfere with your daily routine.
 
 ### Windows
 1. Open *Task Scheduler* and click *Create Task*.
@@ -34,8 +34,8 @@ You may want to use your operating system's scheduler to run the script at a rec
 1. Open up the terminal and type: `crontab -e`. 
 2. Now append the following line with the correct path: `0 9 * * * /absolute/path/to/python /absolute/path/to/BingRewards/BingRewards.py -r`. The second digit, in this case the 9, is the hour (0-23) in your local timezone when the program will be run. Also note the default text editor for crontab is VIM so you'll need to hit `i` before editing text, and `esc` to go back to vim mode whereupon you can type in `:wq` which will write the changes and quit.
 3. An example cronjob using an Anaconda Python build that runs daily at 9am: 
-0 9 * * * /Applications/anaconda/bin/python ~/Programming/Python/bing-rewards-master/BingRewards/BingRewards.py -r
-4. Note that cronjobs are not run if your computer is sleeping. To guarantee that the computer is awake prior to the cronjob, use system preferences to automatically wake the computer up at a pre-set time. It is easy to set-up, for more details, follow this link: https://alvinalexander.com/mac-os-x/mac-wake-up-schedule-automatic-time-sleep
+`0 9 * * * /Applications/anaconda/bin/python ~/Programming/Python/bing-rewards-master/BingRewards/BingRewards.py -r`
+4. Note that cronjobs are not run if your computer is sleeping. To guarantee that the computer is awake prior to the cronjob, use system preferences to automatically wake the computer up right before the cronjob is set to run. This is very easy to set-up, for more details, follow this link: https://alvinalexander.com/mac-os-x/mac-wake-up-schedule-automatic-time-sleep
 
 #### On Login
 1. Open Automator and choose Application.
@@ -51,7 +51,7 @@ You may want to use your operating system's scheduler to run the script at a rec
 
 ## Disclaimer
 - Storing passwords locally, even if they are hashed, should be handled with caution. **The user should avoid getting set up on a shared computer.** 
-- Using automated searching to redeem rewards points can result in permanent Microsoft account ban. Use at your own discretion.
+- Using automated searches to redeem rewards points can result in permanent Microsoft account ban. Use at your own discretion.
 
 ## Known Issues
 - Engagement in daily offers suddenly hangs.
