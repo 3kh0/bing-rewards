@@ -56,7 +56,6 @@ class HistLog:
                     self.__completion.mobile_search = True
                     self.__completion.offers = True
                 else:
-                    #self.__run_hist.pop()
                     if self.__EDGE_SEARCH_OPTION not in completed:
                         self.__completion.edge_search = True
                     if self.__WEB_SEARCH_OPTION not in completed:
@@ -81,22 +80,16 @@ class HistLog:
     def write(self, completion, search_hist):
         self.__completion.update(completion)
         if not self.__completion.is_all_completed():
-            if not self.__completion.is_any_completed():
-                failed = "{}, {} & {}".format(self.__WEB_SEARCH_OPTION, self.__MOBILE_SEARCH_OPTION, self.__OFFERS_OPTION)
-            elif not self.__completion.is_any_searches_completed():
-                failed = "{} & {}".format(self.__WEB_SEARCH_OPTION, self.__MOBILE_SEARCH_OPTION)
-            elif not self.__completion.is_web_search_completed() and not self.__completion.is_offers_completed():
-                failed = "{} & {}".format(self.__WEB_SEARCH_OPTION, self.__OFFERS_OPTION)
-            elif not self.__completion.is_mobile_search_completed() and not self.__completion.is_offers_completed():
-                failed = "{} & {}".format(self.__MOBILE_SEARCH_OPTION, self.__OFFERS_OPTION)
-            elif not self.__completion.is_offers_completed():
-                failed = "{}".format(self.__OFFERS_OPTION)
-            elif not self.__completion.is_mobile_search_completed():
-                failed = "{}".format(self.__MOBILE_SEARCH_OPTION)
-            elif not self.__completion.is_edge_search_completed():
-                failed = "{}".format(self.__EDGE_SEARCH_OPTION)
-            elif not self.__completion.is_web_search_completed():
-                failed = "{}".format(self.__WEB_SEARCH_OPTION)
+            failed = []
+            if not self.__completion.is_edge_search_completed():
+                failed.append(self.__EDGE_SEARCH_OPTION)
+            if not self.__completion.is_web_search_completed():
+                failed.append(self.__WEB_SEARCH_OPTION)
+            if not self.__completion.is_mobile_search_completed():
+                failed.append(self.__MOBILE_SEARCH_OPTION)
+            if not self.__completion.is_offers_completed():
+                failed.append(self.__OFFERS_OPTION)
+            failed = ', '.join(failed)
             msg = self.__COMPLETED_FALSE.format(failed) 
         else:
             msg = self.__COMPLETED_TRUE
@@ -115,7 +108,7 @@ class HistLog:
 
 class Completion:
     def __init__(self):
-        self.edge_search         = False
+        self.edge_search        = False
         self.web_search         = False
         self.mobile_search      = False
         self.offers             = False
