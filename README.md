@@ -54,6 +54,7 @@ You may want to use your operating system's scheduler to either run the script a
 - Using automated searches to redeem rewards points can result in permanent Microsoft account ban. Use at your own discretion.
 
 ## Known Issues
+- Mobile search hangs when trying to load progress elements from bing page.
 - Engagement in daily offers suddenly hangs.
 - Quiz offers failing to complete.
 

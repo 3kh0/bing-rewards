@@ -102,7 +102,7 @@ class Rewards:
             except TimeoutException: 
                 try_count += 1
                 time.sleep(3)
-            if try_count == 5:
+            if try_count == 4:
                 self.__sys_out("When searching, too many time out exceptions when getting progress element", 3, True)
                 break
 
@@ -182,7 +182,7 @@ class Rewards:
                 break
             elif current_progress == prev_progress:
                 try_count += 1
-                if try_count == 5:
+                if try_count == 4:
                     self.__sys_out("Failed to complete search", 2, True, True)
                     return False
             else:
