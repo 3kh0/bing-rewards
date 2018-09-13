@@ -192,7 +192,6 @@ class Rewards:
             search_box = driver.find_element_by_id("sb_form_q")
             search_box.clear()
 
-
             # send query
             while True:
                 if len(self.__queries) > 0:
@@ -204,13 +203,16 @@ class Rewards:
                     continue
                 if query not in self.search_hist:
                     break
+
             search_box.send_keys(query, Keys.RETURN) # unique search term
             self.search_hist.append(query)
-
-
-            # sleep for a few seconds
-            time.sleep(random.uniform(0, 5))
-
+            # sleep for a min of 3.3 seconds to give bing location request popup a chance to show itself
+            time.sleep(random.uniform(3.3, 5.5))
+            #handle popup if there is one
+            try:
+                driver.switch_to_alert().dismiss()
+            except:
+                pass
         self.__sys_out("Successfully completed search", 2, True, True)
         return True
 
