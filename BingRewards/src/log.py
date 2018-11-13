@@ -94,7 +94,9 @@ class HistLog:
         else:
             msg = self.__COMPLETED_TRUE
 
-        self.__run_hist[-1] = "{}: {}".format(self.__run_hist[-1], msg)
+        if self.__COMPLETED_TRUE not in self.__run_hist[-1]:
+            self.__run_hist[-1] = "{}: {}".format(self.__run_hist[-1], msg)
+
         with open(self.run_path, "w") as log:
             log.write("\n".join(self.__run_hist) + "\n")
 
