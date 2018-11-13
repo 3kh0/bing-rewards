@@ -170,6 +170,7 @@ class Rewards:
         prev_progress = -1
         try_count = 0
         trending_date = datetime.now()
+        min_sleep_time = 3.3
 
         last_request_time = None
         if len(self.__queries) == 0:
@@ -207,10 +208,12 @@ class Rewards:
             search_box.send_keys(query, Keys.RETURN) # unique search term
             self.search_hist.append(query)
             # sleep for a min of 3.3 seconds to give bing location request popup a chance to show itself
-            time.sleep(random.uniform(3.3, 5.5))
+            time.sleep(random.uniform(min_sleep_time, 5.5))
             #handle popup if there is one
             try:
                 driver.switch_to_alert().dismiss()
+                #popup handled, no longer need to sleep 3.3 seconds
+                min_sleep_time = 0
             except:
                 pass
         self.__sys_out("Successfully completed search", 2, True, True)
@@ -220,13 +223,20 @@ class Rewards:
         try:
             #questions = driver.find_elements_by_xpath('//*[@id="rqHeaderCredits"]/div[2]/*')
             questions = driver.find_elements_by_xpath('//*[starts-with(@id, "rqQuestionState")]')
-            current_progress, complete_progress = 0, len(questions)
-            for question in questions:
-                if question.get_attribute("class") == "filledCircle":
-                    current_progress += 1
-                else:
-                    break
-            return current_progress-1, complete_progress
+            if len(questions) > 0:
+                current_progress, complete_progress = 0, len(questions)
+                for question in questions:
+                    if question.get_attribute("class") == "filledCircle":
+                        current_progress += 1
+                    else:
+                        break
+                return current_progress-1, complete_progress
+            else:
+                footer = driver.find_element_by_xpath('//*[@id="FooterText0"]').text
+                current_progress = footer[0]
+                complete_progress = footer[-1]
+                return current_progress, complete_progress
+                
         except:
             if try_count < 4:
                 return self.__get_quiz_progress(driver, try_count+1)
@@ -244,7 +254,7 @@ class Rewards:
                 if try_count == 4:
                     self.__sys_out("Failed to start quiz - could not detect quiz overlay", 3, True)
                     return False
-                time.sleep(1)
+                time.sleep(2)
 
         try:
             try_count = 0
@@ -647,7 +657,7 @@ class Rewards:
         try: 
             driver.get(self.__DASHBOARD_URL)
             time.sleep(self.__WEB_DRIVER_WAIT_LONG)
-            stats = driver.find_elements_by_id('$ctrl.id')
+            stats = driver.find_elements_by_xpath('//mee-rewards-counter-animation//span')
 
             earned_index = 4
             streak_index = 2
