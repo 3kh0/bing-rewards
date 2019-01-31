@@ -97,7 +97,7 @@ class Rewards:
         while True:
             try:
                 driver.refresh()
-                progress_elements = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_all_elements_located((By.XPATH, '//*[@id="userPointsBreakdown"]/div/div[2]/div[*]')))
+                progress_elements = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_all_elements_located((By.XPATH, '//*[@id="userPointsBreakdown"]/div/div[2]/div/div[*]')))
                 break
             except TimeoutException: 
                 try_count += 1
