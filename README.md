@@ -1,7 +1,7 @@
 Note: Original author took down the code from their GitHub. Author gave me permission to re-upload and maintain, but wishes to stay anonymous.
 
 # Bing Rewards
-An automated solution for earning daily Microsoft Rewards points in all categories (Edge browser, web, mobile, and quizzes/polls).
+An automated solution for earning daily Microsoft Rewards points in all categories (Edge browser, web, mobile, daily offers, more activities using Python and Selenium.
 
 ## Getting Started
 1. This solution requires Google Chrome which can be downloaded from https://www.google.com/chrome/browser/desktop/index.html.
@@ -54,11 +54,10 @@ You may want to use your operating system's scheduler to either run the script a
 - Using automated searches to redeem rewards points can result in permanent Microsoft account ban. Use at your own discretion.
 
 ## Known Issues
-- Mobile search hangs when trying to load progress elements from bing page.
 - Engagement in daily offers suddenly hangs.
 - Quiz offers failing to complete.
 
-These issues have been seen to be resolved running ChromeDriver outside of headless mode, however, at the time I have not provided a simple way to do this. Headless mode is a relatively new feature that allows Google Chrome to be launched in the background. Turning this feature off would interfere with the user's daily routine. 
+Headless mode takes care of most, but not all of these issues.
 
 Some of these bug fixes may also be rolled out in newer builds. You can ensure you have the latest release by deleting the contents of *__BingRewards/drivers/__* and the most up-to-date driver will automatically be downloaded the next time you run the program. 
 
