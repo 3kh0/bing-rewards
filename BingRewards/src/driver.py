@@ -33,10 +33,8 @@ class Driver:
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read()
-        latest_version = max(["{0}.{1}.{2}.{3}".format(version[0].decode(), version[1].decode(),version[2].decode(),version[3].decode()) 
-                              for version in re.findall(b"ChromeDriver (\d+).(\d+).(\d+).(\d+)", response)])
+        latest_version = '.'.join([version.decode() for version in list(re.findall(b"ChromeDriver (\d+).(\d+).(\d+).(\d+)",response)[0])])
 
-        print(str(latest_version))
         if system == "Windows":
             url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_win32.zip".format(latest_version)
         elif system == "Darwin":
