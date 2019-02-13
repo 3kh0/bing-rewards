@@ -490,7 +490,7 @@ class Rewards:
             except:
                 try_count += 1
                 if try_count == 1:
-                    self.__sys_out("Could not detect quiz overlay, trying quiz2", 3, True)
+                    self.__sys_out("Could not detect quiz overlay", 3, True)
                     return False
                 time.sleep(2)
 
@@ -539,6 +539,7 @@ class Rewards:
             driver.get(self.__DASHBOARD_URL) # for stale element exception
         
         return completed
+
     def __offers(self, driver):
         ## showcase offer
         driver.get(self.__DASHBOARD_URL)

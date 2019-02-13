@@ -1,7 +1,7 @@
 Note: Original author took down the code from their GitHub. Author gave me permission to re-upload and maintain, but wishes to stay anonymous.
 
 # Bing Rewards
-An automated solution for earning daily Microsoft Rewards points in all categories (Edge browser, web, mobile, daily offers, more activities using Python and Selenium.
+An automated solution for earning daily Microsoft Rewards points in all categories (Edge browser, web, mobile, daily offers, and more activities) using Python and Selenium.
 
 ## Getting Started
 1. This solution requires Google Chrome which can be downloaded from https://www.google.com/chrome/browser/desktop/index.html.

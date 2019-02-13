@@ -5,6 +5,7 @@ BingRewards/drivers/
 run.vbs
 /BingRewards.sln
 /BingRewards/BingRewards.pyproj
+BingRewards/src/drivers/chromedriver
 
 
 ## Ignore Visual Studio temporary files, build results, and
