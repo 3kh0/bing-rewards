@@ -244,6 +244,7 @@ class Rewards:
                 return 0, -1
 
     def __start_quiz(self, driver):
+        '''
         try_count = 0
         while True:
             try:
@@ -251,11 +252,11 @@ class Rewards:
                 break
             except:
                 try_count += 1
-                if try_count == 4:
+                if try_count == 2:
                     self.__sys_out("Failed to start quiz - could not detect quiz overlay", 3, True)
                     return False
                 time.sleep(2)
-
+        '''
         try:
             try_count = 0
             while True:
@@ -283,7 +284,6 @@ class Rewards:
 
         return True
     def __quiz(self, driver):
-        self.__sys_out("Starting quiz", 3)
 
         started = self.__start_quiz(driver)
         if not started:
@@ -428,17 +428,20 @@ class Rewards:
         return True
 
     def __quiz2(self, driver):
-        self.__sys_out("Starting weekly quiz (new)", 3)
+        self.__sys_out("Starting quiz with no overlay", 3)
         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
-
         current_progress = 0
+
         while True:
             try:
-                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "FooterText{}".format(current_progress)))).text
+                print('made it here quiz2 pt1')
+                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="QuestionPane{}"]/div[2]'.format(current_progress)))).text
+
+                print('made it here quiz2 pt2')
                 current_progress, complete_progress = [int(x) for x in re.match("\((\d+) of (\d+)\)", progress).groups()]
                 self.__sys_out_progress(current_progress-1, complete_progress, 4)
-
-                driver.find_element_by_xpath('//*[@id="QuestionPane{}"]/div[1]/div[2]/div[1]'.format(current_progress-1)).click() # correct answer not required
+                driver.find_element_by_xpath('//*[@id="QuestionPane{0}"]/div[1]/div[2]/div[{1}]/div/span[1]/span'.format(current_progress-1, random.randint(1,3))).click() # correct answer not required
+                #driver.find_element_by_xpath('//*[@id="QuestionPane{}"]/div[1]/div[2]/div[1]'.format(current_progress-1)).click() # correct answer not required
                 WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.element_to_be_clickable((By.ID, "check"))).click()
 
                 if current_progress == complete_progress:
@@ -451,12 +454,19 @@ class Rewards:
         self.__sys_out("Successfully completed quiz", 3, True, True)
         return True
 
-    def __poll(self, driver):
+    def __poll(self, driver, title):
         self.__sys_out("Starting poll", 3)
         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
 
+        #for daily poll
+        if 'daily' in title:
+            xpath = '//*[@id="btoption{}"]/div[2]/div[1]'.format(random.randint(0,1))
+        #all other polls
+        else:
+            xpath = '//*[@id="OptionText0{}"]'.format(random.randint(0, 1))
+
         try:
-            driver.find_element_by_xpath('//*[@id="OptionText0{}"]'.format(random.randint(0, 1))).click() # first option
+            driver.find_element_by_xpath(xpath).click()
             self.__sys_out("Successfully completed poll", 3, True)
             return True
         except:
@@ -468,6 +478,23 @@ class Rewards:
             driver.switch_to.alert.dismiss()
         except:
             pass
+    
+    def __has_overlay(self, driver):
+        '''most offers that have the word 'quiz' in title have a btOverlay ID. However, certain quizzes that related to special events i.e. halloween do not have this overlay'''
+        self.__sys_out("Starting quiz", 3)
+        try_count = 0
+        while True:
+            try:
+                driver.find_element_by_id("btOverlay")
+                return True
+            except:
+                try_count += 1
+                if try_count == 1:
+                    self.__sys_out("Could not detect quiz overlay, trying quiz2", 3, True)
+                    return False
+                time.sleep(2)
+
+
     def __click_offer(self, driver, offer, title_xpath, checked_xpath, details_xpath, link_xpath):
         title = offer.find_element_by_xpath(title_xpath).text
         self.__sys_out("Trying {0}".format(title), 2)
@@ -479,10 +506,12 @@ class Rewards:
             if icon.get_attribute('class').startswith("mee-icon mee-icon-SkypeCircleCheck ng-scope"):
                 checked = True
                 self.__sys_out("Already checked", 2, True)
+        #quiz does not contain a check-mark icon, implying no points offered
         except:
-            self.__sys_out("Assuming not already checked", 3)
+            checked = True
+            self.__sys_out("skipping quiz - assuming it offers no points", 3)
 
-        completed = True
+        completed = False
         if not checked:
             details = offer.find_element_by_xpath(details_xpath).text
 
@@ -492,14 +521,15 @@ class Rewards:
             #self.__handle_alerts(driver)
 
             if "quiz" in title.lower():
-                completed = self.__quiz(driver)
-            #elif "quiz" in details.lower():
-            elif title.lower() == "test your smarts":
-                completed = self.__quiz2(driver)
+                if self.__has_overlay(driver):
+                    completed = self.__quiz(driver)
+                else:
+                    completed = self.__quiz2(driver)
             elif "poll" in title.lower():
-                completed = self.__poll(driver)
+                completed = self.__poll(driver, title.lower())
+            #all other activities assumed to be quiz 2 format
             else:
-                time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                completed = self.__quiz2(driver)
             if completed:
                 self.__sys_out("Successfully completed {0}".format(title), 2, True)
             else:
@@ -516,41 +546,15 @@ class Rewards:
         completed = []
         ## daily set
         for i in range(3):
-            #offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-rewards-card-placement[1]/div/div/div[{}]/{}/mee-rewards-daily-sets-item/mee-rewards-card/div/div'.format(1 if i == 0 else 2, 'item{}'.format(i) if i == 0 else 'div[{0}]/item{0}'.format(i)))
-            #c = self.__click_offer(driver, offer, './section/div/div[2]/h3', './section/div/div[2]/mee-rewards-points/div/div/span[1]', './section/div/div[2]/p')
             offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div'.format(i+1))
-            c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]')
+            c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
             completed.append(c)
 
-        ### more activities
-        #item_num = 0
-        #i = 0
-        #while i < 8:
-        #    # if offer takes up 2 spaces length wise
-        #    try:
-        #        offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/div/div[{}]/item{}/mee-rewards-more-activities-item/mee-mosaic-item/div/section/div'.format(int(i/2)+1, item_num))
-        #        c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p')
-        #        completed.append(c)
-        #        i += 1
-        #        item_num += 1
-        #    except:
-        #        # if offer takes up 1 space
-        #        try:
-        #            offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/div/div[{}]/div[{}]/item{}/mee-rewards-more-activities-item/mee-mosaic-item/div/section/div'.format(int(i/2)+1, (i%2)+1, item_num))
-        #            c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p')
-        #            completed.append(c)
-        #            item_num += 1
-        #        # if offer takes up 4 spaces (length 2, width 2)
-        #        except:
-        #            pass
-        #    i += 1
-
-        # '//*[@id="punch-cards"]/mee-hero-item/section/div/div/div'
-
-        for i in range(8):
+        #more activities
+        for i in range(11):
             try:
                 offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div'.format(i+1))
-                c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]')
+                c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
                 completed.append(c)
                 i += 1
                 item_num += 1
