@@ -324,11 +324,15 @@ class Rewards:
                 correct_options = []
                 option_index = 0
                 while option_index < quiz_options_len:
-                    option = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "rqAnswerOption{0}".format(option_index))))
-                    #if option.get_attribute("class") == "rqOption rqDragOption correctDragAnswer":
-                    if option.get_attribute("class") == "rqOption rqDragOption correctAnswer":
-                        correct_options.append(option_index)
-                    option_index += 1
+                    try:
+                        option = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "rqAnswerOption{0}".format(option_index))))
+                        #if option.get_attribute("class") == "rqOption rqDragOption correctDragAnswer":
+                        if option.get_attribute("class") == "rqOption rqDragOption correctAnswer":
+                            correct_options.append(option_index)
+                        option_index += 1
+                    except TimeoutException: 
+                        self.__sys_out("Time out Exception", 3)
+                        return False
 
                 if current_progress != prev_progress: # new question
                     incorrect_options = []
@@ -337,7 +341,7 @@ class Rewards:
                     # update incorrect options
                     incorrect_options.append((from_option_index, to_option_index))
                     incorrect_options.append((to_option_index, from_option_index))
-            
+        
 
                 exit_code = -1 # no choices were swapped
                 for combo in to_from_combos:
@@ -417,11 +421,15 @@ class Rewards:
                     self.__sys_out("Failed to complete quiz - tried every choice", 3, True, True)
                     return False
 
-                # click choice
-                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.element_to_be_clickable((By.ID, "rqAnswerOption{0}".format(option_index)))).click()
-                prev_options.append(option_index)
-                time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
-                #self.__handle_alerts(driver)
+                try:
+                    # click choice
+                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.element_to_be_clickable((By.ID, "rqAnswerOption{0}".format(option_index)))).click()
+                    prev_options.append(option_index)
+                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                    #self.__handle_alerts(driver)
+                except TimeoutException: 
+                    self.__sys_out("Time out Exception", 3)
+                    return False
 
 
         self.__sys_out("Successfully completed quiz", 3, True, True)
@@ -530,6 +538,11 @@ class Rewards:
             #all other activities assumed to be quiz 2 format
             else:
                 completed = self.__quiz2(driver)
+                #give quiz1 a try as a hail mary
+                if not completed:
+                    if self.__has_overlay(driver):
+                        completed = self.__quiz(driver)
+
             if completed:
                 self.__sys_out("Successfully completed {0}".format(title), 2, True)
             else:
