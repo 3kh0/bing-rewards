@@ -24,8 +24,8 @@ class Driver:
     MOBILE_DEVICE               = 1
 
     # Microsoft Edge user agents for additional points
-    __WEB_USER_AGENT            = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134"
-    __MOBILE_USER_AGENT         = "Mozilla/5.0 (Linux; Android 6.0; MYA-L22 Build/HUAWEIMYA-L22) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36"
+    __WEB_USER_AGENT            = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.48 Safari/537.36 Edg/74.1.96.24"
+    __MOBILE_USER_AGENT         = "Mozilla/5.0 (Linux; Android 7.1.1; Moto G Play) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.83 Mobile Safari/537.36"
     #__MOBILE_USER_AGENT         = "Mozilla/5.0 (Linux; Android 8.0; Pixel XL Build/OPP3.170518.006) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.0 Mobile Safari/537.36 EdgA/41.1.35.1"
 
 
@@ -33,7 +33,7 @@ class Driver:
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read()
-        latest_version = '.'.join([version.decode() for version in list(re.findall(b"ChromeDriver (\d+).(\d+).(\d+).(\d+)",response)[0])])
+        latest_version = re.findall(b"ChromeDriver \d+\.\d+\.\d+\.\d+",response)[0].decode().split()[1]
 
         if system == "Windows":
             url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_win32.zip".format(latest_version)
