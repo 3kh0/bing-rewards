@@ -511,7 +511,7 @@ class Rewards:
         checked = False
         try:
             icon = offer.find_element_by_xpath(checked_xpath)
-            if icon.get_attribute('class').startswith("mee-icon mee-icon-SkypeCircleCheck ng-scope"):
+            if icon.get_attribute('class').startswith("mee-icon mee-icon-SkypeCircleCheck"):
                 checked = True
                 self.__sys_out("Already checked", 2, True)
         #quiz does not contain a check-mark icon, implying no points offered
@@ -533,15 +533,12 @@ class Rewards:
                     completed = self.__quiz(driver)
                 else:
                     completed = self.__quiz2(driver)
+                    if not completed:
+                        completed = self.__quiz(driver)
+
             elif "poll" in title.lower():
                 completed = self.__poll(driver, title.lower())
             #all other activities assumed to be quiz 2 format
-            else:
-                completed = self.__quiz2(driver)
-                #give quiz1 a try as a hail mary
-                if not completed:
-                    if self.__has_overlay(driver):
-                        completed = self.__quiz(driver)
 
             if completed:
                 self.__sys_out("Successfully completed {0}".format(title), 2, True)
