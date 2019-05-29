@@ -96,6 +96,7 @@ class Rewards:
         try_count = 0
         while True:
             try:
+                time.sleep(3)
                 driver.refresh()
                 progress_elements = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_all_elements_located((By.XPATH, '//*[@id="userPointsBreakdown"]/div/div[2]/div/div[*]')))
                 break
@@ -244,19 +245,7 @@ class Rewards:
                 return 0, -1
 
     def __start_quiz(self, driver):
-        '''
-        try_count = 0
-        while True:
-            try:
-                driver.find_element_by_id("btOverlay")
-                break
-            except:
-                try_count += 1
-                if try_count == 2:
-                    self.__sys_out("Failed to start quiz - could not detect quiz overlay", 3, True)
-                    return False
-                time.sleep(2)
-        '''
+
         try:
             try_count = 0
             while True:
@@ -275,12 +264,12 @@ class Rewards:
                         driver.refresh()
 
                 try_count += 1
-                if try_count == 4:
+                if try_count == 2:
                     self.__sys_out("Failed to start quiz", 3, True)
                     return False
                 time.sleep(1)
         except:
-            self.__sys_out("Already started quiz", 3, True)
+            pass
 
         return True
     def __quiz(self, driver):
@@ -370,7 +359,7 @@ class Rewards:
                         break
                 
                 if exit_code == -1: 
-                    self.__sys_out("Failed to complete quiz - tried every choice", 3, True, True)
+                    self.__sys_out("Failed to complete quiz1 - tried every choice", 3, True, True)
                     return False
                 elif exit_code == 0:
                     break
@@ -395,7 +384,7 @@ class Rewards:
                 else:
                     try_count += 1
                     if try_count == quiz_options_len:
-                        self.__sys_out("Failed to complete quiz - no progress", 3, True, True)
+                        self.__sys_out("Failed to complete quiz1 - no progress", 3, True, True)
                         return False
 
                 if current_progress == complete_progress-1: # last question, works for -1, 0 too (already complete)
@@ -418,7 +407,7 @@ class Rewards:
                     if option_index not in prev_options:
                         break
                 if option_index in prev_options:
-                    self.__sys_out("Failed to complete quiz - tried every choice", 3, True, True)
+                    self.__sys_out("Failed to complete quiz1 - tried every choice", 3, True, True)
                     return False
 
                 try:
@@ -436,30 +425,28 @@ class Rewards:
         return True
 
     def __quiz2(self, driver):
-        self.__sys_out("Starting quiz with no overlay", 3)
+        self.__sys_out("Starting quiz2 (no overlay)", 3)
         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
         current_progress = 0
 
         while True:
             try:
-                print('made it here quiz2 pt1')
                 progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="QuestionPane{}"]/div[2]'.format(current_progress)))).text
-
-                print('made it here quiz2 pt2')
                 current_progress, complete_progress = [int(x) for x in re.match("\((\d+) of (\d+)\)", progress).groups()]
                 self.__sys_out_progress(current_progress-1, complete_progress, 4)
-                driver.find_element_by_xpath('//*[@id="QuestionPane{0}"]/div[1]/div[2]/div[{1}]/div/span[1]/span'.format(current_progress-1, random.randint(1,3))).click() # correct answer not required
-                #driver.find_element_by_xpath('//*[@id="QuestionPane{}"]/div[1]/div[2]/div[1]'.format(current_progress-1)).click() # correct answer not required
+                driver.find_element_by_xpath('//*[@id="QuestionPane{0}"]/div[1]/div[2]/div[{1}]/div/span[1]/span'.format(current_progress-1, random.randint(1,3))).click()
+                time.sleep(random.uniform(1, 3))
+                # correct answer not required
                 WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.element_to_be_clickable((By.ID, "check"))).click()
 
                 if current_progress == complete_progress:
                     self.__sys_out_progress(current_progress, complete_progress, 4)
                     break
             except:
-                self.__sys_out("Failed to complete quiz", 3, True, True)
+                self.__sys_out("Failed to complete quiz2", 3, True, True)
                 return False
 
-        self.__sys_out("Successfully completed quiz", 3, True, True)
+        self.__sys_out("Successfully completed quiz2", 3, True, True)
         return True
 
     def __poll(self, driver, title):
@@ -497,7 +484,7 @@ class Rewards:
                 return True
             except:
                 try_count += 1
-                if try_count == 1:
+                if try_count >= 1:
                     self.__sys_out("Could not detect quiz overlay", 3, True)
                     return False
                 time.sleep(2)
@@ -528,17 +515,17 @@ class Rewards:
             driver.switch_to.window(driver.window_handles[-1])
             #self.__handle_alerts(driver)
 
-            if "quiz" in title.lower():
+            if "poll" in title.lower():
+                completed = self.__poll(driver, title.lower())
+
+            #if "quiz" in title.lower()
+            else:
                 if self.__has_overlay(driver):
                     completed = self.__quiz(driver)
                 else:
                     completed = self.__quiz2(driver)
                     if not completed:
                         completed = self.__quiz(driver)
-
-            elif "poll" in title.lower():
-                completed = self.__poll(driver, title.lower())
-            #all other activities assumed to be quiz 2 format
 
             if completed:
                 self.__sys_out("Successfully completed {0}".format(title), 2, True)
