@@ -14,7 +14,7 @@ RUN_LOG                    = "run.log"
 SEARCH_LOG                 = "search.log"
 
 DEBUG                      = True
-HEADLESS                   = True
+HEADLESS                   = False
 
 
 
