@@ -29,12 +29,13 @@ class Driver:
     #__MOBILE_USER_AGENT         = "Mozilla/5.0 (Linux; Android 8.0; Pixel XL Build/OPP3.170518.006) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.0 Mobile Safari/537.36 EdgA/41.1.35.1"
 
 
-    def __download_driver(driver_path, system):
+    def __download_driver(driver_path, system, driver_dl_index=1):
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read()
         #download second latest version,most recent is sometimes not out to public yet
-        latest_version = re.findall(b"ChromeDriver \d+\.\d+\.\d+\.\d+",response)[1].decode().split()[1]
+        latest_version = re.findall(b"ChromeDriver \d+\.\d+\.\d+\.\d+",response)[driver_dl_index].decode().split()[1]
+        print('downloading chrome driver version: ' + latest_version)
 
         if system == "Windows":
             url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_win32.zip".format(latest_version)
@@ -60,6 +61,7 @@ class Driver:
         os.rmdir(extracted_dir)
 
         os.chmod(driver_path, 0o755)
+
     def get_driver(path, device, headless):
         system = platform.system()
         if system == "Windows":
@@ -83,7 +85,19 @@ class Driver:
         else:
             options.add_argument("user-agent=" + Driver.__MOBILE_USER_AGENT)
         
-        driver = webdriver.Chrome(path, chrome_options=options)
+        driver_dl_index = 2
+        while True:
+            try:
+                driver = webdriver.Chrome(path, chrome_options=options)
+                break
+            #driver not up to date with Chrome browswer
+            except:
+                Driver.__download_driver(path, system, driver_dl_index)
+            if driver_dl_index < 0:
+                print('Tried downloading the ' + str(driver_dl_index + 1) + ' most recent chrome drivers. None match current Chrome browser version')
+                break
+            driver_dl_index -= 1
+
         #if not headless:
         #    driver.set_window_position(-2000, 0)
         return EventFiringWebDriver(driver, EventListener())
