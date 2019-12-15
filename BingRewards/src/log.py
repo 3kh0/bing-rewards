@@ -5,7 +5,7 @@ from dateutil import tz
 
 
 class HistLog:
-    __DATETIME_FORMAT      = "%a, %b %d %Y %I:%M%p %Z"
+    __DATETIME_FORMAT      = "%a, %b %d %Y %I:%M%p"
 
     __LOCAL_TIMEZONE       = tz.tzlocal()
     __PST_TIMEZONE         = tz.gettz("US/Alaska") # Alaska timezone, guards against Pacific Daylight Savings Time
