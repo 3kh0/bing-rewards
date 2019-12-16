@@ -557,8 +557,6 @@ class Rewards:
                 offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div'.format(i+1))
                 c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
                 completed.append(c)
-                i += 1
-                item_num += 1
             except:
                 pass
 
