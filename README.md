@@ -1,3 +1,5 @@
+Dec 2019 Update: The searches are still working smoothly for me (Edge, Web, and Mobile), but the Offers have been experiencing issues for many months now, maybe 20% of offers are currently being solved. ~I tried looking at it briefly, but I may be in over my head, so any help would be appreciated!~ ***I will have updates to all offer types by Christmas.*** On an unrelated note, I suggest everyone take a look at the 500 point bonus offer. It's actually worth 3500 points over 30 days and it takes two minutes of work.
+
 Note: Original author took down the code from their GitHub. Author gave me permission to re-upload and maintain, but wishes to stay anonymous.
 
 # Bing Rewards
