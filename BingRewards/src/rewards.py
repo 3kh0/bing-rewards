@@ -15,7 +15,6 @@ import random
 from datetime import datetime, timedelta
 import json
 import ssl
-import pdb
 
 
 
@@ -53,6 +52,8 @@ class Rewards:
             return prefix + " "*int(self.__SYS_OUT_TAB_LEN/2) + "<"*lvl + " "
 
     def __sys_out(self, msg, lvl, end=False, flush=False):
+        #to avoid UnicodeEncodeErrors
+        msg = msg.encode('ascii', 'ignore').decode('ascii')
         if self.debug:
             if flush: # because of progress bar
                 print("")
@@ -547,7 +548,6 @@ class Rewards:
         '''
         Sometimes when clicking an offer for the first time, it will show a page saying the user is not signed in. Pretty sure it's a Bing bug. This method checks for this bug
         '''
-        self.__sys_out(" checking if error sign in page", 3)
         try:
             driver.find_element_by_class_name('identityStatus')
             return True
@@ -787,11 +787,9 @@ class Rewards:
         if print_stats:
             self.__print_stats(driver)
         Driver.close(driver)
-    def complete_edge_and_web_search(self, search_hist, print_stats=True):
+    def complete_edge_search(self, search_hist, print_stats=True):
         self.search_hist = search_hist
-        self.__complete_edge_search(close=True)
-
-        driver = self.__complete_web_search()
+        driver = self.__complete_edge_search()
         if print_stats:
             self.__print_stats(driver)
         Driver.close(driver)
@@ -803,7 +801,7 @@ class Rewards:
         Driver.close(driver)
     def complete_both_searches(self, search_hist, print_stats=True):
         self.search_hist = search_hist
-        self.__complete_edge_search(close=True)
+        self.__complete_edge_search()
         self.__complete_web_search(close=True)
         driver = self.__complete_mobile_search()
         if print_stats:
@@ -824,12 +822,3 @@ class Rewards:
         if print_stats:
             self.__print_stats(driver)
         Driver.close(driver)
-    def complete_web_search_and_offers(self, search_hist, print_stats=True):
-        self.search_hist = search_hist
-        self.__complete_edge_search(close=True)
-        driver = self.__complete_web_search()
-        self.__complete_offers(driver)
-        if print_stats:
-            self.__print_stats(driver)
-        Driver.close(driver)
-

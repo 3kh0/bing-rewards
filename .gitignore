@@ -1,6 +1,8 @@
 .DS_STORE
 BingRewards/src/config.py
 BingRewards/src/config.py.*
+BingRewards/TestBingRewards.py
+BingRewards/src/test/
 BingRewards/drivers/
 run.vbs
 /BingRewards.sln

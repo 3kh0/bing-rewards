@@ -14,7 +14,7 @@ RUN_LOG                    = "run.log"
 SEARCH_LOG                 = "search.log"
 
 DEBUG                      = True
-HEADLESS                   = False
+HEADLESS                   = True
 
 
 
@@ -51,10 +51,10 @@ def __main(arg0, arg1):
     try:
         if arg1 in ["w", "web"]:
             print("\n\t{}\n".format("You selected web search"))
-            if not completion.is_web_search_completed():    
+            if not completion.is_edge_and_web_search_completed():    
                 if not completion.is_edge_search_completed():
-                    rewards.complete_edge_and_web_search(hist_log.get_search_hist())
-                else:
+                    rewards.complete_edge_search(hist_log.get_search_hist())
+                if not completion.is_web_search_completed():    
                     rewards.complete_web_search(hist_log.get_search_hist())
                 hist_log.write(rewards.completion, rewards.search_hist)
             else:
@@ -67,7 +67,7 @@ def __main(arg0, arg1):
             else:
                 print('Mobile search already completed')
         elif arg1 in ["b", "both"]:
-            print("\n\t{}\n".format("You selected both searches"))
+            print("\n\t{}\n".format("You selected both searches (web & mobile)"))
             if not completion.is_both_searches_completed():
                 rewards.complete_both_searches(hist_log.get_search_hist())
                 hist_log.write(rewards.completion, rewards.search_hist)
@@ -79,7 +79,7 @@ def __main(arg0, arg1):
                 rewards.complete_offers()
                 hist_log.write(rewards.completion, rewards.search_hist)
             else:
-                print('Offers completed')
+                print('Offers already completed')
         elif arg1 in ["a", "all"]:
             print("\n\t{}\n".format("You selected all"))
             if not completion.is_all_completed():
@@ -92,8 +92,8 @@ def __main(arg0, arg1):
             
             if not completion.is_all_completed():
                 if not completion.is_edge_search_completed():
-                    rewards.complete_edge_and_web_search(hist_log.get_search_hist())
-                elif not completion.is_web_search_completed():
+                    rewards.complete_edge_search(hist_log.get_search_hist())
+                if not completion.is_web_search_completed():
                     rewards.complete_web_search(hist_log.get_search_hist())
                 if not completion.is_offers_completed():
                     rewards.complete_offers()

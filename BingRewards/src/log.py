@@ -60,7 +60,6 @@ class HistLog:
                         self.__completion.edge_search = True
                     if self.__WEB_SEARCH_OPTION not in completed:
                         self.__completion.web_search = True
-                        self.__completion.edge_search = True
                     if self.__MOBILE_SEARCH_OPTION not in completed:
                         self.__completion.mobile_search = True
                     if self.__OFFERS_OPTION not in completed:
@@ -101,6 +100,8 @@ class HistLog:
             log.write("\n".join(self.__run_hist) + "\n")
 
         if search_hist:
+            #to avoid UnicodeEncodeErrors
+            self.__search_hist = self.__search_hist.encode('ascii', 'ignore').decode('ascii')
             for query in search_hist:
                 if query not in self.__search_hist:
                     self.__search_hist.append(query)
@@ -118,19 +119,17 @@ class Completion:
     def is_edge_search_completed(self):
         return self.edge_search
     def is_web_search_completed(self):
+        return self.web_search
+    def is_edge_and_web_search_completed(self):
         return self.web_search and self.edge_search
     def is_mobile_search_completed(self):
         return self.mobile_search
     def is_both_searches_completed(self):
-        return self.is_web_search_completed() and self.mobile_search
-    def is_any_searches_completed(self):
-        return self.is_web_search_completed() or self.mobile_search
+        return self.is_edge_and_web_search_completed() and self.mobile_search
     def is_offers_completed(self):
         return self.offers
     def is_all_completed(self):
-        return self.is_web_search_completed() and self.mobile_search and self.offers
-    def is_any_completed(self):
-        return self.is_web_search_completed() or self.mobile_search or self.offers
+        return self.is_edge_and_web_search_completed() and self.mobile_search and self.offers
 
     def update(self, completion):
         self.edge_search = max(self.edge_search, completion.edge_search)

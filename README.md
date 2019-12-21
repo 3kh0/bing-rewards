@@ -1,7 +1,5 @@
 
-Dec 2019 Update: The searches are still working smoothly for me (Edge, Web, and Mobile), and the offers have been fixed and should all work.
-
-Note: Original author took down the code from their GitHub. Author gave me permission to re-upload and maintain, but wishes to stay anonymous.
+Note: Original author took down the code from their GitHub back in July 2018. Author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
 
 # Bing Rewards
 An automated solution for earning daily Microsoft Rewards points in all categories (Edge browser, web, mobile, daily offers, and more activities) using Python and Selenium.
@@ -56,12 +54,10 @@ You may want to use your operating system's scheduler to either run the script a
 - Storing passwords locally, even if they are hashed, should be handled with caution. **The user should avoid getting set up on a shared computer.** 
 - Using automated searches to redeem rewards points can result in permanent Microsoft account ban. Use at your own discretion.
 
-## Known Issues
-- Engagement in daily offers suddenly hangs.
-- Quiz offers failing to complete.
+## Known Issues (Updated Dec 2019)
+- When user is still at Level 1, none of the searches work, I believe Bing very recently changed their Level 1 set-up.
+- The first daily offer shows "failed to complete" on the terminal because the quiz doesn't appear when clicked, but Bing gives the points anyways so it's a non-issue.
 
-Headless mode takes care of most, but not all of these issues.
-
-Some of these bug fixes may also be rolled out in newer builds. You can ensure you have the latest release by deleting the contents of *__BingRewards/drivers/__* and the most up-to-date driver will automatically be downloaded the next time you run the program. 
+Some of these bug fixes may also be rolled out in newer builds. 
 
 
