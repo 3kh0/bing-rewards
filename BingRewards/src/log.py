@@ -101,7 +101,7 @@ class HistLog:
 
         if search_hist:
             #to avoid UnicodeEncodeErrors
-            self.__search_hist = self.__search_hist.encode('ascii', 'ignore').decode('ascii')
+            self.__search_hist = [hist.encode('ascii', 'ignore').decode('ascii') for hist in self.__search_hist]
             for query in search_hist:
                 if query not in self.__search_hist:
                     self.__search_hist.append(query)
