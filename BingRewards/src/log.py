@@ -100,11 +100,11 @@ class HistLog:
             log.write("\n".join(self.__run_hist) + "\n")
 
         if search_hist:
-            #to avoid UnicodeEncodeErrors
-            self.__search_hist = [hist.encode('ascii', 'ignore').decode('ascii') for hist in self.__search_hist]
             for query in search_hist:
                 if query not in self.__search_hist:
                     self.__search_hist.append(query)
+            #to avoid UnicodeEncodeErrors
+            self.__search_hist = [hist.encode('ascii', 'ignore').decode('ascii') for hist in self.__search_hist]
             with open(self.search_path, "w") as log:
                 log.write("\n".join(self.__search_hist) + "\n")
 
