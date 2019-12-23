@@ -57,9 +57,13 @@ class Driver:
         os.remove(zip_file_path)
 
         driver = os.listdir(extracted_dir)[0]
-        os.rename(os.path.join(extracted_dir, driver), driver_path)
-        os.rmdir(extracted_dir)
+        try:
+            os.rename(os.path.join(extracted_dir, driver), driver_path)
+        #for Windows
+        except FileExistsError:
+            os.replace(os.path.join(extracted_dir, driver), driver_path)
 
+        os.rmdir(extracted_dir)
         os.chmod(driver_path, 0o755)
 
     def get_driver(path, device, headless):
