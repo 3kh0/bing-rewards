@@ -41,6 +41,8 @@ class Driver:
             url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_win32.zip".format(latest_version)
         elif system == "Darwin":
             url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_mac64.zip".format(latest_version)
+        elif system == "Linux":
+            url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_linux64.zip".format(latest_version)
 
         response = urlopen(url, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)) # context args for mac
         zip_file_path = os.path.join(os.path.dirname(driver_path), os.path.basename(url))
