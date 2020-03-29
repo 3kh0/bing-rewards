@@ -651,7 +651,7 @@ class Rewards:
                 completed.append(c)
 
         except NoSuchElementException:
-            pass
+            return -1
         return min(completed)
 
 
