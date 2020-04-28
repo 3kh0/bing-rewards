@@ -287,15 +287,17 @@ class Rewards:
         while True:
             quiz_current_progress, quiz_complete_progress = self.__get_quiz_progress(driver)
             self.__sys_out_progress(quiz_current_progress, quiz_complete_progress, 4)
-            #either the quiz is already completed or we're at the last question
+            #either on the last question, or just completed
             if quiz_current_progress == quiz_complete_progress - 1:
                 try:
-                    header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/div')))
-                    if "great job" in header.text.lower():
+                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                    #quiz has been completed
+                    if len(driver.find_elements_by_class_name('headerMessage')) > 0:
                         self.__sys_out_progress(quiz_complete_progress, quiz_complete_progress, 4)
                         self.__sys_out("Quiz complete", 3, True)
                         return True
-                #the last question has not been solved yet, keep going
+
+                #just got to last question, time to solve it
                 except:
                     pass
 
@@ -306,7 +308,8 @@ class Rewards:
                 question_progresses = [question_progress]
                 while True:
                     if len(driver.find_elements_by_id('rqAnswerOption{0}'.format(option_index))) > 0:
-                        element = driver.find_element_by_id('rqAnswerOption{0}'.format(option_index))
+                        #find_element_by_id returns an EventFiringWebElement object, to get the web element, must use wrapped_element attribute
+                        element = driver.find_element_by_id('rqAnswerOption{0}'.format(option_index)).wrapped_element
                         #must use ActionChains due to error 'element is not clickable at point', for more info see this link:https://stackoverflow.com/questions/11908249/debugging-element-is-not-clickable-at-point-error
                         ActionChains(driver).move_to_element(element).click(element).perform()
                     else:
@@ -315,8 +318,9 @@ class Rewards:
                     prev_progress = question_progress
                     #returns a string like '1/5' (1 out of 5 answers selected correctly so far)
                     question_progress = driver.find_element_by_class_name('bt_corOpStat').text
-                    #once the last correct answer is clicked, question progress becomes '' or it becomes '0/5' again
-                    if question_progress == '' or (prev_progress != question_progress and question_progress in question_progresses):
+                    #once the last correct answer is clicked, question progress becomes '' or 5/5, tho in the past it became '0/5' sometimes, hence 2nd cond
+                    if (question_progress == '' or question_progress == '5/5') or (prev_progress != question_progress and question_progress in question_progresses):
+                        #wait for the next question to appear
                         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                         break
                     question_progresses.append(question_progress)
@@ -324,14 +328,43 @@ class Rewards:
             except:
                 return False
 
-    def __quiz(self, driver):
+    def __solve_tot(self, driver):
+        '''
+        Solves This or That quiz
+        The answers are randomly selected, so on average, only half the points will be earned.
+        '''
+        while True:
+            try_count = 0
+            try:
+                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'bt_Quefooter'))).text
+                current_progress, complete_progress = map(int, progress.split(' of '))
+                current_progress = current_progress - 1
+                self.__sys_out_progress(current_progress, complete_progress, 4)
+                driver.find_element_by_id('rqAnswerOption' + str(random.choice([0,1]))).click()
+                time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                if current_progress == complete_progress - 1:
+                    try:
+                        header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'headerMessage')))
+                        if "you earned" in header.text.lower():
+                            self.__sys_out_progress(complete_progress, complete_progress, 4)
+                            return True
+                    #the header message could not be found
+                    except:
+                        return False
+            except:
+                try_count += 1
+                if try_count >= 2:
+                    self.__sys_out("Failed to complete This or That quiz", 3, True, True)
+                    return False
 
+    def __quiz(self, driver):
         started = self.__start_quiz(driver)
         if not started:
             return started
 
         quiz_options_len = 4
         is_drag_and_drop = False
+        is_tot = False
         is_multiple_answers = False
 
         if len(driver.find_elements_by_id('rqAnswerOptionNum0')) > 0:
@@ -340,9 +373,10 @@ class Rewards:
         elif len(driver.find_elements_by_class_name('btCorOps')) > 0:
             is_multiple_answers = True
             self.__sys_out("Multiple Answers", 3)
+        elif len(driver.find_elements_by_class_name('btOptionAnsOvl')) > 0:
+            is_tot = True
         else:
             self.__sys_out("Multiple choice", 3)
-
 
         ## drag and drop
         if is_drag_and_drop:
@@ -369,7 +403,6 @@ class Rewards:
                 while option_index < quiz_options_len:
                     try:
                         option = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "rqAnswerOption{0}".format(option_index))))
-                        #if option.get_attribute("class") == "rqOption rqDragOption correctDragAnswer":
                         if option.get_attribute("class") == "rqOption rqDragOption correctAnswer":
                             correct_options.append(option_index)
                         option_index += 1
@@ -384,7 +417,6 @@ class Rewards:
                     # update incorrect options
                     incorrect_options.append((from_option_index, to_option_index))
                     incorrect_options.append((to_option_index, from_option_index))
-        
 
                 exit_code = -1 # no choices were swapped
                 for combo in to_from_combos:
@@ -418,9 +450,13 @@ class Rewards:
                 elif exit_code == 0:
                     break
 
-        #multiple answers per question
+        #multiple answers per question (i.e. warp speed/supersonic)
         elif is_multiple_answers:
             return self.__multiple_answers(driver)
+
+        #this or that quiz
+        elif is_tot:
+            return self.__solve_tot(driver)
 
         ## multiple choice (i.e. lignting speed)
         else:
@@ -476,7 +512,6 @@ class Rewards:
                 except TimeoutException: 
                     self.__sys_out("Time out Exception", 3)
                     return False
-
 
         self.__sys_out("Successfully completed quiz", 3, True, True)
         return True
@@ -639,9 +674,13 @@ class Rewards:
                     c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
                     try_count += 1
                 completed.append(c)
+        except NoSuchElementException:
+            completed.append(-1)
 
-            #more activities
-            for i in range(30):
+        try:
+            #remaining_offers = driver.find_elements_by_xpath('//*[starts-with(@id, "more-activities"])')#/div/mee-card)')
+            remaining_offers = driver.find_elements_by_xpath('//*[@id="more-activities"]/div/mee-card')
+            for i in range(len(remaining_offers)):
                 c = -1
                 try_count = 0
                 while c == -1 and try_count <= 2:
@@ -651,7 +690,8 @@ class Rewards:
                 completed.append(c)
 
         except NoSuchElementException:
-            return -1
+            print( NoSuchElementException)
+            completed.append(-1)
         return min(completed)
 
 

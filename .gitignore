@@ -1,5 +1,6 @@
 .DS_STORE
 BingRewards/src/config.py
+BingRewards/src/test_rewards.py
 BingRewards/src/config.py.*
 BingRewards/TestBingRewards.py
 BingRewards/src/test/
