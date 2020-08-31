@@ -31,7 +31,10 @@ class Driver:
     def __download_driver(driver_path, system, driver_dl_index=1):
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
-        response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read()
+        try:
+            response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read()
+        except ssl.SSLError as e:
+            response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads").read()
         #download second latest version,most recent is sometimes not out to public yet
         latest_version = re.findall(b"ChromeDriver \d+\.\d+\.\d+\.\d+",response)[driver_dl_index].decode().split()[1]
         print('downloading chrome driver version: ' + latest_version)
@@ -43,7 +46,10 @@ class Driver:
         elif system == "Linux":
             url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_linux64.zip".format(latest_version)
 
-        response = urlopen(url, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)) # context args for mac
+        try:
+            response = urlopen(url, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)) # context args for mac
+        except ssl.SSLError as e:
+            response = urlopen(url)# context args for mac
         zip_file_path = os.path.join(os.path.dirname(driver_path), os.path.basename(url))
         with open(zip_file_path, 'wb') as zip_file:
             while True:

@@ -155,7 +155,11 @@ class Rewards:
     def __update_search_queries(self, timestamp, last_request_time):
         if last_request_time:
             time.sleep(max(0, 20-(datetime.now()-last_request_time).total_seconds())) # sleep at least 20 seconds to avoid over requesting server
-        response = urlopen(self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")), context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
+        try:
+            response = urlopen(self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")), context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
+        except ssl.SSLError as e:
+            response = urlopen(self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")))
+
         last_request_time = datetime.now()
         output = response.read()[5:]
         if type(output) == bytes:
