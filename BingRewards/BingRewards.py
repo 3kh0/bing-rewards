@@ -51,10 +51,10 @@ def __main(arg0, arg1):
     try:
         if arg1 in ["w", "web"]:
             print("\n\t{}\n".format("You selected web search"))
-            if not completion.is_edge_and_web_search_completed():    
+            if not completion.is_edge_and_web_search_completed():
                 if not completion.is_edge_search_completed():
                     rewards.complete_edge_search(hist_log.get_search_hist())
-                if not completion.is_web_search_completed():    
+                if not completion.is_web_search_completed():
                     rewards.complete_web_search(hist_log.get_search_hist())
                 hist_log.write(rewards.completion, rewards.search_hist)
             else:
@@ -86,10 +86,10 @@ def __main(arg0, arg1):
                 rewards.complete_all(hist_log.get_search_hist())
                 hist_log.write(rewards.completion, rewards.search_hist)
             else:
-                print('All already completed')    
+                print('All already completed')
         else:
             print("\n\t{}\n".format("You selected remaining"))
-            
+
             if not completion.is_all_completed():
                 if not completion.is_edge_search_completed():
                     rewards.complete_edge_search(hist_log.get_search_hist())
@@ -107,7 +107,7 @@ def __main(arg0, arg1):
                     logging.debug(hist_log.get_timestamp())
                     for line in rewards.stdout:
                         logging.debug(line)
-                    logging.debug("")    
+                    logging.debug("")
 
             else:
                 print("Nothing remaining")
