@@ -29,7 +29,7 @@ class Driver:
     __MOBILE_USER_AGENT         = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.81 Mobile Safari/537.36 EdgA/45.7.2.5057"
 
 
-    def __download_driver(driver_path, system, driver_dl_index=1):
+    def __download_driver(driver_path, system, driver_dl_index=0):
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         try:
@@ -37,7 +37,8 @@ class Driver:
         except ssl.SSLError as e:
             response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads").read()
         #download second latest version,most recent is sometimes not out to public yet
-        latest_version = re.findall(b"ChromeDriver \d+\.\d+\.\d+\.\d+",response)[driver_dl_index].decode().split()[1]
+
+        latest_version = re.findall(b"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+",response)[driver_dl_index].decode().split()[1]
         print('downloading chrome driver version: ' + latest_version)
 
         if system == "Windows":
@@ -97,18 +98,18 @@ class Driver:
         else:
             options.add_argument("user-agent=" + Driver.__MOBILE_USER_AGENT)
 
-        driver_dl_index = 2
+        driver_dl_index = 1
         while True:
             try:
-                driver = webdriver.Chrome(path, chrome_options=options)
+                driver = webdriver.Chrome(path, options=options)
                 break
-            #driver not up to date with Chrome browswer
+            #driver not up to date with Chrome browser, try different ver
             except:
                 Driver.__download_driver(path, system, driver_dl_index)
-            if driver_dl_index < 0:
-                print('Tried downloading the ' + str(driver_dl_index + 1) + ' most recent chrome drivers. None match current Chrome browser version')
-                break
-            driver_dl_index -= 1
+                driver_dl_index += 1
+                if driver_dl_index > 2:
+                    print('Tried downloading the ' + str(driver_dl_index) + ' most recent chrome drivers. None match current Chrome browser version')
+                    break
 
         #if not headless:
         #    driver.set_window_position(-2000, 0)
