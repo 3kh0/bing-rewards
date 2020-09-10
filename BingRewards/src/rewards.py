@@ -89,9 +89,13 @@ class Rewards:
             ActionChains(driver).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN).perform()
 
         #stay signed in
-        if len(driver.find_elements_by_xpath('//*[@id="idSIButton9"]')) > 0:
-            driver.find_element_by_id('KmsiCheckboxField').click()
+        try:
+            #don't show this again checkbox
+            WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))).click()
+            #yes, stay signed in
             driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
+        except:
+            pass
 
         self.__sys_out("Successfully logged in", 2, True)
 
