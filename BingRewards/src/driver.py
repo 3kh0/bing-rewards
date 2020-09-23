@@ -114,9 +114,3 @@ class Driver:
         #if not headless:
         #    driver.set_window_position(-2000, 0)
         return EventFiringWebDriver(driver, EventListener())
-    def close(driver):
-        # close open tabs
-        for handle in driver.window_handles:
-            driver.switch_to.window(handle)
-            driver.close()
-

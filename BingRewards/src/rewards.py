@@ -743,13 +743,13 @@ class Rewards:
                 self.__sys_out("Failed to complete edge search", 1, True)
         except:
             try:
-                Driver.close(driver)
+                driver.quit()
             except: # not yet initialized
                 pass
             raise
 
         if close:
-            Driver.close(driver)
+            driver.quit()
         else:
             return driver
 
@@ -767,13 +767,13 @@ class Rewards:
                 self.__sys_out("Failed to complete web search", 1, True)
         except:
             try:
-                Driver.close(driver)
+                driver.quit()
             except: # not yet initialized
                 pass
             raise
 
         if close:
-            Driver.close(driver)
+            driver.quit()
         else:
             return driver
 
@@ -791,13 +791,13 @@ class Rewards:
                 self.__sys_out("Failed to complete mobile search", 1, True)
         except:
             try:
-                Driver.close(driver)
+                driver.quit()
             except: # not yet initialized
                 pass
             raise
 
         if close:
-            Driver.close(driver)
+            driver.quit()
         else:
             return driver
     def __complete_offers(self, driver=None):
@@ -815,7 +815,7 @@ class Rewards:
                 self.__sys_out("Successfully completed offers", 1, True)
         except:
             try:
-                Driver.close(driver)
+                driver.quit()
             except:
                 pass
             raise
@@ -859,19 +859,19 @@ class Rewards:
         driver = self.__complete_mobile_search()
         if print_stats:
             self.__print_stats(driver)
-        Driver.close(driver)
+        driver.quit()
     def complete_edge_search(self, search_hist, print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_edge_search()
         if print_stats:
             self.__print_stats(driver)
-        Driver.close(driver)
+        driver.quit()
     def complete_web_search(self, search_hist, print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_web_search()
         if print_stats:
             self.__print_stats(driver)
-        Driver.close(driver)
+        driver.quit()
     def complete_both_searches(self, search_hist, print_stats=True):
         self.search_hist = search_hist
         self.__complete_edge_search()
@@ -879,19 +879,19 @@ class Rewards:
         driver = self.__complete_mobile_search()
         if print_stats:
             self.__print_stats(driver)
-        Driver.close(driver)
+        driver.quit()
     def complete_offers(self, print_stats=True):
         driver = self.__complete_offers()
         if print_stats:
             self.__print_stats(driver)
-        Driver.close(driver)
+        driver.quit()
     def complete_all(self, search_hist, print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_edge_search()
         self.__complete_web_search()
         self.__complete_offers(driver)
-        Driver.close(driver)
+        driver.quit()
         driver = self.__complete_mobile_search()
         if print_stats:
             self.__print_stats(driver)
-        Driver.close(driver)
+        driver.quit()

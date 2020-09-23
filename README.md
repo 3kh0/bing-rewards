@@ -1,4 +1,6 @@
-An automated solution for earning daily Microsoft Rewards points in all categories (Edge browser, web, mobile, daily offers, and more activities) using Python and Selenium. Multiple accounts is NOT supported
+An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
+
+Please note: multiple accounts not supported, USA users only.
 
 ## Getting Started
 1. This solution requires Google Chrome which can be downloaded from https://www.google.com/chrome/browser/desktop/index.html.
@@ -36,7 +38,7 @@ You may want to use your operating system's scheduler to run this program automa
 ## Multiple accounts
 Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
 
-Caveat: I think a docker container implementation would be a good middle ground solution. Unfortunately, I'm not too familiar with Docker so someone would have to implement it and I would gladly merge with master.
+Caveat: I think a docker container implementation would be a good middle ground solution. Unfortunately, I'm not too familiar with Docker so someone would have to implement it and I would gladly issue a pull request.
 
 ## Known Issues (Last Updated Aug 2020)
 - The first daily offer shows "failed to complete" on the terminal because the quiz doesn't appear when clicked, but Bing gives the points anyways so it's a non-issue.
