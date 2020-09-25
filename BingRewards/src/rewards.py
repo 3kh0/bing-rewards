@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, ElementClickInterceptedException
 import base64
 import time
 import sys
@@ -21,7 +21,7 @@ import ssl
 class Rewards:
     __LOGIN_URL                 = "https://login.live.com"
     __BING_URL                  = "https://bing.com"
-    __DASHBOARD_URL             = "https://account.microsoft.com/rewards/dashboard"
+    __DASHBOARD_URL             = "https://account.microsoft.com/rewards/"
     __POINTS_URL                = "https://account.microsoft.com/rewards/pointsbreakdown"
     __TRENDS_URL                = "https://trends.google.com/trends/api/dailytrends?hl=en-US&ed={}&geo=US&ns=15"
 
@@ -84,7 +84,7 @@ class Rewards:
         driver.get(self.__LOGIN_URL)
         ActionChains(driver).send_keys(base64.b64decode(self.email).decode(), Keys.RETURN).perform()
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "i0118"))).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN)
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.ID, "i0118"))).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN)
         except:
             ActionChains(driver).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN).perform()
 
@@ -94,29 +94,34 @@ class Rewards:
             WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))).click()
             #yes, stay signed in
             driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
-        except:
+        except TimeoutException:
             pass
 
-        self.__sys_out("Successfully logged in", 2, True)
+        #check login was sucessful
+        try:
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.microsoft.com/"))
+            self.__sys_out("Successfully logged in", 2, True)
+            if not 'mkt=EN-US' in driver.current_url:
+                raise RuntimeError("Logged in, but not United States user")
+        except:
+            raise RuntimeError("Did NOT log in successfully")
 
     def __get_search_progress(self, driver, device, is_edge=False):
         if len(driver.window_handles) == 1: # open new tab
             driver.execute_script('''window.open("{0}");'''.format(self.__POINTS_URL))
         driver.switch_to.window(driver.window_handles[-1])
 
-        try_count = 0
-        while True:
+        try_count, progress_elements = 0, None
+        while progress_elements is None:
             try:
                 time.sleep(3)
                 driver.refresh()
                 progress_elements = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_all_elements_located((By.XPATH, '//*[@id="userPointsBreakdown"]/div/div[2]/div/div[*]')))
-                break
             except TimeoutException:
                 try_count += 1
                 time.sleep(3)
             if try_count == 4:
-                self.__sys_out("When searching, too many time out exceptions when getting progress element", 3, True)
-                break
+                raise TimeoutException("Failed to get search progress element")
 
         if device == Driver.WEB_DEVICE:
             web_progress_elements = [None, None, None]
@@ -144,21 +149,21 @@ class Rewards:
             else:
                 current_progress, complete_progress = 0, -1
 
+        #mobile search progress
         else:
             mobile_progress_element = None
             for element in progress_elements:
                 progress_name = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]').text.lower()
-                if "mobile" in progress_name or ("daily" in progress_name and "activities" not in progress_name):
+                if "mobile" in progress_name:
                     mobile_progress_element = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]')
 
             if mobile_progress_element:
                 current_progress, complete_progress = [int(i) for i in re.findall(r'(\d+)', mobile_progress_element.text)]
 
             else:
-                current_progress, complete_progress = 0, -1
+                raise NoSuchElementException("Could not detect mobile search progress.\nMobile search points may be unavailable for users at level 1")
 
         driver.switch_to.window(driver.window_handles[0])
-        #driver.get(self.__BING_URL)
         return current_progress, complete_progress
 
     def __update_search_queries(self, timestamp, last_request_time):
@@ -189,7 +194,6 @@ class Rewards:
         prev_progress = -1
         try_count = 0
         trending_date = datetime.now()
-        min_sleep_time = 3.3
 
         last_request_time = None
         if len(self.__queries) == 0:
@@ -226,14 +230,12 @@ class Rewards:
 
             search_box.send_keys(query, Keys.RETURN) # unique search term
             self.search_hist.append(query)
-            # sleep for a min of 3.3 seconds to give bing location request popup a chance to show itself
-            time.sleep(random.uniform(min_sleep_time, 5.5))
-            #handle popup if there is one
+            time.sleep(random.uniform(1, 5.5))
+            #originally used for location alerts
+            #should no longer be an issue as geolocation is turned on
             try:
-                driver.switch_to_alert().dismiss()
-                #popup handled, no longer need to sleep 3.3 seconds
-                min_sleep_time = 0
-            except:
+                driver.switch_to.alert.dismiss()
+            except NoAlertPresentException:
                 pass
         self.__sys_out("Successfully completed search", 2, True, True)
         return True
@@ -263,7 +265,6 @@ class Rewards:
                 return 0, -1
 
     def __start_quiz(self, driver):
-
         try:
             try_count = 0
             while True:
@@ -558,6 +559,8 @@ class Rewards:
                     break
             except:
                 #implies one of the next buttons was found, but wasn't able to click it
+                print('made it to except block')
+                driver.refresh()
                 try_count += 1
                 if try_count >= 2:
                     self.__sys_out("Failed to complete quiz2", 3, True, True)
@@ -824,7 +827,8 @@ class Rewards:
     def __print_stats(self, driver):
         try:
             driver.get(self.__DASHBOARD_URL)
-            time.sleep(self.__WEB_DRIVER_WAIT_LONG)
+            #once pointsbreakdown link is clickable, page is loaded
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="rx-user-status-action"]/span/ng-transclude')))
             stats = driver.find_elements_by_xpath('//mee-rewards-counter-animation//span')
 
             earned_index = 4
@@ -839,17 +843,17 @@ class Rewards:
 
             if IS_LEVEL_TWO:
                 self.__sys_out("Summary", 1, flush=True)
-                self.__sys_out("Points earned: "+stats[earned_index].text.replace(" ", ""), 2)
-                self.__sys_out("Streak count: "+stats[streak_index].text, 2)
+                self.__sys_out("Points earned: " + stats[earned_index].text.replace(" ", ""), 2)
+                self.__sys_out("Streak count: " + stats[streak_index].text, 2)
                 self.__sys_out(stats[days_till_bonus_index].text, 2, end=True) # streak details, ex. how many days remaining, bonus earned
-                self.__sys_out("Available points: "+stats[avail_index].text, 2)
+                self.__sys_out("Available points: " + stats[avail_index].text, 2)
 
             else:
                 self.__sys_out("Summary", 1, flush=True)
-                self.__sys_out("Points earned: "+stats[earned_index+1].text.replace(" ", ""), 2)
-                self.__sys_out("Streak count: "+stats[streak_index+1].text, 2)
+                self.__sys_out("Points earned: " + stats[earned_index+1].text.replace(" ", ""), 2)
+                self.__sys_out("Streak count: " + stats[streak_index+1].text, 2)
                 self.__sys_out(stats[days_till_bonus_index+1].text, 2, end=True) # streak details, ex. how many days remaining, bonus earned
-                self.__sys_out("Available points: "+stats[avail_index+1].text, 2)
+                self.__sys_out("Available points: " + stats[avail_index+1].text, 2)
 
         except Exception as e:
             print('    Error checking rewards status - ', e)
