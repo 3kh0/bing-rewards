@@ -4,7 +4,6 @@ from src.rewards import Rewards
 from src.log import HistLog
 import logging
 
-
 DRIVERS_DIR                = "drivers"
 DRIVER                     = "chromedriver"
 
@@ -16,17 +15,12 @@ SEARCH_LOG                 = "search.log"
 DEBUG                      = True
 HEADLESS                   = True
 
-
-
-
-
 def __main(arg0, arg1):
     # change to top dir
     dir_run_from = os.getcwd()
     top_dir = os.path.dirname(arg0)
     if top_dir and top_dir != dir_run_from:
         os.chdir(top_dir)
-
 
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
@@ -47,7 +41,6 @@ def __main(arg0, arg1):
     rewards = Rewards(os.path.join(DRIVERS_DIR, DRIVER), config.credentials["email"], config.credentials["password"], DEBUG, HEADLESS)
     completion = hist_log.get_completion()
 
-
     try:
         if arg1 in ["w", "web"]:
             print("\n\t{}\n".format("You selected web search"))
@@ -61,8 +54,11 @@ def __main(arg0, arg1):
                 print('Web search already completed')
         elif arg1 in ["m", "mobile"]:
             print("\n\t{}\n".format("You selected mobile search"))
-            if not completion.is_mobile_search_completed():
-                rewards.complete_mobile_search(hist_log.get_search_hist())
+            if not completion.is_edge_and_mobile_search_completed():
+                if not completion.is_edge_search_completed():
+                    rewards.complete_edge_search(hist_log.get_search_hist())
+                if not completion.is_mobile_search_completed():
+                    rewards.complete_mobile_search(hist_log.get_search_hist())
                 hist_log.write(rewards.completion, rewards.search_hist)
             else:
                 print('Mobile search already completed')
@@ -91,14 +87,19 @@ def __main(arg0, arg1):
             print("\n\t{}\n".format("You selected remaining"))
 
             if not completion.is_all_completed():
-                if not completion.is_edge_search_completed():
-                    rewards.complete_edge_search(hist_log.get_search_hist())
-                if not completion.is_web_search_completed():
-                    rewards.complete_web_search(hist_log.get_search_hist())
-                if not completion.is_offers_completed():
-                    rewards.complete_offers()
-                if not completion.is_mobile_search_completed():
-                    rewards.complete_mobile_search(hist_log.get_search_hist())
+                #complete_all() is fastest method b/c it doesn't open new webdriver for each new search type, so even if already completed method is tried again, it has very low overhead.
+                if not completion.is_web_search_completed() and not completion.is_mobile_search_completed():
+                    rewards.complete_all(hist_log.get_search_hist())
+                #higher overhead, opens a new webdriver for each unfinished search type
+                else:
+                    if not completion.is_edge_search_completed():
+                        rewards.complete_edge_search(hist_log.get_search_hist())
+                    if not completion.is_web_search_completed():
+                        rewards.complete_web_search(hist_log.get_search_hist())
+                    if not completion.is_offers_completed():
+                        rewards.complete_offers()
+                    if not completion.is_mobile_search_completed():
+                        rewards.complete_mobile_search(hist_log.get_search_hist())
 
                 hist_log.write(rewards.completion, rewards.search_hist)
                 completion = hist_log.get_completion()
@@ -118,7 +119,6 @@ def __main(arg0, arg1):
 
         hist_log.write(rewards.completion, rewards.search_hist)
         raise
-
 
 if __name__ == "__main__":
     args = sys.argv

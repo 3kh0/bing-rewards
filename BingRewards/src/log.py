@@ -89,7 +89,7 @@ class HistLog:
             if not self.__completion.is_offers_completed():
                 failed.append(self.__OFFERS_OPTION)
             failed = ', '.join(failed)
-            msg = self.__COMPLETED_FALSE.format(failed) 
+            msg = self.__COMPLETED_FALSE.format(failed)
         else:
             msg = self.__COMPLETED_TRUE
 
@@ -122,6 +122,8 @@ class Completion:
         return self.web_search
     def is_edge_and_web_search_completed(self):
         return self.web_search and self.edge_search
+    def is_edge_and_mobile_search_completed(self):
+        return self.mobile_search and self.edge_search
     def is_mobile_search_completed(self):
         return self.mobile_search
     def is_both_searches_completed(self):
