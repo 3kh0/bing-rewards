@@ -98,8 +98,9 @@ class Rewards:
         try:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.microsoft.com/"))
             self.__sys_out("Successfully logged in", 2, True)
-            if not 'mkt=EN-US' in driver.current_url:
-                raise RuntimeError("Logged in, but not United States user")
+            VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB']
+            if not any(market in driver.current_url for market in VALID_MARKETS):
+                raise RuntimeError("Logged in, but user not located in a valid market (USA, UK).")
         except:
             raise RuntimeError("Did NOT log in successfully")
 
@@ -822,7 +823,9 @@ class Rewards:
         try:
             driver.get(self.__DASHBOARD_URL)
             #once pointsbreakdown link is clickable, page is loaded
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="rx-user-status-action"]/span/ng-transclude')))
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="rx-user-status-action"]/span/ng-transclude')))
+            #sleep an additional 5 seconds to make sure stats are loaded
+            time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
             stats = driver.find_elements_by_xpath('//mee-rewards-counter-animation//span')
 
             earned_index = 4

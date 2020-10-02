@@ -1,6 +1,6 @@
 An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
 
-Please note: multiple accounts not supported, USA users only.
+Please note: multiple accounts not supported, USA and UK users only.
 
 ## Getting Started
 1. This solution requires Google Chrome which can be downloaded from https://www.google.com/chrome/browser/desktop/index.html.
