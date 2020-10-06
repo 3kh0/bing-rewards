@@ -704,7 +704,11 @@ class Rewards:
                     offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div'.format(i+1))
                     c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
                     try_count += 1
-                completed.append(c)
+                #first quiz never started (MS bug) but pts still awarded
+                if i == 0:
+                    completed.append(True)
+                else:
+                    completed.append(c)
         except NoSuchElementException:
             completed.append(-1)
 
