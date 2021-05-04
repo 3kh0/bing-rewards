@@ -217,7 +217,7 @@ class Rewards:
 
             search_box.send_keys(query, Keys.RETURN) # unique search term
             self.search_hist.append(query)
-            time.sleep(random.uniform(2, 4.5))
+            time.sleep(random.uniform(1, 2.5))
             #originally used for location alerts
             #should no longer be an issue as geolocation is turned on
             try:
@@ -654,7 +654,16 @@ class Rewards:
             #driver.execute_script('''window.open("{0}","_blank");'''.format(offer.get_attribute("href")))
             driver.switch_to.window(driver.window_handles[-1])
             #self.__handle_alerts(driver)
-
+            
+            #Check for cookies popup
+            self.__sys_out("Checking cookies popup", 3)
+            time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+            try:
+                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))).click()
+                time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                self.__sys_out("cookie popup cleared", 3)
+            except:
+                self.__sys_out("No cookie popup present", 3)
             if self.__is_offer_sign_in_bug(driver):
                 completed = -1
 
