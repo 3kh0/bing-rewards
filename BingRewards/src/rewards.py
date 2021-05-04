@@ -217,7 +217,7 @@ class Rewards:
 
             search_box.send_keys(query, Keys.RETURN) # unique search term
             self.search_hist.append(query)
-            time.sleep(random.uniform(1, 2.5))
+            time.sleep(random.uniform(2, 4.5))
             #originally used for location alerts
             #should no longer be an issue as geolocation is turned on
             try:
