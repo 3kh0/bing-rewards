@@ -98,7 +98,7 @@ class Rewards:
         try:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.microsoft.com/"))
             self.__sys_out("Successfully logged in", 2, True)
-            VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB']
+            VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR']
             if not any(market in driver.current_url for market in VALID_MARKETS):
                 raise RuntimeError("Logged in, but user not located in a valid market (USA, UK).")
         except:
