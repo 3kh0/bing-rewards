@@ -35,6 +35,9 @@ You may want to use your operating system's scheduler to run this program automa
 4. An example cronjob using an Anaconda Python build that runs daily at 9am: `0 9 * * * /Applications/anaconda/bin/python ~/Programming/Python/bing-rewards-master/BingRewards/BingRewards.py -r`
 5. Note that cronjobs are not run if your computer is sleeping. To guarantee that the computer is awake prior to the cronjob, use system preferences to automatically wake the computer up right before the cronjob is set to run. This is very easy to set-up, for more details, follow this link: https://alvinalexander.com/mac-os-x/mac-wake-up-schedule-automatic-time-sleep
 
+## UK updates
+Added UK quiz functionality, UK based updates written and tested by chris987789
+
 ## Multiple accounts
 Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
 

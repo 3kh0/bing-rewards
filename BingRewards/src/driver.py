@@ -87,6 +87,8 @@ class Driver:
         options.add_argument("--disable-extensions")
         options.add_argument("--window-size=1280,1024")
         options.add_argument("--log-level=3")
+        options.add_argument("--disable-notifications")
+        options.add_argument("disable-infobars")
         options.add_experimental_option("prefs", {"profile.default_content_setting_values.geolocation" : 1}) # geolocation permission, 0=Ask, 1=Allow, 2=Deny
         if headless:
             options.add_argument("--headless")
