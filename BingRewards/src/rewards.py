@@ -185,7 +185,7 @@ class Rewards:
             last_request_time = self.__update_search_queries(trending_date, last_request_time)
         while True:
             progress = self.__get_search_progress(driver, device, is_edge)
-            if progress == False:
+            if not progress:
                 return False
             else:
                 current_progress, complete_progress = progress
@@ -220,15 +220,15 @@ class Rewards:
             search_box.send_keys(query, Keys.RETURN) # unique search term
             self.search_hist.append(query)
             time.sleep(random.uniform(2, 4.5))
-            
+
             if cookieclear == 0:
                 try:
+                    #self.__sys_out("cookie popup cleared", 3)
                     WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))).click()
-                    self.__sys_out("cookie popup cleared", 3)
-                    cookieclear = 1
-                except:
-                    self.__sys_out("No cookie popup present", 3)
-                    cookieclear = 1
+                except TimeoutException:
+                    #self.__sys_out("No cookie popup present", 3)
+                    pass
+                cookieclear = 1
 
             #originally used for location alerts
             #should no longer be an issue as geolocation is turned on
@@ -370,7 +370,7 @@ class Rewards:
                 if try_count >= 2:
                     self.__sys_out("Failed to complete This or That quiz", 3, True, True)
                     return False
-                
+
     def __solve_hot_take(self, driver):
         try:
             driver.find_element_by_id('btoption{}'.format(random.choice(([0,1])))).click()
@@ -649,7 +649,7 @@ class Rewards:
         self.__sys_out("Trying {0}".format(title), 2)
 
         # check whether it was already completed
-        
+
         checked = False
         try:
             icon = offer.find_element_by_xpath(checked_xpath)
@@ -673,7 +673,7 @@ class Rewards:
 
             #Check for cookies popup
             if self.cookieclearquiz == 0:
-            
+
                 self.__sys_out("Checking cookies popup", 3)
                 try:
                     WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))).click()
@@ -852,7 +852,7 @@ class Rewards:
                 self.__login(driver)
 
             self.completion.offers = self.__offers(driver)
-            if self.completion.offers == -1 or self.completion.offers == False:
+            if self.completion.offers == -1 or not self.completion.offers:
                 self.__sys_out("Failed to complete offers", 1, True)
             else:
                 self.__sys_out("Successfully completed offers", 1, True)
