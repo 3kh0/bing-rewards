@@ -98,12 +98,18 @@ class Rewards:
         #check login was sucessful
         try:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.microsoft.com/"))
-            self.__sys_out("Successfully logged in", 2, True)
-            VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR']
-            if not any(market in driver.current_url for market in VALID_MARKETS):
-                raise RuntimeError("Logged in, but user not located in a valid market (USA, UK).")
-        except:
-            raise RuntimeError("Did NOT log in successfully")
+        except TimeoutException:
+            # Terms of usage update
+            try:
+                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.live.com/tou"))
+                WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.ID, 'iNext'))).click()
+            except TimeoutException:
+                raise RuntimeError("Did NOT log in successfully")
+
+        self.__sys_out("Successfully logged in", 2, True)
+        VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR']
+        if not any(market in driver.current_url for market in VALID_MARKETS):
+            raise RuntimeError("Logged in, but user not located in a valid market (USA, UK).")
 
     def __get_search_progress(self, driver, device, is_edge=False):
         if len(driver.window_handles) == 1: # open new tab
