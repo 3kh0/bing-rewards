@@ -86,6 +86,13 @@ class Rewards:
         except:
             ActionChains(driver).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN).perform()
 
+        # confirm identity
+        try:
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.live.com/identity/confirm"))
+            raise RuntimeError("Must confirm account identity by signing in manually first")
+        except TimeoutException:
+            pass
+
         #stay signed in
         try:
             #don't show this again checkbox
