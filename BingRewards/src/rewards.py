@@ -118,6 +118,19 @@ class Rewards:
         if not any(market in driver.current_url for market in VALID_MARKETS):
             raise RuntimeError("Logged in, but user not located in a valid market (USA, UK).")
 
+    def _open_dashboard(self, driver):
+        driver.get(self.__DASHBOARD_URL) # for stale element exception
+        try:
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://rewards.microsoft.com/?redref"))
+        except TimeoutException:
+            # need to sign in via welcome page
+            try:
+                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://rewards.microsoft.com/welcome"))
+                #TODO click sign in
+                driver.find_element_by_xpath('//*[@id="raf-signin-link-id"]').click()
+            except TimeoutException:
+                raise RuntimeError('Cannot proceed to dashboard page for offers')
+
     def __get_search_progress(self, driver, device, is_edge=False):
         if len(driver.window_handles) == 1: # open new tab
             driver.execute_script('''window.open("{0}");'''.format(self.__POINTS_URL))
@@ -717,7 +730,7 @@ class Rewards:
                 self.__sys_out("Failed to complete {0}".format(title), 2, True)
 
             driver.switch_to.window(driver.window_handles[0])
-            driver.get(self.__DASHBOARD_URL) # for stale element exception
+            self._open_dashboard(driver) # for stale element exception
 
         return completed
 
@@ -726,7 +739,7 @@ class Rewards:
         Creates a dictionary where (k, v)= (offer title, offer element)
         Useful for testing individual offers
         '''
-        driver.get(self.__DASHBOARD_URL)
+        self._open_dashboard(driver)
         title_to_offer = {}
         for i in range(3):
             offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div'.format(i+1))
@@ -745,7 +758,7 @@ class Rewards:
 
     def __offers(self, driver):
         ## showcase offer
-        driver.get(self.__DASHBOARD_URL)
+        self._open_dashboard(driver)
         completed = []
         #try statement in case we try to find an offer that exceeded the range index
         try:
@@ -779,8 +792,10 @@ class Rewards:
                     try_count += 1
                 completed.append(c)
 
-        except NoSuchElementException:
+        #TODO: this code has been adjusted for test purposes
+        except TimeoutException:
             print( NoSuchElementException)
+            logging.exception('')
             completed.append(-1)
         return min(completed)
 
@@ -880,7 +895,7 @@ class Rewards:
 
     def __print_stats(self, driver):
         try:
-            driver.get(self.__DASHBOARD_URL)
+            self._open_dashboard(driver)
             #once pointsbreakdown link is clickable, page is loaded
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="rx-user-status-action"]/span/ng-transclude')))
             #sleep an additional 5 seconds to make sure stats are loaded
