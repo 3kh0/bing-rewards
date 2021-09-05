@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, ElementClickInterceptedException, StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException
 import base64
 import time
 import sys
@@ -244,7 +244,7 @@ class Rewards:
                 self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")),
                 context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             )
-        except ssl.SSLError as e:
+        except ssl.SSLError:
             response = urlopen(
                 self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d"))
             )
@@ -296,12 +296,7 @@ class Rewards:
                 prev_progress = current_progress
                 try_count = 0
 
-            search_box = WebDriverWait(driver,
-                                       self.__WEB_DRIVER_WAIT_SHORT).until(
-                                           EC.visibility_of_element_located(
-                                               (By.ID, "sb_form_q")
-                                           )
-                                       )
+            search_box = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.ID, "sb_form_q")))
             search_box.clear()
 
             # send query
@@ -335,10 +330,7 @@ class Rewards:
 
             #originally used for location alerts
             #should no longer be an issue as geolocation is turned on
-            try:
-                driver.switch_to.alert.dismiss()
-            except NoAlertPresentException:
-                pass
+            self.__handle_alerts(driver)
         self.__sys_out("Successfully completed search", 2, True, True)
         return True
 
@@ -485,12 +477,7 @@ class Rewards:
         while True:
             try_count = 0
             try:
-                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG
-                                        ).until(
-                                            EC.visibility_of_element_located(
-                                                (By.CLASS_NAME, 'bt_Quefooter')
-                                            )
-                                        ).text
+                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'bt_Quefooter'))).text
                 current_progress, complete_progress = map(
                     int, progress.split(' of ')
                 )
@@ -515,7 +502,7 @@ class Rewards:
                             )
                             return True
                     #the header message could not be found
-                    except:
+                    except TimeoutException:
                         return False
             except:
                 try_count += 1
@@ -531,7 +518,7 @@ class Rewards:
                 'btoption{}'.format(random.choice(([0, 1])))
             ).click()
             return True
-        except:
+        except TimeoutException:
             self.__sys_out("Failed to complete Hot Takes", 3, True, True)
             return False
 
@@ -559,7 +546,7 @@ class Rewards:
         else:
             self.__sys_out("Multiple choice", 3)
 
-        ## drag and drop
+        # drag and drop
         if is_drag_and_drop:
             time.sleep(self.__WEB_DRIVER_WAIT_SHORT)  # let demo complete
 
@@ -695,7 +682,7 @@ class Rewards:
         elif is_hot_take:
             return self.__solve_hot_take(driver)
 
-        ## multiple choice (i.e. lignting speed)
+        # multiple choice (i.e. lignting speed)
         else:
             prev_progress = -1
             prev_options = []
@@ -878,14 +865,14 @@ class Rewards:
             ).click()
             self.__sys_out("Successfully completed poll", 3, True)
             return True
-        except:
+        except TimeoutException:
             self.__sys_out("Failed to complete poll", 3, True)
             return False
 
     def __handle_alerts(self, driver):
         try:
             driver.switch_to.alert.dismiss()
-        except:
+        except NoAlertPresentException:
             pass
 
     def __is_offer_sign_in_bug(self, driver):
@@ -895,7 +882,7 @@ class Rewards:
         try:
             driver.find_element_by_class_name('identityStatus')
             return True
-        except:
+        except NoSuchElementException:
             return False
 
     def __has_overlay(self, driver):
@@ -906,17 +893,14 @@ class Rewards:
             try:
                 driver.find_element_by_id("btOverlay")
                 return True
-            except:
+            except NoSuchElementException:
                 try_count += 1
                 if try_count >= 1:
                     self.__sys_out("Could not detect quiz overlay", 3, True)
                     return False
                 time.sleep(2)
 
-    def __click_offer(
-        self, driver, offer, title_xpath, checked_xpath, details_xpath,
-        link_xpath
-    ):
+    def __click_offer(self, driver, offer, title_xpath, checked_xpath):
         title = offer.find_element_by_xpath(title_xpath).text
         self.__sys_out("Trying {0}".format(title), 2)
 
@@ -931,21 +915,16 @@ class Rewards:
                 checked = True
                 self.__sys_out("Already checked", 2, True)
         #quiz does not contain a check-mark icon, implying no points offered
-        except:
+        except NoSuchElementException:
             checked = True
             self.__sys_out("skipping quiz - assuming it offers no points", 3)
 
         completed = True
         if not checked:
-            details = offer.find_element_by_xpath(details_xpath).text
-
-            #offer.find_element_by_xpath(link_xpath).click()
             offer.click()
-            #driver.execute_script('''window.open("{0}","_blank");'''.format(offer.get_attribute("href")))
             driver.switch_to.window(driver.window_handles[-1])
-            #self.__handle_alerts(driver)
 
-            #Check for cookies popup
+            #Check for cookies popup - UK thing
             if self.cookieclearquiz == 0:
 
                 self.__sys_out("Checking cookies popup", 3)
@@ -955,7 +934,7 @@ class Rewards:
                     ).click()
                     self.__sys_out("cookie popup cleared", 3)
                     self.cookieclearquiz = 1
-                except:
+                except TimeoutException:
                     self.__sys_out("No cookie popup present", 3)
                     self.cookieclearquiz = 1
 
@@ -1013,12 +992,12 @@ class Rewards:
                 title = offer.find_element_by_xpath('./div[2]/h3').text
                 title_to_offer[title] = offer
                 i += 1
-            except:
+            except NoSuchElementException:
                 pass
         return title_to_offer
 
     def __offers(self, driver):
-        ## showcase offer
+        # showcase offer
         self._open_dashboard(driver)
         completed = []
         #try statement in case we try to find an offer that exceeded the range index
@@ -1036,8 +1015,7 @@ class Rewards:
                     )
                     c = self.__click_offer(
                         driver, offer, './div[2]/h3',
-                        './mee-rewards-points/div/div/span[1]', './div[2]/p',
-                        './div[3]/a/span/ng-transclude'
+                        './mee-rewards-points/div/div/span[1]'
                     )
                     try_count += 1
                 #first quiz never started (MS bug) but pts still awarded
@@ -1063,8 +1041,7 @@ class Rewards:
                     )
                     c = self.__click_offer(
                         driver, offer, './div[2]/h3',
-                        './mee-rewards-points/div/div/span[1]', './div[2]/p',
-                        './div[3]/a/span/ng-transclude'
+                        './mee-rewards-points/div/div/span[1]'
                     )
                     try_count += 1
                 completed.append(c)
@@ -1093,7 +1070,7 @@ class Rewards:
         except:
             try:
                 driver.quit()
-            except:  # not yet initialized
+            except AttributeError:  # not yet initialized
                 pass
             raise
 
@@ -1121,7 +1098,7 @@ class Rewards:
         except:
             try:
                 driver.quit()
-            except:  # not yet initialized
+            except AttributeError:  # not yet initialized
                 pass
             raise
 
@@ -1150,7 +1127,7 @@ class Rewards:
         except:
             try:
                 driver.quit()
-            except:  # not yet initialized
+            except AttributeError:  # not yet initialized
                 pass
             raise
 
@@ -1177,7 +1154,7 @@ class Rewards:
         except:
             try:
                 driver.quit()
-            except:
+            except AttributeError:
                 pass
             raise
 

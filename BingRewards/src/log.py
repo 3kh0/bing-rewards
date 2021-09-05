@@ -46,10 +46,7 @@ class HistLog:
             print(self.__run_hist[-1].split(": "))
             last_ran, completed = self.__run_hist[-1].split(": ")
 
-            last_ran_pst = datetime.strptime(last_ran,
-                                             self.__DATETIME_FORMAT).replace(
-                                                 tzinfo=self.__LOCAL_TIMEZONE
-                                             ).astimezone(self.__PST_TIMEZONE)
+            last_ran_pst = datetime.strptime(last_ran, self.__DATETIME_FORMAT).replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
             run_datetime_pst = self.__run_datetime.astimezone(
                 self.__PST_TIMEZONE
             )

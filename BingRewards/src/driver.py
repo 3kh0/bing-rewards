@@ -36,7 +36,7 @@ class Driver:
                 "https://sites.google.com/a/chromium.org/chromedriver/downloads",
                 context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             ).read()
-        except ssl.SSLError as e:
+        except ssl.SSLError:
             response = urlopen(
                 "https://sites.google.com/a/chromium.org/chromedriver/downloads"
             ).read()
@@ -64,7 +64,7 @@ class Driver:
             response = urlopen(
                 url, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             )  # context args for mac
-        except ssl.SSLError as e:
+        except ssl.SSLError:
             response = urlopen(url)  # context args for mac
         zip_file_path = os.path.join(
             os.path.dirname(driver_path), os.path.basename(url)

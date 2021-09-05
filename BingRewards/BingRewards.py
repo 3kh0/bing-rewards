@@ -32,7 +32,7 @@ def __main(arg0, arg1):
     # get credentials
     try:
         from src import config
-    except:
+    except ImportError:
         print("\nFailed to import configuration file")
         logging.basicConfig(
             level=logging.DEBUG,
@@ -132,7 +132,7 @@ def __main(arg0, arg1):
 
             else:
                 print("Nothing remaining")
-    except:
+    except: # catch *all* exceptions
         logging.basicConfig(
             level=logging.DEBUG,
             format='%(message)s',
@@ -155,11 +155,7 @@ if __name__ == "__main__":
             "a for all", "r for remaining (default)"
         )
 
-        try:
-            arg1 = raw_input(input_message)  # python 2
-        except:
-            arg1 = input(input_message)  # python 3
-        arg1 = arg1.lower()
+        arg1 = input(input_message).lower()
 
         __main(args[0], arg1)
 
