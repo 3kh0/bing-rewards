@@ -13,7 +13,7 @@ RUN_LOG                    = "run.log"
 SEARCH_LOG                 = "search.log"
 
 DEBUG                      = True
-HEADLESS                   = False
+HEADLESS                   = True
 
 def __main(arg0, arg1):
     # change to top dir

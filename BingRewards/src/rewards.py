@@ -691,7 +691,8 @@ class Rewards:
         if not checked:
             details = offer.find_element_by_xpath(details_xpath).text
 
-            offer.find_element_by_xpath(link_xpath).click()
+            #offer.find_element_by_xpath(link_xpath).click()
+            offer.click()
             #driver.execute_script('''window.open("{0}","_blank");'''.format(offer.get_attribute("href")))
             driver.switch_to.window(driver.window_handles[-1])
             #self.__handle_alerts(driver)
@@ -769,7 +770,7 @@ class Rewards:
                 #try the page again if sign in bug
                 try_count = 0
                 while c == -1 and try_count <= 2:
-                    offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div'.format(i+1))
+                    offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div/a'.format(i+1))
                     c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
                     try_count += 1
                 #first quiz never started (MS bug) but pts still awarded
@@ -787,15 +788,13 @@ class Rewards:
                 c = -1
                 try_count = 0
                 while c == -1 and try_count <= 2:
-                    offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div'.format(i+1))
+                    offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div/a'.format(i+1))
                     c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
                     try_count += 1
                 completed.append(c)
 
-        #TODO: this code has been adjusted for test purposes
-        except TimeoutException:
-            print( NoSuchElementException)
-            logging.exception('')
+        except NoSuchElementException:
+            print(NoSuchElementException)
             completed.append(-1)
         return min(completed)
 
