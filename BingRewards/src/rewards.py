@@ -18,44 +18,49 @@ import ssl
 
 
 class Rewards:
-    __LOGIN_URL                 = "https://login.live.com"
-    __BING_URL                  = "https://bing.com"
-    __DASHBOARD_URL             = "https://account.microsoft.com/rewards/"
-    __POINTS_URL                = "https://account.microsoft.com/rewards/pointsbreakdown"
-    __TRENDS_URL                = "https://trends.google.com/trends/api/dailytrends?hl=en-US&ed={}&geo=US&ns=15"
+    __LOGIN_URL = "https://login.live.com"
+    __BING_URL = "https://bing.com"
+    __DASHBOARD_URL = "https://account.microsoft.com/rewards/"
+    __POINTS_URL = "https://account.microsoft.com/rewards/pointsbreakdown"
+    __TRENDS_URL = "https://trends.google.com/trends/api/dailytrends?hl=en-US&ed={}&geo=US&ns=15"
 
-    __WEB_DRIVER_WAIT_LONG      = 30
-    __WEB_DRIVER_WAIT_SHORT     = 5
+    __WEB_DRIVER_WAIT_LONG = 30
+    __WEB_DRIVER_WAIT_SHORT = 5
 
-    __SYS_OUT_TAB_LEN           = 8
-    __SYS_OUT_PROGRESS_BAR_LEN  = 30
+    __SYS_OUT_TAB_LEN = 8
+    __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
     def __init__(self, path, email, password, debug=True, headless=True):
-        self.path               = path
-        self.email              = email
-        self.password           = password
-        self.debug              = debug
-        self.headless           = headless
-        self.completion         = Completion()
-        self.stdout             = []
-        self.search_hist        = []
-        self.__queries          = []
+        self.path = path
+        self.email = email
+        self.password = password
+        self.debug = debug
+        self.headless = headless
+        self.completion = Completion()
+        self.stdout = []
+        self.search_hist = []
+        self.__queries = []
 
     def __get_sys_out_prefix(self, lvl, end):
-        prefix = " "*(self.__SYS_OUT_TAB_LEN*(lvl-1)-(lvl-1))
+        prefix = " " * (self.__SYS_OUT_TAB_LEN * (lvl - 1) - (lvl - 1))
         if not end:
-            return prefix + ">"*lvl + " "
+            return prefix + ">" * lvl + " "
         else:
-            return prefix + " "*int(self.__SYS_OUT_TAB_LEN/2) + "<"*lvl + " "
+            return prefix + " " * int(
+                self.__SYS_OUT_TAB_LEN / 2
+            ) + "<" * lvl + " "
 
     def __sys_out(self, msg, lvl, end=False, flush=False):
         #to avoid UnicodeEncodeErrors
         msg = msg.encode('ascii', 'ignore').decode('ascii')
         if self.debug:
-            if flush: # because of progress bar
+            if flush:  # because of progress bar
                 print("")
-            out = "{0}{1}{2}".format(self.__get_sys_out_prefix(lvl, end), msg, "\n" if lvl==1 and end else "")
+            out = "{0}{1}{2}".format(
+                self.__get_sys_out_prefix(lvl, end), msg,
+                "\n" if lvl == 1 and end else ""
+            )
             print(out)
             if len(self.stdout) > 0:
                 if self.stdout[-1].startswith("\r"):
@@ -64,14 +69,19 @@ class Rewards:
 
     def __sys_out_progress(self, current_progress, complete_progress, lvl):
         if self.debug:
-            ratio = float(current_progress)/complete_progress
-            current_bars = int(ratio*self.__SYS_OUT_PROGRESS_BAR_LEN)
-            needed_bars = self.__SYS_OUT_PROGRESS_BAR_LEN-current_bars
-            out = "\r{0}Progress: [{1}] {2}/{3} ({4}%)".format(self.__get_sys_out_prefix(lvl, False), "#"*current_bars + " "*needed_bars,
-                                                               current_progress, complete_progress, int(ratio*100))
+            ratio = float(current_progress) / complete_progress
+            current_bars = int(ratio * self.__SYS_OUT_PROGRESS_BAR_LEN)
+            needed_bars = self.__SYS_OUT_PROGRESS_BAR_LEN - current_bars
+            out = "\r{0}Progress: [{1}] {2}/{3} ({4}%)".format(
+                self.__get_sys_out_prefix(lvl, False),
+                "#" * current_bars + " " * needed_bars, current_progress,
+                complete_progress, int(ratio * 100)
+            )
             sys.stdout.write(out)
             sys.stdout.flush()
-            if self.stdout[-1].startswith("\r"): # dont need to check size of array before accessing element because progress never comes first
+            if self.stdout[-1].startswith(
+                "\r"
+            ):  # dont need to check size of array before accessing element because progress never comes first
                 self.stdout[-1] = out
             else:
                 self.stdout.append(out)
@@ -80,23 +90,35 @@ class Rewards:
         self.__sys_out("Logging in", 2)
 
         driver.get(self.__LOGIN_URL)
-        ActionChains(driver).send_keys(base64.b64decode(self.email).decode(), Keys.RETURN).perform()
+        ActionChains(driver).send_keys(
+            base64.b64decode(self.email).decode(), Keys.RETURN
+        ).perform()
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.ID, "i0118"))).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN)
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.visibility_of_element_located((By.ID, "i0118"))
+            ).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN)
         except:
-            ActionChains(driver).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN).perform()
+            ActionChains(driver).send_keys(
+                base64.b64decode(self.password).decode(), Keys.RETURN
+            ).perform()
 
         # confirm identity
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.live.com/identity/confirm"))
-            raise RuntimeError("Must confirm account identity by signing in manually first")
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.url_contains("https://account.live.com/identity/confirm")
+            )
+            raise RuntimeError(
+                "Must confirm account identity by signing in manually first"
+            )
         except TimeoutException:
             pass
 
         #stay signed in
         try:
             #don't show this again checkbox
-            WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))).click()
+            WebDriverWait(driver, 2).until(
+                EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
+            ).click()
             #yes, stay signed in
             driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
         except TimeoutException:
@@ -104,36 +126,53 @@ class Rewards:
 
         #check login was sucessful
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.microsoft.com/"))
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.url_contains("https://account.microsoft.com/")
+            )
         except TimeoutException:
             # Terms of usage update
             try:
-                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://account.live.com/tou"))
-                WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.ID, 'iNext'))).click()
+                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.url_contains("https://account.live.com/tou")
+                )
+                WebDriverWait(driver, 2).until(
+                    EC.element_to_be_clickable((By.ID, 'iNext'))
+                ).click()
             except TimeoutException:
                 raise RuntimeError("Did NOT log in successfully")
 
         self.__sys_out("Successfully logged in", 2, True)
         VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR']
         if not any(market in driver.current_url for market in VALID_MARKETS):
-            raise RuntimeError("Logged in, but user not located in a valid market (USA, UK).")
+            raise RuntimeError(
+                "Logged in, but user not located in a valid market (USA, UK)."
+            )
 
     def _open_dashboard(self, driver):
-        driver.get(self.__DASHBOARD_URL) # for stale element exception
+        driver.get(self.__DASHBOARD_URL)  # for stale element exception
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://rewards.microsoft.com/?redref"))
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.url_contains("https://rewards.microsoft.com/?redref")
+            )
         except TimeoutException:
             # need to sign in via welcome page
             try:
-                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.url_contains("https://rewards.microsoft.com/welcome"))
+                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.url_contains("https://rewards.microsoft.com/welcome")
+                )
                 #TODO click sign in
-                driver.find_element_by_xpath('//*[@id="raf-signin-link-id"]').click()
+                driver.find_element_by_xpath('//*[@id="raf-signin-link-id"]'
+                                            ).click()
             except TimeoutException:
-                raise RuntimeError('Cannot proceed to dashboard page for offers')
+                raise RuntimeError(
+                    'Cannot proceed to dashboard page for offers'
+                )
 
     def __get_search_progress(self, driver, device, is_edge=False):
-        if len(driver.window_handles) == 1: # open new tab
-            driver.execute_script('''window.open("{0}");'''.format(self.__POINTS_URL))
+        if len(driver.window_handles) == 1:  # open new tab
+            driver.execute_script(
+                '''window.open("{0}");'''.format(self.__POINTS_URL)
+            )
         driver.switch_to.window(driver.window_handles[-1])
         driver.refresh()
         time.sleep(1)
@@ -141,7 +180,16 @@ class Rewards:
         try_count = 0
         while True:
             try:
-                progress_elements = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_all_elements_located((By.XPATH, '//*[@id="userPointsBreakdown"]/div/div[2]/div/div[*]')))
+                progress_elements = WebDriverWait(
+                    driver, self.__WEB_DRIVER_WAIT_LONG
+                ).until(
+                    EC.visibility_of_all_elements_located(
+                        (
+                            By.XPATH,
+                            '//*[@id="userPointsBreakdown"]/div/div[2]/div/div[*]'
+                        )
+                    )
+                )
                 break
             except TimeoutException:
                 try_count += 1
@@ -160,29 +208,46 @@ class Rewards:
 
         progress_text = None
         for element in progress_elements:
-            progress_name = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]').text.upper()
+            progress_name = element.find_element_by_xpath(
+                './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]'
+            ).text.upper()
             if search_type in progress_name:
-                progress_text = element.find_element_by_xpath('./div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]').text
+                progress_text = element.find_element_by_xpath(
+                    './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]'
+                ).text
                 break
 
         if progress_text is None:
-            msg = "Ending {search_type} search. Could not detect search progress.".format(search_type=search_type)
+            msg = "Ending {search_type} search. Could not detect search progress.".format(
+                search_type=search_type
+            )
             if search_type == 'MOBILE':
                 msg += "Most likely because user is at LEVEL 1 and mobile searches are unavailable."
             self.__sys_out(msg, 3, True)
             return False
 
-        current_progress, complete_progress = [int(match) for match in re.findall('\d+', progress_text)]
+        current_progress, complete_progress = [
+            int(match) for match in re.findall('\d+', progress_text)
+        ]
         driver.switch_to.window(driver.window_handles[0])
         return current_progress, complete_progress
 
     def __update_search_queries(self, timestamp, last_request_time):
         if last_request_time:
-            time.sleep(max(0, 20-(datetime.now()-last_request_time).total_seconds())) # sleep at least 20 seconds to avoid over requesting server
+            time.sleep(
+                max(
+                    0, 20 - (datetime.now() - last_request_time).total_seconds()
+                )
+            )  # sleep at least 20 seconds to avoid over requesting server
         try:
-            response = urlopen(self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")), context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
+            response = urlopen(
+                self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")),
+                context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+            )
         except ssl.SSLError as e:
-            response = urlopen(self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")))
+            response = urlopen(
+                self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d"))
+            )
 
         last_request_time = datetime.now()
         output = response.read()[5:]
@@ -191,7 +256,8 @@ class Rewards:
         response = json.loads(output)
 
         #self.__queries = [] # will already be empty
-        for topic in response["default"]["trendingSearchesDays"][0]["trendingSearches"]:
+        for topic in response["default"]["trendingSearchesDays"][0][
+            "trendingSearches"]:
             self.__queries.append(topic["title"]["query"].lower())
             for related_topic in topic["relatedQueries"]:
                 self.__queries.append(related_topic["query"].lower())
@@ -208,7 +274,9 @@ class Rewards:
 
         last_request_time = None
         if len(self.__queries) == 0:
-            last_request_time = self.__update_search_queries(trending_date, last_request_time)
+            last_request_time = self.__update_search_queries(
+                trending_date, last_request_time
+            )
         while True:
             progress = self.__get_search_progress(driver, device, is_edge)
             if not progress:
@@ -228,7 +296,12 @@ class Rewards:
                 prev_progress = current_progress
                 try_count = 0
 
-            search_box = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.ID, "sb_form_q")))
+            search_box = WebDriverWait(driver,
+                                       self.__WEB_DRIVER_WAIT_SHORT).until(
+                                           EC.visibility_of_element_located(
+                                               (By.ID, "sb_form_q")
+                                           )
+                                       )
             search_box.clear()
 
             # send query
@@ -238,19 +311,23 @@ class Rewards:
                     self.__queries = self.__queries[1:]
                 else:
                     trending_date -= timedelta(days=1)
-                    last_request_time = self.__update_search_queries(trending_date, last_request_time)
+                    last_request_time = self.__update_search_queries(
+                        trending_date, last_request_time
+                    )
                     continue
                 if query not in self.search_hist:
                     break
 
-            search_box.send_keys(query, Keys.RETURN) # unique search term
+            search_box.send_keys(query, Keys.RETURN)  # unique search term
             self.search_hist.append(query)
             time.sleep(random.uniform(2, 4.5))
 
             if cookieclear == 0:
                 try:
                     #self.__sys_out("cookie popup cleared", 3)
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))).click()
+                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                        EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
+                    ).click()
                 except TimeoutException:
                     #self.__sys_out("No cookie popup present", 3)
                     pass
@@ -268,7 +345,9 @@ class Rewards:
     def __get_quiz_progress(self, driver, try_count=0):
         try:
             #questions = driver.find_elements_by_xpath('//*[@id="rqHeaderCredits"]/div[2]/*')
-            questions = driver.find_elements_by_xpath('//*[starts-with(@id, "rqQuestionState")]')
+            questions = driver.find_elements_by_xpath(
+                '//*[starts-with(@id, "rqQuestionState")]'
+            )
             if len(questions) > 0:
                 current_progress, complete_progress = 0, len(questions)
                 for question in questions:
@@ -276,16 +355,18 @@ class Rewards:
                         current_progress += 1
                     else:
                         break
-                return current_progress-1, complete_progress
+                return current_progress - 1, complete_progress
             else:
-                footer = driver.find_element_by_xpath('//*[@id="FooterText0"]').text
+                footer = driver.find_element_by_xpath(
+                    '//*[@id="FooterText0"]'
+                ).text
                 current_progress = footer[0]
                 complete_progress = footer[-1]
                 return current_progress, complete_progress
 
         except:
             if try_count < 4:
-                return self.__get_quiz_progress(driver, try_count+1)
+                return self.__get_quiz_progress(driver, try_count + 1)
             else:
                 return 0, -1
 
@@ -293,7 +374,11 @@ class Rewards:
         try_count = 0
         while True:
             try:
-                start_quiz = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.ID, 'rqStartQuiz')))
+                start_quiz = WebDriverWait(
+                    driver, self.__WEB_DRIVER_WAIT_SHORT
+                ).until(
+                    EC.visibility_of_element_located((By.ID, 'rqStartQuiz'))
+                )
             #if quiz doesn't have a rStartQuiz element, it doesn't need to be prepped
             except TimeoutException:
                 return True
@@ -305,7 +390,9 @@ class Rewards:
                     time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
             else:
                 try:
-                    if driver.find_element_by_id("quizWelcomeContainer").get_attribute("style") == "display: none;": # started
+                    if driver.find_element_by_id(
+                        "quizWelcomeContainer"
+                    ).get_attribute("style") == "display: none;":  # started
                         self.__sys_out("Successfully started quiz", 3, True)
                         break
                 except:
@@ -325,15 +412,23 @@ class Rewards:
         A type of quiz with overlay that have multple questions (usually 3), and within each question, the user must select x amount of correct answers (usually 5). Examples of this type of question are warpspeed and supersonic quizzes
         '''
         while True:
-            quiz_current_progress, quiz_complete_progress = self.__get_quiz_progress(driver)
-            self.__sys_out_progress(quiz_current_progress, quiz_complete_progress, 4)
+            quiz_current_progress, quiz_complete_progress = self.__get_quiz_progress(
+                driver
+            )
+            self.__sys_out_progress(
+                quiz_current_progress, quiz_complete_progress, 4
+            )
             #either on the last question, or just completed
             if quiz_current_progress == quiz_complete_progress - 1:
                 try:
                     time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                     #quiz has been completed
-                    if len(driver.find_elements_by_class_name('headerMessage')) > 0:
-                        self.__sys_out_progress(quiz_complete_progress, quiz_complete_progress, 4)
+                    if len(
+                        driver.find_elements_by_class_name('headerMessage')
+                    ) > 0:
+                        self.__sys_out_progress(
+                            quiz_complete_progress, quiz_complete_progress, 4
+                        )
                         self.__sys_out("Quiz complete", 3, True)
                         return True
 
@@ -347,19 +442,33 @@ class Rewards:
                 question_progress = '0/5'
                 question_progresses = [question_progress]
                 while True:
-                    if len(driver.find_elements_by_id('rqAnswerOption{0}'.format(option_index))) > 0:
+                    if len(
+                        driver.find_elements_by_id(
+                            'rqAnswerOption{0}'.format(option_index)
+                        )
+                    ) > 0:
                         #find_element_by_id returns an EventFiringWebElement object, to get the web element, must use wrapped_element attribute
-                        element = driver.find_element_by_id('rqAnswerOption{0}'.format(option_index)).wrapped_element
+                        element = driver.find_element_by_id(
+                            'rqAnswerOption{0}'.format(option_index)
+                        ).wrapped_element
                         #must use ActionChains due to error 'element is not clickable at point', for more info see this link:https://stackoverflow.com/questions/11908249/debugging-element-is-not-clickable-at-point-error
-                        ActionChains(driver).move_to_element(element).click(element).perform()
+                        ActionChains(driver).move_to_element(element).click(
+                            element
+                        ).perform()
                     else:
                         return False
                     time.sleep(random.uniform(1, 4))
                     prev_progress = question_progress
                     #returns a string like '1/5' (1 out of 5 answers selected correctly so far)
-                    question_progress = driver.find_element_by_class_name('bt_corOpStat').text
+                    question_progress = driver.find_element_by_class_name(
+                        'bt_corOpStat'
+                    ).text
                     #once the last correct answer is clicked, question progress becomes '' or 5/5, tho in the past it became '0/5' sometimes, hence 2nd cond
-                    if (question_progress == '' or question_progress == '5/5') or (prev_progress != question_progress and question_progress in question_progresses):
+                    if (question_progress == '' or
+                        question_progress == '5/5') or (
+                            prev_progress != question_progress and
+                            question_progress in question_progresses
+                        ):
                         #wait for the next question to appear
                         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                         break
@@ -376,17 +485,34 @@ class Rewards:
         while True:
             try_count = 0
             try:
-                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'bt_Quefooter'))).text
-                current_progress, complete_progress = map(int, progress.split(' of '))
+                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG
+                                        ).until(
+                                            EC.visibility_of_element_located(
+                                                (By.CLASS_NAME, 'bt_Quefooter')
+                                            )
+                                        ).text
+                current_progress, complete_progress = map(
+                    int, progress.split(' of ')
+                )
                 current_progress = current_progress - 1
                 self.__sys_out_progress(current_progress, complete_progress, 4)
-                driver.find_element_by_id('rqAnswerOption' + str(random.choice([0,1]))).click()
+                driver.find_element_by_id(
+                    'rqAnswerOption' + str(random.choice([0, 1]))
+                ).click()
                 time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                 if current_progress == complete_progress - 1:
                     try:
-                        header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'headerMessage')))
+                        header = WebDriverWait(
+                            driver, self.__WEB_DRIVER_WAIT_LONG
+                        ).until(
+                            EC.visibility_of_element_located(
+                                (By.CLASS_NAME, 'headerMessage')
+                            )
+                        )
                         if "you earned" in header.text.lower():
-                            self.__sys_out_progress(complete_progress, complete_progress, 4)
+                            self.__sys_out_progress(
+                                complete_progress, complete_progress, 4
+                            )
                             return True
                     #the header message could not be found
                     except:
@@ -394,17 +520,20 @@ class Rewards:
             except:
                 try_count += 1
                 if try_count >= 2:
-                    self.__sys_out("Failed to complete This or That quiz", 3, True, True)
+                    self.__sys_out(
+                        "Failed to complete This or That quiz", 3, True, True
+                    )
                     return False
 
     def __solve_hot_take(self, driver):
         try:
-            driver.find_element_by_id('btoption{}'.format(random.choice(([0,1])))).click()
+            driver.find_element_by_id(
+                'btoption{}'.format(random.choice(([0, 1])))
+            ).click()
             return True
         except:
             self.__sys_out("Failed to complete Hot Takes", 3, True, True)
             return False
-
 
     def __quiz(self, driver):
         started = self.__start_quiz(driver)
@@ -432,7 +561,7 @@ class Rewards:
 
         ## drag and drop
         if is_drag_and_drop:
-            time.sleep(self.__WEB_DRIVER_WAIT_SHORT) # let demo complete
+            time.sleep(self.__WEB_DRIVER_WAIT_SHORT)  # let demo complete
 
             # get all possible combinations
             to_from_combos = []
@@ -445,59 +574,112 @@ class Rewards:
             incorrect_options = []
             from_option_index, to_option_index = -1, -1
             while True:
-                current_progress, complete_progress = self.__get_quiz_progress(driver)
+                current_progress, complete_progress = self.__get_quiz_progress(
+                    driver
+                )
                 if complete_progress > 0:
-                    self.__sys_out_progress(current_progress, complete_progress, 4)
+                    self.__sys_out_progress(
+                        current_progress, complete_progress, 4
+                    )
 
                 # get all correct combinations so to not use them again
                 correct_options = []
                 option_index = 0
                 while option_index < quiz_options_len:
                     try:
-                        option = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "rqAnswerOption{0}".format(option_index))))
-                        if option.get_attribute("class") == "rqOption rqDragOption correctAnswer":
+                        option = WebDriverWait(
+                            driver, self.__WEB_DRIVER_WAIT_LONG
+                        ).until(
+                            EC.visibility_of_element_located(
+                                (
+                                    By.ID,
+                                    "rqAnswerOption{0}".format(option_index)
+                                )
+                            )
+                        )
+                        if option.get_attribute(
+                            "class"
+                        ) == "rqOption rqDragOption correctAnswer":
                             correct_options.append(option_index)
                         option_index += 1
                     except TimeoutException:
                         self.__sys_out("Time out Exception", 3)
                         return False
 
-                if current_progress != prev_progress: # new question
+                if current_progress != prev_progress:  # new question
                     incorrect_options = []
-                    prev_progress =  current_progress
+                    prev_progress = current_progress
                 else:
                     # update incorrect options
-                    incorrect_options.append((from_option_index, to_option_index))
-                    incorrect_options.append((to_option_index, from_option_index))
+                    incorrect_options.append(
+                        (from_option_index, to_option_index)
+                    )
+                    incorrect_options.append(
+                        (to_option_index, from_option_index)
+                    )
 
-                exit_code = -1 # no choices were swapped
+                exit_code = -1  # no choices were swapped
                 for combo in to_from_combos:
                     from_option_index, to_option_index = combo[0], combo[1]
                     # check if combination has already been tried
                     if combo not in incorrect_options and from_option_index not in correct_options and to_option_index not in correct_options:
                         # drag from option to to option
-                        from_option = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "rqAnswerOption{0}".format(from_option_index))))
-                        to_option = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.ID, "rqAnswerOption{0}".format(to_option_index))))
-                        ActionChains(driver).drag_and_drop(from_option, to_option).perform()
+                        from_option = WebDriverWait(
+                            driver, self.__WEB_DRIVER_WAIT_LONG
+                        ).until(
+                            EC.visibility_of_element_located(
+                                (
+                                    By.ID, "rqAnswerOption{0}".
+                                    format(from_option_index)
+                                )
+                            )
+                        )
+                        to_option = WebDriverWait(
+                            driver, self.__WEB_DRIVER_WAIT_LONG
+                        ).until(
+                            EC.visibility_of_element_located(
+                                (
+                                    By.ID,
+                                    "rqAnswerOption{0}".format(to_option_index)
+                                )
+                            )
+                        )
+                        ActionChains(driver).drag_and_drop(
+                            from_option, to_option
+                        ).perform()
                         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                         #self.__handle_alerts(driver)
 
-                        if current_progress == complete_progress-1: # last question
+                        if current_progress == complete_progress - 1:  # last question
                             try:
                                 #header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/span/div[1]')))
-                                header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/div')))
+                                header = WebDriverWait(
+                                    driver, self.__WEB_DRIVER_WAIT_SHORT
+                                ).until(
+                                    EC.visibility_of_element_located(
+                                        (
+                                            By.XPATH,
+                                            '//*[@id="quizCompleteContainer"]/div'
+                                        )
+                                    )
+                                )
                                 #if header.text == "Way to go!":
                                 if "great job" in header.text.lower():
-                                    self.__sys_out_progress(complete_progress, complete_progress, 4)
-                                    exit_code = 0 # successfully completed
+                                    self.__sys_out_progress(
+                                        complete_progress, complete_progress, 4
+                                    )
+                                    exit_code = 0  # successfully completed
                                     break
                             except:
                                 pass
-                        exit_code = 1 # successfully swapped 2 choices (can still be wrong)
+                        exit_code = 1  # successfully swapped 2 choices (can still be wrong)
                         break
 
                 if exit_code == -1:
-                    self.__sys_out("Failed to complete quiz1 - tried every choice", 3, True, True)
+                    self.__sys_out(
+                        "Failed to complete quiz1 - tried every choice", 3,
+                        True, True
+                    )
                     return False
                 elif exit_code == 0:
                     break
@@ -513,19 +695,22 @@ class Rewards:
         elif is_hot_take:
             return self.__solve_hot_take(driver)
 
-
         ## multiple choice (i.e. lignting speed)
         else:
             prev_progress = -1
             prev_options = []
             try_count = 0
-            prev_complete_progress = 0 # complete progress becomes 0 at end of quiz, for printing purposes
+            prev_complete_progress = 0  # complete progress becomes 0 at end of quiz, for printing purposes
             while True:
-                current_progress, complete_progress = self.__get_quiz_progress(driver)
+                current_progress, complete_progress = self.__get_quiz_progress(
+                    driver
+                )
                 if complete_progress > 0:
                     #selected the correct answer
                     if current_progress != prev_progress:
-                        self.__sys_out_progress(current_progress, complete_progress, 4)
+                        self.__sys_out_progress(
+                            current_progress, complete_progress, 4
+                        )
                         prev_progress = current_progress
                         prev_options = []
                         try_count = 0
@@ -533,20 +718,37 @@ class Rewards:
                 else:
                     try_count += 1
                     if try_count == quiz_options_len:
-                        self.__sys_out("Failed to complete quiz1 - no progress", 3, True, True)
+                        self.__sys_out(
+                            "Failed to complete quiz1 - no progress", 3, True,
+                            True
+                        )
                         return False
 
-                if current_progress == complete_progress-1: # last question, works for -1, 0 too (already complete)
+                if current_progress == complete_progress - 1:  # last question, works for -1, 0 too (already complete)
                     try:
                         #header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/span/div[1]')))
-                        header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/div')))
+                        header = WebDriverWait(
+                            driver, self.__WEB_DRIVER_WAIT_SHORT
+                        ).until(
+                            EC.visibility_of_element_located(
+                                (
+                                    By.XPATH,
+                                    '//*[@id="quizCompleteContainer"]/div'
+                                )
+                            )
+                        )
                         #if header.text == "Way to go!":
                         if "great job" in header.text.lower():
                             if prev_complete_progress > 0:
-                                self.__sys_out_progress(prev_complete_progress, prev_complete_progress, 4)
+                                self.__sys_out_progress(
+                                    prev_complete_progress,
+                                    prev_complete_progress, 4
+                                )
                                 break
                             else:
-                                self.__sys_out("Already completed quiz", 3, True)
+                                self.__sys_out(
+                                    "Already completed quiz", 3, True
+                                )
                                 return True
                     except:
                         pass
@@ -556,12 +758,19 @@ class Rewards:
                     if option_index not in prev_options:
                         break
                 if option_index in prev_options:
-                    self.__sys_out("Failed to complete quiz1 - tried every choice", 3, True, True)
+                    self.__sys_out(
+                        "Failed to complete quiz1 - tried every choice", 3,
+                        True, True
+                    )
                     return False
 
                 try:
                     # click choice
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.element_to_be_clickable((By.ID, "rqAnswerOption{0}".format(option_index)))).click()
+                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(
+                        EC.element_to_be_clickable(
+                            (By.ID, "rqAnswerOption{0}".format(option_index))
+                        )
+                    ).click()
                     prev_options.append(option_index)
                     time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                     #self.__handle_alerts(driver)
@@ -578,32 +787,62 @@ class Rewards:
 
         while current_progress != complete_progress:
             try:
-                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="QuestionPane{}"]/div[2]'.format(current_progress)))).text
+                progress = WebDriverWait(
+                    driver, self.__WEB_DRIVER_WAIT_SHORT
+                ).until(
+                    EC.visibility_of_element_located(
+                        (
+                            By.XPATH, '//*[@id="QuestionPane{}"]/div[2]'.
+                            format(current_progress)
+                        )
+                    )
+                ).text
             except TimeoutException:
                 self.__sys_out("Could not find quiz2 progress elements", 3)
                 return False
-            current_progress, complete_progress = [int(x) for x in re.match("\((\d+) of (\d+)\)", progress).groups()]
-            self.__sys_out_progress(current_progress-1, complete_progress, 4)
+            current_progress, complete_progress = [
+                int(x)
+                for x in re.match("\((\d+) of (\d+)\)", progress).groups()
+            ]
+            self.__sys_out_progress(current_progress - 1, complete_progress, 4)
             time.sleep(random.uniform(1, 3))
-            driver.find_elements_by_class_name('wk_Circle')[random.randint(0,2)].click()
+            driver.find_elements_by_class_name('wk_Circle')[random.randint(
+                0, 2
+            )].click()
             time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
 
             is_clicked, try_count = False, 0
             #sometimes the 'next' button isn't clickable and page needs to be refreshed
             while not is_clicked:
                 if len(driver.find_elements_by_class_name('cbtn')) > 0:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.CLASS_NAME, 'cbtn'))).click()
+                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                        EC.element_to_be_clickable((By.CLASS_NAME, 'cbtn'))
+                    ).click()
                 elif len(driver.find_elements_by_class_name('wk_button')) > 0:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.CLASS_NAME, 'wk_button'))).click()
+                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                        EC.element_to_be_clickable(
+                            (By.CLASS_NAME, 'wk_button')
+                        )
+                    ).click()
                 elif len(driver.find_elements_by_id('check')) > 0:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.ID, 'check'))).click()
+                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                        EC.element_to_be_clickable((By.ID, 'check'))
+                    ).click()
                 else:
                     self.__sys_out("Failed to complete quiz2", 3, True, True)
                     return False
 
                 try:
                     if current_progress != complete_progress:
-                        WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="QuestionPane{}"]/div[2]'.format(current_progress)))).text
+                        WebDriverWait(driver, 5).until(
+                            EC.visibility_of_element_located(
+                                (
+                                    By.XPATH,
+                                    '//*[@id="QuestionPane{}"]/div[2]'.
+                                    format(current_progress)
+                                )
+                            )
+                        ).text
                     is_clicked = True
 
                 except:
@@ -611,7 +850,9 @@ class Rewards:
                     driver.refresh()
                     try_count += 1
                     if try_count == 2:
-                        self.__sys_out("Quiz2 element not clickable", 3, True, True)
+                        self.__sys_out(
+                            "Quiz2 element not clickable", 3, True, True
+                        )
                         return False
 
         #if current_progress == complete_progress:
@@ -625,14 +866,16 @@ class Rewards:
 
         #for daily poll
         if 'daily' in title:
-            element_id = 'btoption{0}'.format(random.randint(0,1))
+            element_id = 'btoption{0}'.format(random.randint(0, 1))
         #all other polls
         else:
             #xpath = '//*[@id="OptionText0{}"]'.format(random.randint(0, 1))
-            element_id = 'OptionText0{0}'.format(random.randint(0,1))
+            element_id = 'OptionText0{0}'.format(random.randint(0, 1))
 
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.ID, element_id))).click()
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.element_to_be_clickable((By.ID, element_id))
+            ).click()
             self.__sys_out("Successfully completed poll", 3, True)
             return True
         except:
@@ -670,7 +913,10 @@ class Rewards:
                     return False
                 time.sleep(2)
 
-    def __click_offer(self, driver, offer, title_xpath, checked_xpath, details_xpath, link_xpath):
+    def __click_offer(
+        self, driver, offer, title_xpath, checked_xpath, details_xpath,
+        link_xpath
+    ):
         title = offer.find_element_by_xpath(title_xpath).text
         self.__sys_out("Trying {0}".format(title), 2)
 
@@ -679,7 +925,9 @@ class Rewards:
         checked = False
         try:
             icon = offer.find_element_by_xpath(checked_xpath)
-            if icon.get_attribute('class').startswith("mee-icon mee-icon-SkypeCircleCheck"):
+            if icon.get_attribute('class').startswith(
+                "mee-icon mee-icon-SkypeCircleCheck"
+            ):
                 checked = True
                 self.__sys_out("Already checked", 2, True)
         #quiz does not contain a check-mark icon, implying no points offered
@@ -697,13 +945,14 @@ class Rewards:
             driver.switch_to.window(driver.window_handles[-1])
             #self.__handle_alerts(driver)
 
-
             #Check for cookies popup
             if self.cookieclearquiz == 0:
 
                 self.__sys_out("Checking cookies popup", 3)
                 try:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))).click()
+                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                        EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
+                    ).click()
                     self.__sys_out("cookie popup cleared", 3)
                     self.cookieclearquiz = 1
                 except:
@@ -724,14 +973,19 @@ class Rewards:
                     completed = self.__quiz2(driver)
 
             if completed == -1:
-                self.__sys_out("Sign in Bing bug for offer {0}, will try again".format(title), 2, True)
+                self.__sys_out(
+                    "Sign in Bing bug for offer {0}, will try again".
+                    format(title), 2, True
+                )
             elif completed:
-                self.__sys_out("Successfully completed {0}".format(title), 2, True)
+                self.__sys_out(
+                    "Successfully completed {0}".format(title), 2, True
+                )
             else:
                 self.__sys_out("Failed to complete {0}".format(title), 2, True)
 
             driver.switch_to.window(driver.window_handles[0])
-            self._open_dashboard(driver) # for stale element exception
+            self._open_dashboard(driver)  # for stale element exception
 
         return completed
 
@@ -743,13 +997,19 @@ class Rewards:
         self._open_dashboard(driver)
         title_to_offer = {}
         for i in range(3):
-            offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div'.format(i+1))
+            offer = driver.find_element_by_xpath(
+                '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div'
+                .format(i + 1)
+            )
             title = offer.find_element_by_xpath('./div[2]/h3').text
             title_to_offer[title] = offer
 
         for i in range(30):
             try:
-                offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div'.format(i+1))
+                offer = driver.find_element_by_xpath(
+                    '//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div'
+                    .format(i + 1)
+                )
                 title = offer.find_element_by_xpath('./div[2]/h3').text
                 title_to_offer[title] = offer
                 i += 1
@@ -770,8 +1030,15 @@ class Rewards:
                 #try the page again if sign in bug
                 try_count = 0
                 while c == -1 and try_count <= 2:
-                    offer = driver.find_element_by_xpath('//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div/a'.format(i+1))
-                    c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
+                    offer = driver.find_element_by_xpath(
+                        '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
+                        .format(i + 1)
+                    )
+                    c = self.__click_offer(
+                        driver, offer, './div[2]/h3',
+                        './mee-rewards-points/div/div/span[1]', './div[2]/p',
+                        './div[3]/a/span/ng-transclude'
+                    )
                     try_count += 1
                 #first quiz never started (MS bug) but pts still awarded
                 if i == 0:
@@ -783,13 +1050,22 @@ class Rewards:
 
         try:
             #remaining_offers = driver.find_elements_by_xpath('//*[starts-with(@id, "more-activities"])')#/div/mee-card)')
-            remaining_offers = driver.find_elements_by_xpath('//*[@id="more-activities"]/div/mee-card')
+            remaining_offers = driver.find_elements_by_xpath(
+                '//*[@id="more-activities"]/div/mee-card'
+            )
             for i in range(len(remaining_offers)):
                 c = -1
                 try_count = 0
                 while c == -1 and try_count <= 2:
-                    offer = driver.find_element_by_xpath('//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div/a'.format(i+1))
-                    c = self.__click_offer(driver, offer, './div[2]/h3', './mee-rewards-points/div/div/span[1]', './div[2]/p', './div[3]/a/span/ng-transclude')
+                    offer = driver.find_element_by_xpath(
+                        '//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
+                        .format(i + 1)
+                    )
+                    c = self.__click_offer(
+                        driver, offer, './div[2]/h3',
+                        './mee-rewards-points/div/div/span[1]', './div[2]/p',
+                        './div[3]/a/span/ng-transclude'
+                    )
                     try_count += 1
                 completed.append(c)
 
@@ -803,9 +1079,13 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(self.path, Driver.WEB_DEVICE, self.headless)
+                driver = Driver.get_driver(
+                    self.path, Driver.WEB_DEVICE, self.headless
+                )
                 self.__login(driver)
-            self.completion.edge_search = self.__search(driver, Driver.WEB_DEVICE, is_edge=True)
+            self.completion.edge_search = self.__search(
+                driver, Driver.WEB_DEVICE, is_edge=True
+            )
             if self.completion.edge_search:
                 self.__sys_out("Successfully completed edge search", 1, True)
             else:
@@ -813,7 +1093,7 @@ class Rewards:
         except:
             try:
                 driver.quit()
-            except: # not yet initialized
+            except:  # not yet initialized
                 pass
             raise
 
@@ -827,9 +1107,13 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(self.path, Driver.WEB_DEVICE, self.headless)
+                driver = Driver.get_driver(
+                    self.path, Driver.WEB_DEVICE, self.headless
+                )
                 self.__login(driver)
-            self.completion.web_search = self.__search(driver, Driver.WEB_DEVICE)
+            self.completion.web_search = self.__search(
+                driver, Driver.WEB_DEVICE
+            )
             if self.completion.web_search:
                 self.__sys_out("Successfully completed web search", 1, True)
             else:
@@ -837,7 +1121,7 @@ class Rewards:
         except:
             try:
                 driver.quit()
-            except: # not yet initialized
+            except:  # not yet initialized
                 pass
             raise
 
@@ -851,10 +1135,14 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(self.path, Driver.MOBILE_DEVICE, self.headless)
+                driver = Driver.get_driver(
+                    self.path, Driver.MOBILE_DEVICE, self.headless
+                )
                 self.__login(driver)
 
-            self.completion.mobile_search = self.__search(driver, Driver.MOBILE_DEVICE)
+            self.completion.mobile_search = self.__search(
+                driver, Driver.MOBILE_DEVICE
+            )
             if self.completion.mobile_search:
                 self.__sys_out("Successfully completed mobile search", 1, True)
             else:
@@ -862,7 +1150,7 @@ class Rewards:
         except:
             try:
                 driver.quit()
-            except: # not yet initialized
+            except:  # not yet initialized
                 pass
             raise
 
@@ -870,12 +1158,15 @@ class Rewards:
             driver.quit()
         else:
             return driver
+
     def __complete_offers(self, driver=None):
         self.__sys_out("Starting offers", 1)
 
         try:
             if not driver:
-                driver = Driver.get_driver(self.path, Driver.WEB_DEVICE, self.headless)
+                driver = Driver.get_driver(
+                    self.path, Driver.WEB_DEVICE, self.headless
+                )
                 self.__login(driver)
 
             self.completion.offers = self.__offers(driver)
@@ -896,10 +1187,19 @@ class Rewards:
         try:
             self._open_dashboard(driver)
             #once pointsbreakdown link is clickable, page is loaded
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="rx-user-status-action"]/span/ng-transclude')))
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.element_to_be_clickable(
+                    (
+                        By.XPATH,
+                        '//*[@id="rx-user-status-action"]/span/ng-transclude'
+                    )
+                )
+            )
             #sleep an additional 5 seconds to make sure stats are loaded
             time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
-            stats = driver.find_elements_by_xpath('//mee-rewards-counter-animation//span')
+            stats = driver.find_elements_by_xpath(
+                '//mee-rewards-counter-animation//span'
+            )
 
             earned_index = 4
             streak_index = 2
@@ -913,17 +1213,33 @@ class Rewards:
 
             if IS_LEVEL_TWO:
                 self.__sys_out("Summary", 1, flush=True)
-                self.__sys_out("Points earned: " + stats[earned_index].text.replace(" ", ""), 2)
+                self.__sys_out(
+                    "Points earned: " +
+                    stats[earned_index].text.replace(" ", ""), 2
+                )
                 self.__sys_out("Streak count: " + stats[streak_index].text, 2)
-                self.__sys_out(stats[days_till_bonus_index].text, 2, end=True) # streak details, ex. how many days remaining, bonus earned
-                self.__sys_out("Available points: " + stats[avail_index].text, 2)
+                self.__sys_out(
+                    stats[days_till_bonus_index].text, 2, end=True
+                )  # streak details, ex. how many days remaining, bonus earned
+                self.__sys_out(
+                    "Available points: " + stats[avail_index].text, 2
+                )
 
             else:
                 self.__sys_out("Summary", 1, flush=True)
-                self.__sys_out("Points earned: " + stats[earned_index+1].text.replace(" ", ""), 2)
-                self.__sys_out("Streak count: " + stats[streak_index+1].text, 2)
-                self.__sys_out(stats[days_till_bonus_index+1].text, 2, end=True) # streak details, ex. how many days remaining, bonus earned
-                self.__sys_out("Available points: " + stats[avail_index+1].text, 2)
+                self.__sys_out(
+                    "Points earned: " +
+                    stats[earned_index + 1].text.replace(" ", ""), 2
+                )
+                self.__sys_out(
+                    "Streak count: " + stats[streak_index + 1].text, 2
+                )
+                self.__sys_out(
+                    stats[days_till_bonus_index + 1].text, 2, end=True
+                )  # streak details, ex. how many days remaining, bonus earned
+                self.__sys_out(
+                    "Available points: " + stats[avail_index + 1].text, 2
+                )
 
         except Exception as e:
             print('    Error checking rewards status - ', e)
@@ -931,25 +1247,30 @@ class Rewards:
     def print_stats(self, driver, is_print_stats):
         self.__print_stats(driver)
         driver.quit()
+
     def complete_edge_search(self, search_hist, is_print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_edge_search()
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
+
     def complete_web_search(self, search_hist, is_print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_web_search()
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
+
     def complete_mobile_search(self, search_hist, is_print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_mobile_search()
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
+
     def complete_offers(self, is_print_stats=True):
         driver = self.__complete_offers()
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
+
     def complete_both_searches(self, search_hist, is_print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_edge_search()
@@ -957,6 +1278,7 @@ class Rewards:
         driver = self.__complete_mobile_search()
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
+
     def complete_all(self, search_hist, is_print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_edge_search()

@@ -3,8 +3,7 @@ import getpass
 import base64
 import time
 
-
-CONFIG_FILE_PATH      = "BingRewards/src/config.py"
+CONFIG_FILE_PATH = "BingRewards/src/config.py"
 
 CONFIG_FILE_TEMPLATE = """credentials = dict(
     email = '{0}',
@@ -12,8 +11,7 @@ CONFIG_FILE_TEMPLATE = """credentials = dict(
 )
 """
 
-
-# get hashed credentials 
+# get hashed credentials
 try:
     email = base64.b64encode(raw_input("   *Email: ").encode()).decode()
 except:
@@ -41,4 +39,3 @@ else:
     else:
         print("{} already contains latest credentials".format(CONFIG_FILE_PATH))
 time.sleep(2)
-
