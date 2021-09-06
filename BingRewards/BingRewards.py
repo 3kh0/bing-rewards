@@ -3,6 +3,8 @@ import os
 from src.rewards import Rewards
 from src.log import HistLog
 import logging
+import base64
+from options import parse_arguments
 
 DRIVERS_DIR = "drivers"
 DRIVER = "chromedriver"
@@ -13,13 +15,17 @@ RUN_LOG = "run.log"
 SEARCH_LOG = "search.log"
 
 DEBUG = True
-HEADLESS = True
 
 
-def __main(arg0, arg1):
+def __decode(encoded):
+    return base64.b64decode(encoded).decode()
+
+
+def __main():
+    args = parse_arguments()
     # change to top dir
     dir_run_from = os.getcwd()
-    top_dir = os.path.dirname(arg0)
+    top_dir = os.path.dirname(sys.argv[0])
     if top_dir and top_dir != dir_run_from:
         os.chdir(top_dir)
 
@@ -30,72 +36,34 @@ def __main(arg0, arg1):
     )
 
     # get credentials
-    try:
-        from src import config
-    except ImportError:
-        print("\nFailed to import configuration file")
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(message)s',
-            filename=os.path.join(LOG_DIR, ERROR_LOG)
-        )
-        logging.exception(hist_log.get_timestamp())
-        logging.debug("")
-        raise
+    if args.email and args.password:
+        email = args.email
+        password = args.password
+    else:
+        try:
+            from src import config
+        except ImportError:
+            print("\nFailed to import configuration file")
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format='%(message)s',
+                filename=os.path.join(LOG_DIR, ERROR_LOG)
+            )
+            logging.exception(hist_log.get_timestamp())
+            logging.debug("")
+            raise
+        email = __decode(config.credentials['email'])
+        password = __decode(config.credentials['password'])
 
     if not os.path.exists(DRIVERS_DIR):
         os.mkdir(DRIVERS_DIR)
     rewards = Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), config.credentials["email"],
-        config.credentials["password"], DEBUG, HEADLESS
+        os.path.join(DRIVERS_DIR, DRIVER), email, password, DEBUG, args.headless
     )
     completion = hist_log.get_completion()
 
     try:
-        if arg1 in ["w", "web"]:
-            print("\n\t{}\n".format("You selected web search"))
-            if not completion.is_edge_and_web_search_completed():
-                if not completion.is_edge_search_completed():
-                    rewards.complete_edge_search(hist_log.get_search_hist())
-                if not completion.is_web_search_completed():
-                    rewards.complete_web_search(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Web search already completed')
-        elif arg1 in ["m", "mobile"]:
-            print("\n\t{}\n".format("You selected mobile search"))
-            if not completion.is_edge_and_mobile_search_completed():
-                if not completion.is_edge_search_completed():
-                    rewards.complete_edge_search(hist_log.get_search_hist())
-                if not completion.is_mobile_search_completed():
-                    rewards.complete_mobile_search(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Mobile search already completed')
-        elif arg1 in ["b", "both"]:
-            print(
-                "\n\t{}\n".format("You selected both searches (web & mobile)")
-            )
-            if not completion.is_both_searches_completed():
-                rewards.complete_both_searches(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Both searches already completed')
-        elif arg1 in ["o", "other"]:
-            print("\n\t{}\n".format("You selected offers"))
-            if not completion.is_offers_completed():
-                rewards.complete_offers()
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Offers already completed')
-        elif arg1 in ["a", "all"]:
-            print("\n\t{}\n".format("You selected all"))
-            if not completion.is_all_completed():
-                rewards.complete_all(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('All already completed')
-        else:
+        if args.search_type == 'remaining':
             print("\n\t{}\n".format("You selected remaining"))
 
             if not completion.is_all_completed():
@@ -132,7 +100,51 @@ def __main(arg0, arg1):
 
             else:
                 print("Nothing remaining")
-    except: # catch *all* exceptions
+        elif args.search_type == 'web':
+            print("\n\t{}\n".format("You selected web search"))
+            if not completion.is_edge_and_web_search_completed():
+                if not completion.is_edge_search_completed():
+                    rewards.complete_edge_search(hist_log.get_search_hist())
+                if not completion.is_web_search_completed():
+                    rewards.complete_web_search(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Web search already completed')
+        elif args.search_type == 'mobile':
+            print("\n\t{}\n".format("You selected mobile search"))
+            if not completion.is_edge_and_mobile_search_completed():
+                if not completion.is_edge_search_completed():
+                    rewards.complete_edge_search(hist_log.get_search_hist())
+                if not completion.is_mobile_search_completed():
+                    rewards.complete_mobile_search(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Mobile search already completed')
+        elif args.search_type == 'both':
+            print(
+                "\n\t{}\n".format("You selected both searches (web & mobile)")
+            )
+            if not completion.is_both_searches_completed():
+                rewards.complete_both_searches(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Both searches already completed')
+        elif args.search_type == 'offers':
+            print("\n\t{}\n".format("You selected offers"))
+            if not completion.is_offers_completed():
+                rewards.complete_offers()
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('Offers already completed')
+        elif args.search_type == 'all':
+            print("\n\t{}\n".format("You selected all"))
+            if not completion.is_all_completed():
+                rewards.complete_all(hist_log.get_search_hist())
+                hist_log.write(rewards.completion, rewards.search_hist)
+            else:
+                print('All already completed')
+
+    except:  # catch *all* exceptions
         logging.basicConfig(
             level=logging.DEBUG,
             format='%(message)s',
@@ -146,27 +158,4 @@ def __main(arg0, arg1):
 
 
 if __name__ == "__main__":
-    args = sys.argv
-
-    if len(args) == 1:
-        out = "Enter \t{}, \n\t{}, \n\t{}, \n\t{}, \n\t{}, \n\t{} \nInput: \t"
-        input_message = out.format(
-            "w for web", "m for mobile", "b for both", "o for offers",
-            "a for all", "r for remaining (default)"
-        )
-
-        arg1 = input(input_message).lower()
-
-        __main(args[0], arg1)
-
-    elif len(args) == 2:
-        arg1 = args[1].lower()
-        assert arg1 in [
-            "-w", "--web", "-m", "--mobile", "-b", "--both", "-o", "--offers",
-            "-a", "-all", "-r", "--remaining"
-        ]
-
-        __main(args[0], arg1.replace("-", ""))
-
-    else:
-        print("Incorrect number of arguments")
+    __main()

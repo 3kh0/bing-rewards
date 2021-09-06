@@ -7,7 +7,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException
-import base64
 import time
 import sys
 import re
@@ -91,15 +90,15 @@ class Rewards:
 
         driver.get(self.__LOGIN_URL)
         ActionChains(driver).send_keys(
-            base64.b64decode(self.email).decode(), Keys.RETURN
+            self.email, Keys.RETURN
         ).perform()
         try:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                 EC.visibility_of_element_located((By.ID, "i0118"))
-            ).send_keys(base64.b64decode(self.password).decode(), Keys.RETURN)
+            ).send_keys(self.password, Keys.RETURN)
         except:
             ActionChains(driver).send_keys(
-                base64.b64decode(self.password).decode(), Keys.RETURN
+                self.password, Keys.RETURN
             ).perform()
 
         # confirm identity
