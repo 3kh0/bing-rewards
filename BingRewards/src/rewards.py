@@ -416,7 +416,7 @@ class Rewards:
                     time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                     #quiz has been completed
                     if len(
-                        driver.find_elements_by_class_name('headerMessage')
+                        driver.find_elements_by_class_name('headerMessage_Refresh')
                     ) > 0:
                         self.__sys_out_progress(
                             quiz_complete_progress, quiz_complete_progress, 4
@@ -474,28 +474,21 @@ class Rewards:
         Solves This or That quiz
         The answers are randomly selected, so on average, only half the points will be earned.
         '''
+        try_count = 0
         while True:
-            try_count = 0
             try:
                 progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'bt_Quefooter'))).text
-                current_progress, complete_progress = map(
+                current_question, complete_progress = map(
                     int, progress.split(' of ')
                 )
-                current_progress = current_progress - 1
-                self.__sys_out_progress(current_progress, complete_progress, 4)
+                self.__sys_out_progress(current_question - 1, complete_progress, 4)
                 driver.find_element_by_id(
                     'rqAnswerOption' + str(random.choice([0, 1]))
                 ).click()
                 time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
-                if current_progress == complete_progress - 1:
+                if current_question == complete_progress:
                     try:
-                        header = WebDriverWait(
-                            driver, self.__WEB_DRIVER_WAIT_LONG
-                        ).until(
-                            EC.visibility_of_element_located(
-                                (By.CLASS_NAME, 'headerMessage')
-                            )
-                        )
+                        header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'headerMessage_Refresh')))
                         if "you earned" in header.text.lower():
                             self.__sys_out_progress(
                                 complete_progress, complete_progress, 4
@@ -725,7 +718,7 @@ class Rewards:
                             )
                         )
                         #if header.text == "Way to go!":
-                        if "great job" in header.text.lower():
+                        if "you earned" in header.text.lower():
                             if prev_complete_progress > 0:
                                 self.__sys_out_progress(
                                     prev_complete_progress,
@@ -977,20 +970,20 @@ class Rewards:
         title_to_offer = {}
         for i in range(3):
             offer = driver.find_element_by_xpath(
-                '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div'
+                '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
                 .format(i + 1)
             )
             title = offer.find_element_by_xpath('./div[2]/h3').text
-            title_to_offer[title] = offer
+            title_to_offer[title + str(i)] = offer
 
         for i in range(30):
             try:
                 offer = driver.find_element_by_xpath(
-                    '//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div'
+                    '//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
                     .format(i + 1)
                 )
                 title = offer.find_element_by_xpath('./div[2]/h3').text
-                title_to_offer[title] = offer
+                title_to_offer[title + str(i)] = offer
                 i += 1
             except NoSuchElementException:
                 pass
