@@ -148,8 +148,11 @@ class Rewards:
                 "Logged in, but user not located in a valid market (USA, UK)."
             )
 
-    def _open_dashboard(self, driver):
-        driver.get(self.__DASHBOARD_URL)  # for stale element exception
+    def __open_dashboard(self, driver, try_count):
+        if try_count == 2:
+            return
+
+        driver.get(self.__DASHBOARD_URL)
         try:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                 EC.url_contains("https://rewards.microsoft.com/?redref")
@@ -160,13 +163,22 @@ class Rewards:
                 WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                     EC.url_contains("https://rewards.microsoft.com/welcome")
                 )
-                #TODO click sign in
                 driver.find_element_by_xpath('//*[@id="raf-signin-link-id"]'
                                             ).click()
             except TimeoutException:
                 raise RuntimeError(
                     'Cannot proceed to dashboard page for offers'
                 )
+        #wait for offers to load completely
+        try:
+            offer_xpath = '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[1]/div/card-content/mee-rewards-daily-set-item-content/div/a'
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.presence_of_element_located((By.XPATH, offer_xpath)))
+        #if offers dont load, start function over
+        except TimeoutException:
+            self.__open_dashboard(self, driver, try_count + 1)
+
+    def _open_dashboard(self, driver):
+        self.__open_dashboard(driver, try_count=0)
 
     def __get_search_progress(self, driver, device, is_edge=False):
         if len(driver.window_handles) == 1:  # open new tab
