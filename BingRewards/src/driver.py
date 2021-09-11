@@ -6,6 +6,7 @@ import zipfile
 from selenium import webdriver
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
+from selenium.common.exceptions import SessionNotCreatedException
 import re
 
 
@@ -28,7 +29,7 @@ class Driver:
     __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36 Edg/88.0.705.63"
     __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36 EdgA/46.1.2.5140"
 
-    def __download_driver(driver_path, system, driver_dl_index=0):
+    def __download_driver(driver_path, system, try_count=0):
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         try:
@@ -44,8 +45,8 @@ class Driver:
 
         latest_version = re.findall(
             b"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+", response
-        )[driver_dl_index].decode().split()[1]
-        print('downloading chrome driver version: ' + latest_version)
+        )[try_count].decode().split()[1]
+        print('Downloading chromedriver version: ' + latest_version)
 
         if system == "Windows":
             url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_win32.zip".format(
@@ -121,21 +122,20 @@ class Driver:
         else:
             options.add_argument("user-agent=" + Driver.__MOBILE_USER_AGENT)
 
-        driver_dl_index = 1
-        while True:
+        # we start at try_count = 1 b/c we already downloaded the most recent version
+        try_count = 1
+        MAX_TRIES = 3
+        is_dl_success = False
+        while not is_dl_success:
             try:
                 driver = webdriver.Chrome(path, options=options)
-                break
+                is_dl_success = True
             #driver not up to date with Chrome browser, try different ver
-            except:
-                Driver.__download_driver(path, system, driver_dl_index)
-                driver_dl_index += 1
-                if driver_dl_index > 2:
-                    print(
-                        'Tried downloading the ' + str(driver_dl_index) +
-                        ' most recent chrome drivers. None match current Chrome browser version'
-                    )
-                    break
+            except SessionNotCreatedException:
+                if try_count == MAX_TRIES:
+                    raise SessionNotCreatedException(f'Tried downloading the {try_count} most recent chromedrivers. None match your Chrome browswer version. Aborting now, please update your chrome browser.')
+                Driver.__download_driver(path, system, try_count)
+                try_count += 1
 
         #if not headless:
         #    driver.set_window_position(-2000, 0)
