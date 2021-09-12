@@ -35,7 +35,7 @@ class Driver:
         try:
             response = urlopen(
                 "https://sites.google.com/a/chromium.org/chromedriver/downloads",
-                context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+                context=ssl.SSLContext(ssl.PROTOCOL_TLS)
             ).read()
         except ssl.SSLError:
             response = urlopen(
@@ -63,7 +63,7 @@ class Driver:
 
         try:
             response = urlopen(
-                url, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+                url, context=ssl.SSLContext(ssl.PROTOCOL_TLS)
             )  # context args for mac
         except ssl.SSLError:
             response = urlopen(url)  # context args for mac

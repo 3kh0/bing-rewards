@@ -253,7 +253,7 @@ class Rewards:
         try:
             response = urlopen(
                 self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")),
-                context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+                context=ssl.SSLContext(ssl.PROTOCOL_TLS)
             )
         except ssl.SSLError:
             response = urlopen(
