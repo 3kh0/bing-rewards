@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, UnexpectedAlertPresentException
 import time
 import sys
 import re
@@ -876,7 +876,7 @@ class Rewards:
     def __handle_alerts(self, driver):
         try:
             driver.switch_to.alert.dismiss()
-        except NoAlertPresentException:
+        except (NoAlertPresentException, UnexpectedAlertPresentException):
             pass
 
     def __is_offer_sign_in_bug(self, driver):
