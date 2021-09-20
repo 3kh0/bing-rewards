@@ -1,4 +1,4 @@
-from src.driver import Driver
+﻿from src.driver import Driver
 from src.log import Completion
 from urllib.request import urlopen
 from selenium.webdriver.common.keys import Keys
@@ -141,10 +141,10 @@ class Rewards:
                 raise RuntimeError("Did NOT log in successfully")
 
         self.__sys_out("Successfully logged in", 2, True)
-        VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR']
+        VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES']
         if not any(market in driver.current_url for market in VALID_MARKETS):
             raise RuntimeError(
-                "Logged in, but user not located in a valid market (USA, UK)."
+                "Logged in, but user not located in a valid market (USA, UK, FR, ES)."
             )
 
     def __open_dashboard(self, driver, try_count):
@@ -211,29 +211,31 @@ class Rewards:
                 raise NoSuchElementException(msg)
 
         if is_edge:
-            search_type = 'EDGE'
+            search_types = ['EDGE']
         elif device == Driver.WEB_DEVICE:
-            search_type = 'PC'
+            search_types = ['PC']
         elif device == Driver.MOBILE_DEVICE:
-            search_type = 'MOBILE'
+            search_types = ['MOBILE','MÓVILES']
 
         progress_text = None
         for element in progress_elements:
             progress_name = element.find_element_by_xpath(
                 './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]'
             ).text.upper()
-            if search_type in progress_name:
-                progress_text = element.find_element_by_xpath(
-                    './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]'
-                ).text
-                break
+            
+            for search_type in search_types:
+                if search_type in progress_name:
+                    progress_text = element.find_element_by_xpath(
+                        './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]'
+                    ).text
+                    break
 
         if progress_text is None:
             msg = "Ending {search_type} search. Could not detect search progress.".format(
-                search_type=search_type
+                search_type=search_types
             )
-            if search_type == 'MOBILE':
-                msg += "Most likely because user is at LEVEL 1 and mobile searches are unavailable."
+            # if search_type == 'MOBILE':
+            #    msg += "Most likely because user is at LEVEL 1 and mobile searches are unavailable."
             self.__sys_out(msg, 3, True)
             return False
 
