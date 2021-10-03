@@ -112,6 +112,17 @@ class Rewards:
         except TimeoutException:
             pass
 
+        # recover account
+        try:
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.url_contains("https://account.live.com/recover")
+            )
+            raise RuntimeError(
+                "Microsoft wants you to first verify your identity and change your password. You must sign in manually."
+            )
+        except TimeoutException:
+            pass
+
         #stay signed in
         try:
             #don't show this again checkbox
