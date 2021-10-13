@@ -215,14 +215,14 @@ class Rewards:
         elif device == Driver.WEB_DEVICE:
             search_types = ['PC']
         elif device == Driver.MOBILE_DEVICE:
-            search_types = ['MOBILE','MÓVILES']
+            search_types = ['MÓVILES', 'MOBILE']
 
         progress_text = None
         for element in progress_elements:
             progress_name = element.find_element_by_xpath(
                 './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]'
             ).text.upper()
-            
+
             for search_type in search_types:
                 if search_type in progress_name:
                     progress_text = element.find_element_by_xpath(
@@ -231,11 +231,11 @@ class Rewards:
                     break
 
         if progress_text is None:
-            msg = "Ending {search_type} search. Could not detect search progress.".format(
+            msg = f"Ending {search_type} search. Could not detect search progress.".format(
                 search_type=search_types
             )
-            # if search_type == 'MOBILE':
-            #    msg += "Most likely because user is at LEVEL 1 and mobile searches are unavailable."
+            if device == Driver.MOBILE_DEVICE:
+                msg += " Most likely because user is at LEVEL 1 and mobile searches are unavailable."
             self.__sys_out(msg, 3, True)
             return False
 
