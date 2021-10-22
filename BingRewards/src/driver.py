@@ -26,20 +26,21 @@ class Driver:
 
     # Microsoft Edge user agents for additional points
     #agent src: https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
-    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36 Edg/88.0.705.63"
+    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36 Edg/94.0.992.50"
     __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36 EdgA/46.1.2.5140"
 
     def __download_driver(driver_path, system, try_count=0):
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
+        CHROME_RELEASE_URL = "https://sites.google.com/chromium.org/driver/downloads?authuser=0"
         try:
             response = urlopen(
-                "https://sites.google.com/a/chromium.org/chromedriver/downloads",
+                CHROME_RELEASE_URL,
                 context=ssl.SSLContext(ssl.PROTOCOL_TLS)
             ).read()
         except ssl.SSLError:
             response = urlopen(
-                "https://sites.google.com/a/chromium.org/chromedriver/downloads"
+                CHROME_RELEASE_URL
             ).read()
         #download second latest version,most recent is sometimes not out to public yet
 
