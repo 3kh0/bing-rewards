@@ -155,7 +155,7 @@ class Rewards:
         VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES']
         if not any(market in driver.current_url for market in VALID_MARKETS):
             raise RuntimeError(
-                "Logged in, but user not located in a valid market (USA, UK, FR, ES)."
+                    f"Logged in, but user not located in one of these valid markets: {VALID_MARKETS}."
             )
 
     def __open_dashboard(self, driver, try_count):
