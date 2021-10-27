@@ -85,6 +85,31 @@ class Rewards:
             else:
                 self.stdout.append(out)
 
+    def __check_login_url(self, driver, url):
+        if "https://account.microsoft.com/" in url:
+            return True
+
+        elif "https://login.live.com/ppsecure" in url:
+            WebDriverWait(driver, 2).until(
+                EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
+            ).click()
+            #yes, stay signed in
+            driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
+        elif "https://account.live.com/tou" in url:
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.url_contains("https://account.live.com/tou")
+            )
+            WebDriverWait(driver, 2).until(
+                EC.element_to_be_clickable((By.ID, 'iNext'))
+            ).click()
+
+        elif "identity/confirm" in url or "/recover" in url:
+            raise RuntimeError(
+                "Must confirm account identity by signing in manually first"
+            )
+        else:
+            raise RuntimeError("Did NOT log in successfully")
+
     def __login(self, driver):
         self.__sys_out("Logging in", 2)
 
@@ -92,6 +117,8 @@ class Rewards:
         ActionChains(driver).send_keys(
             self.email, Keys.RETURN
         ).perform()
+
+        #login with credentials
         try:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                 EC.visibility_of_element_located((By.ID, "i0118"))
@@ -101,55 +128,11 @@ class Rewards:
                 self.password, Keys.RETURN
             ).perform()
 
-        # confirm identity
-        try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                EC.url_contains("https://account.live.com/identity/confirm")
-            )
-            raise RuntimeError(
-                "Must confirm account identity by signing in manually first"
-            )
-        except TimeoutException:
-            pass
-
-        # recover account
-        try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                EC.url_contains("https://account.live.com/recover")
-            )
-            raise RuntimeError(
-                "Microsoft wants you to first verify your identity and change your password. You must sign in manually."
-            )
-        except TimeoutException:
-            pass
-
-        #stay signed in
-        try:
-            #don't show this again checkbox
-            WebDriverWait(driver, 2).until(
-                EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
-            ).click()
-            #yes, stay signed in
-            driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
-        except TimeoutException:
-            pass
-
-        #check login was sucessful
-        try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                EC.url_contains("https://account.microsoft.com/")
-            )
-        except TimeoutException:
-            # Terms of usage update
-            try:
-                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                    EC.url_contains("https://account.live.com/tou")
-                )
-                WebDriverWait(driver, 2).until(
-                    EC.element_to_be_clickable((By.ID, 'iNext'))
-                ).click()
-            except TimeoutException:
-                raise RuntimeError("Did NOT log in successfully")
+        is_login_complete = False
+        while not is_login_complete:
+            time.sleep(1)
+            url = driver.current_url
+            is_login_complete = self.__check_login_url(driver, url)
 
         self.__sys_out("Successfully logged in", 2, True)
         VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES']
