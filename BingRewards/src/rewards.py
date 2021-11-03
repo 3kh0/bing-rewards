@@ -86,15 +86,18 @@ class Rewards:
                 self.stdout.append(out)
 
     def __check_login_url(self, driver, url):
+        #made it to the home page! login complete
         if "https://account.microsoft.com/" in url:
             return True
 
+        #'stay signed in' page
         elif "https://login.live.com/ppsecure" in url:
             WebDriverWait(driver, 2).until(
                 EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
             ).click()
             #yes, stay signed in
             driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
+        #'agree to terms and conditions' page
         elif "https://account.live.com/tou" in url:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                 EC.url_contains("https://account.live.com/tou")
@@ -103,12 +106,15 @@ class Rewards:
                 EC.element_to_be_clickable((By.ID, 'iNext'))
             ).click()
 
+        #'confirm identity' or 'recover account' page
         elif "identity/confirm" in url or "/recover" in url:
             raise RuntimeError(
-                "Must confirm account identity by signing in manually first"
+                "Must confirm account identity by signing in manually first. Please login again with your Microsoft account in Google Chrome."
             )
         else:
-            raise RuntimeError("Did NOT log in successfully")
+            raise RuntimeError("Made it to an unrecognized page during login process.")
+        # login process not complete yet
+        return False
 
     def __login(self, driver):
         self.__sys_out("Logging in", 2)
