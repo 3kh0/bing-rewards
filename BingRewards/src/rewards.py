@@ -30,12 +30,13 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, debug=True, headless=True):
+    def __init__(self, path, email, password, debug=True, headless=True, cookies=True):
         self.path = path
         self.email = email
         self.password = password
         self.debug = debug
         self.headless = headless
+        self.cookies = cookies
         self.completion = Completion()
         self.stdout = []
         self.search_hist = []
@@ -1061,7 +1062,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless
+                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
             self.completion.edge_search = self.__search(
@@ -1089,7 +1090,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless
+                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
             self.completion.web_search = self.__search(
@@ -1117,7 +1118,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = Driver.get_driver(
-                    self.path, Driver.MOBILE_DEVICE, self.headless
+                    self.path, Driver.MOBILE_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 
@@ -1146,7 +1147,7 @@ class Rewards:
         try:
             if not driver:
                 driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless
+                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 

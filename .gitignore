@@ -4,6 +4,7 @@ BingRewards/src/config.py
 BingRewards/notify.py
 BingRewards/drivers/
 BingRewards/logs/
+BingRewards/stored_browser_data/
 
 
 ## Ignore Visual Studio temporary files, build results, and

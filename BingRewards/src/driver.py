@@ -93,7 +93,7 @@ class Driver:
         os.rmdir(extracted_dir)
         os.chmod(driver_path, 0o755)
 
-    def get_driver(path, device, headless):
+    def get_driver(path, device, headless, cookies):
         system = platform.system()
         if system == "Windows":
             if not path.endswith(".exe"):
@@ -107,6 +107,9 @@ class Driver:
         options.add_argument("--log-level=3")
         options.add_argument("--disable-notifications")
         options.add_argument("disable-infobars")
+
+        if cookies:
+            options.add_argument("user-data-dir=stored_browser_data")
         options.add_experimental_option(
             "prefs", {
                 "profile.default_content_setting_values.geolocation": 1,

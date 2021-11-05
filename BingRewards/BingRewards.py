@@ -35,10 +35,13 @@ def __main():
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
     )
 
+    #use browser with cookies by default
+    cookies = True
     # get credentials
     if args.email and args.password:
         email = args.email
         password = args.password
+        cookies = False
     else:
         try:
             from src import config
@@ -58,7 +61,7 @@ def __main():
     if not os.path.exists(DRIVERS_DIR):
         os.mkdir(DRIVERS_DIR)
     rewards = Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), email, password, DEBUG, args.headless
+        os.path.join(DRIVERS_DIR, DRIVER), email, password, DEBUG, args.headless, cookies
     )
     completion = hist_log.get_completion()
 
