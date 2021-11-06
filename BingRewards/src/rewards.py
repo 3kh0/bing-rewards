@@ -96,7 +96,7 @@ class Rewards:
                 EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
             ).click()
             #yes, stay signed in
-            driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
+            driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
         #'agree to terms and conditions' page
         elif "https://account.live.com/tou" in url:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
@@ -162,7 +162,7 @@ class Rewards:
                 WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                     EC.url_contains("https://rewards.microsoft.com/welcome")
                 )
-                driver.find_element_by_xpath('//*[@id="raf-signin-link-id"]'
+                driver.find_element(By.XPATH, '//*[@id="raf-signin-link-id"]'
                                             ).click()
             except TimeoutException:
                 raise RuntimeError(
@@ -219,13 +219,13 @@ class Rewards:
 
         progress_text = None
         for element in progress_elements:
-            progress_name = element.find_element_by_xpath(
+            progress_name = element.find_element(By.XPATH,
                 './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]'
             ).text.upper()
 
             for search_type in search_types:
                 if search_type in progress_name:
-                    progress_text = element.find_element_by_xpath(
+                    progress_text = element.find_element(By.XPATH,
                         './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]'
                     ).text
                     break
@@ -349,8 +349,7 @@ class Rewards:
 
     def __get_quiz_progress(self, driver, try_count=0):
         try:
-            #questions = driver.find_elements_by_xpath('//*[@id="rqHeaderCredits"]/div[2]/*')
-            questions = driver.find_elements_by_xpath(
+            questions = driver.find_elements(By.XPATH,
                 '//*[starts-with(@id, "rqQuestionState")]'
             )
             if len(questions) > 0:
@@ -362,7 +361,7 @@ class Rewards:
                         break
                 return current_progress - 1, complete_progress
             else:
-                footer = driver.find_element_by_xpath(
+                footer = driver.find_element(By.XPATH,
                     '//*[@id="FooterText0"]'
                 ).text
                 current_progress = footer[0]
@@ -395,7 +394,7 @@ class Rewards:
                     time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
             else:
                 try:
-                    if driver.find_element_by_id(
+                    if driver.find_element(By.ID,
                         "quizWelcomeContainer"
                     ).get_attribute("style") == "display: none;":  # started
                         self.__sys_out("Successfully started quiz", 3, True)
@@ -429,7 +428,7 @@ class Rewards:
                     time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                     #quiz has been completed
                     if len(
-                        driver.find_elements_by_class_name('headerMessage_Refresh')
+                        driver.find_elements(By.CLASS_NAME, 'headerMessage_Refresh')
                     ) > 0:
                         self.__sys_out_progress(
                             quiz_complete_progress, quiz_complete_progress, 4
@@ -448,12 +447,12 @@ class Rewards:
                 question_progresses = [question_progress]
                 while True:
                     if len(
-                        driver.find_elements_by_id(
+                        driver.find_elements(By.ID,
                             'rqAnswerOption{0}'.format(option_index)
                         )
                     ) > 0:
                         #find_element_by_id returns an EventFiringWebElement object, to get the web element, must use wrapped_element attribute
-                        element = driver.find_element_by_id(
+                        element = driver.find_element(By.ID,
                             'rqAnswerOption{0}'.format(option_index)
                         ).wrapped_element
                         #must use ActionChains due to error 'element is not clickable at point', for more info see this link:https://stackoverflow.com/questions/11908249/debugging-element-is-not-clickable-at-point-error
@@ -465,7 +464,7 @@ class Rewards:
                     time.sleep(random.uniform(1, 4))
                     prev_progress = question_progress
                     #returns a string like '1/5' (1 out of 5 answers selected correctly so far)
-                    question_progress = driver.find_element_by_class_name(
+                    question_progress = driver.find_element(By.CLASS_NAME,
                         'bt_corOpStat'
                     ).text
                     #once the last correct answer is clicked, question progress becomes '' or 5/5, tho in the past it became '0/5' sometimes, hence 2nd cond
@@ -495,7 +494,7 @@ class Rewards:
                     int, progress.split(' of ')
                 )
                 self.__sys_out_progress(current_question - 1, complete_progress, 4)
-                driver.find_element_by_id(
+                driver.find_element(By.ID,
                     'rqAnswerOption' + str(random.choice([0, 1]))
                 ).click()
                 time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
@@ -520,7 +519,7 @@ class Rewards:
 
     def __solve_hot_take(self, driver):
         try:
-            driver.find_element_by_id(
+            driver.find_element(By.ID,
                 'btoption{}'.format(random.choice(([0, 1])))
             ).click()
             return True
@@ -539,15 +538,15 @@ class Rewards:
         is_hot_take = False
         is_multiple_answers = False
 
-        if len(driver.find_elements_by_id('rqAnswerOptionNum0')) > 0:
+        if len(driver.find_elements(By.ID, 'rqAnswerOptionNum0')) > 0:
             is_drag_and_drop = True
             self.__sys_out("Drag and drop", 3)
-        elif len(driver.find_elements_by_class_name('btCorOps')) > 0:
+        elif len(driver.find_elements(By.CLASS_NAME, 'btCorOps')) > 0:
             is_multiple_answers = True
             self.__sys_out("Multiple Answers", 3)
-        elif len(driver.find_elements_by_class_name('btOptionAnsOvl')) > 0:
+        elif len(driver.find_elements(by.CLASS_NAME, 'btOptionAnsOvl')) > 0:
             is_tot = True
-        elif len(driver.find_elements_by_id('btPollOverlay')) > 0:
+        elif len(driver.find_elements(By.ID, 'btPollOverlay')) > 0:
             is_hot_take = True
         else:
             self.__sys_out("Multiple choice", 3)
@@ -799,7 +798,7 @@ class Rewards:
             ]
             self.__sys_out_progress(current_progress - 1, complete_progress, 4)
             time.sleep(random.uniform(1, 3))
-            driver.find_elements_by_class_name('wk_Circle')[random.randint(
+            driver.find_elements(By.CLASS_NAME, 'wk_Circle')[random.randint(
                 0, 2
             )].click()
             time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
@@ -807,17 +806,17 @@ class Rewards:
             is_clicked, try_count = False, 0
             #sometimes the 'next' button isn't clickable and page needs to be refreshed
             while not is_clicked:
-                if len(driver.find_elements_by_class_name('cbtn')) > 0:
+                if len(driver.find_elements(By.CLASS_NAME, 'cbtn')) > 0:
                     WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                         EC.element_to_be_clickable((By.CLASS_NAME, 'cbtn'))
                     ).click()
-                elif len(driver.find_elements_by_class_name('wk_button')) > 0:
+                elif len(driver.find_elements(By.CLASS_NAME, 'wk_button')) > 0:
                     WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                         EC.element_to_be_clickable(
                             (By.CLASS_NAME, 'wk_button')
                         )
                     ).click()
-                elif len(driver.find_elements_by_id('check')) > 0:
+                elif len(driver.find_elements(By.ID, 'check')) > 0:
                     WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                         EC.element_to_be_clickable((By.ID, 'check'))
                     ).click()
@@ -886,7 +885,7 @@ class Rewards:
         Sometimes when clicking an offer for the first time, it will show a page saying the user is not signed in. Pretty sure it's a Bing bug. This method checks for this bug
         '''
         try:
-            driver.find_element_by_class_name('identityStatus')
+            driver.find_element(By.CLASS_NAME, 'identityStatus')
             return True
         except NoSuchElementException:
             return False
@@ -897,7 +896,7 @@ class Rewards:
         try_count = 0
         while True:
             try:
-                driver.find_element_by_id("btOverlay")
+                driver.find_element(By.ID, "btOverlay")
                 return True
             except NoSuchElementException:
                 try_count += 1
@@ -907,14 +906,14 @@ class Rewards:
                 time.sleep(2)
 
     def __click_offer(self, driver, offer, title_xpath, checked_xpath):
-        title = offer.find_element_by_xpath(title_xpath).text
+        title = offer.find_element(By.XPATH, title_xpath).text
         self.__sys_out("Trying {0}".format(title), 2)
 
         # check whether it was already completed
 
         checked = False
         try:
-            icon = offer.find_element_by_xpath(checked_xpath)
+            icon = offer.find_element(By.XPATH, checked_xpath)
             if icon.get_attribute('class').startswith(
                 "mee-icon mee-icon-SkypeCircleCheck"
             ):
@@ -982,20 +981,20 @@ class Rewards:
         self._open_dashboard(driver)
         title_to_offer = {}
         for i in range(3):
-            offer = driver.find_element_by_xpath(
+            offer = driver.find_element(By.XPATH,
                 '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
                 .format(i + 1)
             )
-            title = offer.find_element_by_xpath('./div[2]/h3').text
+            title = offer.find_element(By.XPATH, './div[2]/h3').text
             title_to_offer[title + str(i)] = offer
 
         for i in range(30):
             try:
-                offer = driver.find_element_by_xpath(
+                offer = driver.find_element(By.XPATH,
                     '//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
                     .format(i + 1)
                 )
-                title = offer.find_element_by_xpath('./div[2]/h3').text
+                title = offer.find_element(By.XPATH, './div[2]/h3').text
                 title_to_offer[title + str(i)] = offer
                 i += 1
             except NoSuchElementException:
@@ -1015,7 +1014,7 @@ class Rewards:
                 #try the page again if sign in bug
                 try_count = 0
                 while c == -1 and try_count <= 2:
-                    offer = driver.find_element_by_xpath(
+                    offer = driver.find_element(By.XPATH,
                         '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
                         .format(i + 1)
                     )
@@ -1033,15 +1032,14 @@ class Rewards:
             completed.append(-1)
 
         try:
-            #remaining_offers = driver.find_elements_by_xpath('//*[starts-with(@id, "more-activities"])')#/div/mee-card)')
-            remaining_offers = driver.find_elements_by_xpath(
+            remaining_offers = driver.find_elements(By.XPATH,
                 '//*[@id="more-activities"]/div/mee-card'
             )
             for i in range(len(remaining_offers)):
                 c = -1
                 try_count = 0
                 while c == -1 and try_count <= 2:
-                    offer = driver.find_element_by_xpath(
+                    offer = driver.find_element(By.XPATH,
                         '//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
                         .format(i + 1)
                     )
@@ -1180,7 +1178,7 @@ class Rewards:
             )
             #sleep an additional 5 seconds to make sure stats are loaded
             time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
-            stats = driver.find_elements_by_xpath(
+            stats = driver.find_elements(By.XPATH,
                 '//mee-rewards-counter-animation//span'
             )
 
