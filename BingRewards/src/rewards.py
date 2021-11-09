@@ -544,7 +544,7 @@ class Rewards:
         elif len(driver.find_elements(By.CLASS_NAME, 'btCorOps')) > 0:
             is_multiple_answers = True
             self.__sys_out("Multiple Answers", 3)
-        elif len(driver.find_elements(by.CLASS_NAME, 'btOptionAnsOvl')) > 0:
+        elif len(driver.find_elements(By.CLASS_NAME, 'btOptionAnsOvl')) > 0:
             is_tot = True
         elif len(driver.find_elements(By.ID, 'btPollOverlay')) > 0:
             is_hot_take = True
