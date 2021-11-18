@@ -142,7 +142,7 @@ class Rewards:
             is_login_complete = self.__check_login_url(driver, url)
 
         self.__sys_out("Successfully logged in", 2, True)
-        VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES', 'mkt=EN-AU']
+        VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES', 'mkt=EN-AU', 'mkt=IT-IT']
         if not any(market in driver.current_url for market in VALID_MARKETS):
             raise RuntimeError(
                     f"Logged in, but user not located in one of these valid markets: {VALID_MARKETS}."
@@ -216,7 +216,7 @@ class Rewards:
         elif device == Driver.WEB_DEVICE:
             search_types = ['PC']
         elif device == Driver.MOBILE_DEVICE:
-            search_types = ['MÓVILES', 'MOBILE']
+            search_types = ['MÓVILES', 'MOBILE', 'MOBILI']
 
         progress_text = None
         for element in progress_elements:
