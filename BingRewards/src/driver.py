@@ -121,7 +121,7 @@ class Driver:
         if cookies:
             options.add_argument("user-data-dir=stored_browser_data")
             #option 1
-            options.add_argument('--remote-debugging-port=9222')
+            #options.add_argument('--remote-debugging-port=9222')
             #option 2
             #options.add_argument('--no-sandbox')
             #options.add_argument('--disable-dev-shm-usage')
