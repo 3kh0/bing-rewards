@@ -119,7 +119,8 @@ class Driver:
             options.add_argument("user-agent=" + Driver.__MOBILE_USER_AGENT)
 
         if cookies:
-            options.add_argument("user-data-dir=stored_browser_data")
+            current_directory = os.path.dirname(os.path.realpath(__file__))
+            options.add_argument("user-data-dir=" + current_directory + "/stored_browser_data")
             #option 1
             #options.add_argument('--remote-debugging-port=9222')
             #option 2
