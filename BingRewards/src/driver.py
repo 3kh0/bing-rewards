@@ -50,17 +50,15 @@ class Driver:
         print('Downloading chromedriver version: ' + latest_version)
 
         if system == "Windows":
-            url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_win32.zip".format(
-                latest_version
-            )
+            url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_win32.zip"
         elif system == "Darwin":
-            url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_mac64.zip".format(
-                latest_version
-            )
+            #M1
+            if platform.processor() == 'arm':
+                url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_mac64_m1.zip"
+            else:
+                url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_mac64.zip"
         elif system == "Linux":
-            url = "https://chromedriver.storage.googleapis.com/{}/chromedriver_linux64.zip".format(
-                latest_version
-            )
+            url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_linux64.zip"
 
         try:
             response = urlopen(
