@@ -26,8 +26,8 @@ class Driver:
 
     # Microsoft Edge user agents for additional points
     #agent src: https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
-    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36 Edg/94.0.992.50"
-    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.50 Mobile Safari/537.36 EdgA/93.0.961.53"
+    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36 Edg/96.0.1054.29"
+    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Mobile Safari/537.36 EdgA/95.0.1020.42"
 
     def __download_driver(driver_path, system, dl_try_count=0):
         # determine latest chromedriver version
@@ -120,11 +120,7 @@ class Driver:
 
         if cookies:
             options.add_argument("user-data-dir=stored_browser_data")
-            #option 1
-            #options.add_argument('--remote-debugging-port=9222')
-            #option 2
-            #options.add_argument('--no-sandbox')
-            #options.add_argument('--disable-dev-shm-usage')
+
         return options
 
     def get_driver(path, device, headless, cookies):
@@ -137,7 +133,6 @@ class Driver:
 
         # we start at dl_try_count = 1 b/c we already downloaded the most recent version
         dl_try_count = 1
-        cookie_try_count = 0
         MAX_TRIES = 3
         is_dl_success = False
         options = Driver.add_chrome_options(device, headless, cookies)
@@ -154,17 +149,19 @@ class Driver:
                 Driver.__download_driver(path, system, dl_try_count)
                 dl_try_count += 1
 
+            #WebDriverException is Selenium generic exception
             except WebDriverException as wde:
-                #Cookies option causing issues
-                print(f'\nwebdriverexception msg: {str(wde)}')
-                if "DevToolsActivePort file doesn't exist" in str(wde):
-                    if cookie_try_count == 1:
-                        raise WebDriverException('Driver cookie option issue?')
-                    print('Trying chromedriver without cookies option')
+                error_msg = str(wde)
+
+                # handle cookie error
+                if "DevToolsActivePort file doesn't exist" in error_msg:
+                    #print('Driver error using cookies option. Trying without cookies.')
                     options = Driver.add_chrome_options(device, headless, cookies=False)
-                    cookie_try_count += 1
+
+                # elif 'x' in error_msg:
+
                 else:
-                    raise WebDriverException(str(wde))
+                    raise WebDriverException(error_msg)
 
         #if not headless:
         #    driver.set_window_position(-2000, 0)

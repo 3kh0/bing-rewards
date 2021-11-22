@@ -216,7 +216,8 @@ class Rewards:
         elif device == Driver.WEB_DEVICE:
             search_types = ['PC']
         elif device == Driver.MOBILE_DEVICE:
-            search_types = ['MÓVILES', 'MOBILE', 'MOBILI']
+            #pleaes leave 'MOBILE' as last element
+            search_types = ['MÓVILES', 'MOBILI', 'MOBILE']
 
         progress_text = None
         for element in progress_elements:
@@ -232,9 +233,7 @@ class Rewards:
                     break
 
         if progress_text is None:
-            msg = f"Ending {search_type} search. Could not detect search progress.".format(
-                search_type=search_types
-            )
+            msg = f"Ending {search_type} search. Could not detect search progress."
             if device == Driver.MOBILE_DEVICE:
                 msg += " Most likely because user is at LEVEL 1 and mobile searches are unavailable."
             self.__sys_out(msg, 3, True)
