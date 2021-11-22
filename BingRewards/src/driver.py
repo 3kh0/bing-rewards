@@ -147,20 +147,23 @@ class Driver:
                 driver = webdriver.Chrome(path, options=options)
                 is_dl_success = True
 
-            #Cookies option causing issues
-            except WebDriverException:
-                if cookie_try_count == 1:
-                    raise WebDriverException('Driver cookie option issue?')
-                print('Trying chromedriver without cookies option')
-                options = Driver.add_chrome_options(device, headless, cookies=False)
-                cookie_try_count += 1
-
             #driver not up to date with Chrome browser, try different version
             except SessionNotCreatedException:
                 if dl_try_count == MAX_TRIES:
                     raise SessionNotCreatedException(f'Tried downloading the {dl_try_count} most recent chromedrivers. None match your Chrome browswer version. Aborting now, please update your chrome browser.')
                 Driver.__download_driver(path, system, dl_try_count)
                 dl_try_count += 1
+
+            except WebDriverException as wde:
+                #Cookies option causing issues
+                if "DevToolsActivePort file doesn't exist" in wde.value:
+                    if cookie_try_count == 1:
+                        raise WebDriverException('Driver cookie option issue?')
+                    print('Trying chromedriver without cookies option')
+                    options = Driver.add_chrome_options(device, headless, cookies=False)
+                    cookie_try_count += 1
+                else:
+                    raise WebDriverException(wde.value)
 
         #if not headless:
         #    driver.set_window_position(-2000, 0)
