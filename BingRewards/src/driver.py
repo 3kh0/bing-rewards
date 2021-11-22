@@ -156,7 +156,8 @@ class Driver:
 
             except WebDriverException as wde:
                 #Cookies option causing issues
-                if "DevToolsActivePort file doesn't exist" in wde.value:
+                print(f'\nwebdriverexception msg: {str(wde)}')
+                if "DevToolsActivePort file doesn't exist" in str(wde):
                     if cookie_try_count == 1:
                         raise WebDriverException('Driver cookie option issue?')
                     print('Trying chromedriver without cookies option')
