@@ -164,7 +164,7 @@ class Driver:
                     options = Driver.add_chrome_options(device, headless, cookies=False)
                     cookie_try_count += 1
                 else:
-                    raise WebDriverException(wde.value)
+                    raise WebDriverException(str(wde))
 
         #if not headless:
         #    driver.set_window_position(-2000, 0)
