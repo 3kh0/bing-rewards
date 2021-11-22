@@ -109,11 +109,26 @@ def parse_arguments():
         '--password',
         action=PasswordAction,
         nargs='?',
-        help=
-        "the email password to use. Use -p with no argument to trigger a secure pw prompt"
+        help="the email password to use. Use -p with no argument to trigger a secure pw prompt"
     )
 
-    parser.set_defaults(search_type='remaining', headless=True)
+    cookies_group = parser.add_mutually_exclusive_group()
+    cookies_group.add_argument(
+        '-c',
+        '--cookies',
+        dest='cookies',
+        action='store_true',
+        help='run browser with cookies, this is the default'
+    )
+    cookies_group.add_argument(
+        '-nc',
+        '--no-cookies',
+        dest='cookies',
+        action='store_false',
+        help='run browser without cookies'
+    )
+
+    parser.set_defaults(search_type='remaining', headless=True, cookies=True)
 
     args = parser.parse_args()
 

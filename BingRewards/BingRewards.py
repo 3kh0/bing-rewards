@@ -35,8 +35,9 @@ def __main():
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
     )
 
-    #use browser with cookies by default
-    cookies = True
+    #browser cookies
+    cookies = args.cookies
+
     # get credentials
     if args.email and args.password:
         email = args.email

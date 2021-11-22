@@ -24,6 +24,8 @@ Please note: multiple accounts not supported, USA and UK users only.
 * `-nhl` or `--no-headless`: Don't run in headless mode
 * `-e` or `--email`: email to use, supersedes the config email
 * `-p` or `--password`: the email password to use. Use -p with no argument to trigger a secure pw prompt
+* `-c` or `--cookies`: Run browser with cookies to preserve username and pw- this is the *default*
+* `-nc` or `--no-cookies`: Browser does not save cookies
 
 #### Examples
 The following `python BingRewards.py` 
