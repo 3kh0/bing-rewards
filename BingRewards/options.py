@@ -71,7 +71,7 @@ def parse_arguments():
     search_group.add_argument(
         '-o',
         '--offers',
-        const='offer',
+        const='offers',
         action='store_const',
         dest='search_type',
         help='run offers'
