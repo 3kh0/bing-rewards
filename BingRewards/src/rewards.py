@@ -792,10 +792,15 @@ class Rewards:
             except TimeoutException:
                 self.__sys_out("Could not find quiz2 progress elements", 3)
                 return False
-            current_progress, complete_progress = [
-                int(x)
-                for x in re.match("\((\d+) of (\d+)\)", progress).groups()
-            ]
+            try:
+                #capture quiz progress
+                current_progress, complete_progress = [
+                    int(x)
+                    for x in re.match("\((\d+)[a-zA-Z ]+(\d+)\)", progress).groups()
+                ]
+            except AttributeError:
+                self.__sys_out("Skipping quiz, issue with regex identifying progress, most likely non-English site.", 3)
+                return False
             self.__sys_out_progress(current_progress - 1, complete_progress, 4)
             time.sleep(random.uniform(1, 3))
             driver.find_elements(By.CLASS_NAME, 'wk_Circle')[random.randint(
