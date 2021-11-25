@@ -142,8 +142,11 @@ class Driver:
                 driver = webdriver.Chrome(path, options=options)
                 is_dl_success = True
 
-            #driver not up to date with Chrome browser, try different version
-            except SessionNotCreatedException:
+            except SessionNotCreatedException as se:
+                error_msg = str(se).lower()
+                if 'this version of chromedriver only supports chrome version' not in error_msg:
+                    raise SessionNotCreatedException(error_msg)
+                #driver not up to date with Chrome browser, try different version
                 if dl_try_count == MAX_TRIES:
                     raise SessionNotCreatedException(f'Tried downloading the {dl_try_count} most recent chromedrivers. None match your Chrome browswer version. Aborting now, please update your chrome browser.')
                 Driver.__download_driver(path, system, dl_try_count)
