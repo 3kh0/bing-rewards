@@ -91,7 +91,7 @@ class Driver:
         os.rmdir(extracted_dir)
         os.chmod(driver_path, 0o755)
 
-    def add_chrome_options(device, headless, cookies):
+    def add_chrome_options(device, headless, cookies, path):
         options = webdriver.ChromeOptions()
 
         options.add_argument("--disable-extensions")
@@ -117,7 +117,9 @@ class Driver:
             options.add_argument("user-agent=" + Driver.__MOBILE_USER_AGENT)
 
         if cookies:
-            options.add_argument("user-data-dir=stored_browser_data")
+            driver_dir = os.path.dirname(path)
+            cookies_path = os.path.join(driver_dir, 'stored_browser_data/')
+            options.add_argument("user-data-dir=" + cookies_path)
 
         return options
 
@@ -133,7 +135,7 @@ class Driver:
         dl_try_count = 1
         MAX_TRIES = 3
         is_dl_success = False
-        options = Driver.add_chrome_options(device, headless, cookies)
+        options = Driver.add_chrome_options(device, headless, cookies, path)
 
         while not is_dl_success:
             try:
