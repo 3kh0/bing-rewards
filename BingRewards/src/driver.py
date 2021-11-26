@@ -99,6 +99,7 @@ class Driver:
         options.add_argument("--log-level=3")
         options.add_argument("--disable-notifications")
         options.add_argument("disable-infobars")
+        options.add_argument("--disable-gpu")
 
         options.add_experimental_option(
             "prefs", {
