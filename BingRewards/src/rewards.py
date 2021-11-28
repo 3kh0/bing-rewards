@@ -216,8 +216,7 @@ class Rewards:
         elif device == Driver.WEB_DEVICE:
             search_types = ['PC']
         elif device == Driver.MOBILE_DEVICE:
-            #pleaes leave 'MOBILE' as last element
-            search_types = ['MÓVILES', 'MOBILI', 'MOBILE']
+            search_types = ['MOBILE', 'MÓVILES', 'MOBILI']
 
         progress_text = None
         for element in progress_elements:
@@ -233,7 +232,7 @@ class Rewards:
                     break
 
         if progress_text is None:
-            msg = f"Ending {search_type} search. Could not detect search progress."
+            msg = f"Ending {search_types[0]} search. Could not detect search progress."
             if device == Driver.MOBILE_DEVICE:
                 msg += " Most likely because user is at LEVEL 1 and mobile searches are unavailable."
             self.__sys_out(msg, 3, True)
@@ -1277,3 +1276,33 @@ class Rewards:
         driver = self.__complete_mobile_search()
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
+
+    def complete_search_type(self, search_type, prev_completion, search_hist):
+        if search_type == 'remaining':
+            #complete_all() has lower overhead but tries all searches
+            if not prev_completion.is_web_search_completed() and not prev_completion.is_mobile_search_completed():
+                self.complete_all(search_hist)
+            #higher overhead, opens a new webdriver for each unfinished search type
+            else:
+                if not prev_completion.is_edge_search_completed():
+                    self.complete_edge_search(search_hist)
+                if not prev_completion.is_web_search_completed():
+                    self.complete_web_search(search_hist)
+                if not prev_completion.is_offers_completed():
+                    self.complete_offers()
+                if not prev_completion.is_mobile_search_completed():
+                    self.complete_mobile_search(search_hist)
+        # if either web/mobile, check if edge is complete
+        elif search_type in ('web', 'mobile'):
+            if not prev_completion.is_edge_search_completed():
+                self.complete_edge_search(search_hist)
+            if search_type == 'web':
+                self.complete_web_search(search_hist)
+            elif search_type == 'mobile':
+                self.complete_mobile_search(search_hist)
+        elif search_type == 'both':
+            self.complete_both_searches(search_hist)
+        elif search_type == 'offers':
+            self.complete_offers(search_hist)
+        elif search_type == 'all':
+            self.complete_all(search_hist)

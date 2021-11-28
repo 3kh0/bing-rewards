@@ -157,3 +157,16 @@ class Completion:
         self.web_search = max(self.web_search, completion.web_search)
         self.mobile_search = max(self.mobile_search, completion.mobile_search)
         self.offers = max(self.offers, completion.offers)
+
+    def is_search_type_completed(self, search_type):
+        if search_type == 'web':
+            return self.is_edge_and_web_search_completed()
+        elif search_type == 'mobile':
+            return self.is_edge_and_mobile_search_completed()
+        elif search_type == 'both':
+            return self.is_both_searches_completed()
+        elif search_type == 'offers':
+            return self.is_offers_completed()
+        elif search_type in ('all', 'remaining'):
+            return self.is_all_completed()
+
