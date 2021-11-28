@@ -305,6 +305,10 @@ class Rewards:
                 if try_count == 4:
                     self.__sys_out("Failed to complete search", 2, True, True)
                     return False
+                # handle mobile blank search-bar bug
+                elif try_count >= 2:
+                    driver.refresh()
+                    time.sleep(2)
             else:
                 prev_progress = current_progress
                 try_count = 0
@@ -332,17 +336,13 @@ class Rewards:
 
             if cookieclear == 0:
                 try:
-                    #self.__sys_out("cookie popup cleared", 3)
                     WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                         EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
                     ).click()
                 except TimeoutException:
-                    #self.__sys_out("No cookie popup present", 3)
                     pass
                 cookieclear = 1
 
-            #originally used for location alerts
-            #should no longer be an issue as geolocation is turned on
             self.__handle_alerts(driver)
         self.__sys_out("Successfully completed search", 2, True, True)
         return True
@@ -880,6 +880,9 @@ class Rewards:
             return False
 
     def __handle_alerts(self, driver):
+        '''
+        Handle any Bing location pop-up alerts
+        '''
         try:
             driver.switch_to.alert.dismiss()
         except (NoAlertPresentException, UnexpectedAlertPresentException):
