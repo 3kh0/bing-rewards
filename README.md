@@ -1,12 +1,15 @@
 An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
 
-Please note: multiple accounts not supported, USA and UK users only.
+Please note: 
+- only US website guaranteed to be supported
+- multiple accounts NOT supported
 
 ## Getting Started
 1. Download [Chrome](https://www.google.com/chrome/)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install `requirements.txt` file included in the repo: `pip install -r BingRewards/requirements.txt`.
-4. Create config file by running `python setup.py`. If you need to update your email or password, re-run this.
+4. Create config file by running `python setup.py`. If you need to update your email or password, re-run this. 
+	- Please note your email and password will be saved essentially as plain text (base64 encoded). If you prefer, leave the setup arguments blank and use the --email and --password command line arguments instead.
 5. You must have signed onto your account using this machine before. Open Chrome and visit https://login.live.com. The site may ask to send you a verification email or text.
 6. And you're all set! Run `python BingRewards/BingRewards.py` to start earning points.
 
@@ -44,7 +47,7 @@ You may want to use your operating system's scheduler to run this program automa
 4. When adding the action, point the program to *__python.exe__* (most likely located in *__C:/Program Files__*) and add the argument line `BingRewards/BingRewards.py`. In the *Start in* box, place the absolute path to where you've cloned this repository.
 5. It's also recommended to select the option to only execute when there is a network connection available under the *Conditions* tab.
 
-### Mac (crontab)
+### Mac / Linux (crontab)
 1. Open up the terminal and go to your home directory `cd ~`
 2. Type `crontab -e`.
 3. Now append the following line with the correct path: `0 9 * * * /absolute/path/to/python /absolute/path/to/BingRewards/BingRewards.py`. The second digit, in this case the 9, is the hour (0-23) in your local timezone when the program will be run. Also note the default text editor for crontab is VIM so you'll need to hit `i` before editing text, and `esc` to go back to vim mode whereupon you can type in `:wq` which will write the changes and quit.
