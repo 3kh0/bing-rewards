@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
+from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, UnexpectedAlertPresentException
 import time
 import sys
@@ -86,7 +87,8 @@ class Rewards:
             else:
                 self.stdout.append(out)
 
-    def __check_login_url(self, driver, url):
+    def __check_login_url(self, driver:EventFiringWebDriver, url):
+        
         #made it to the home page! login complete
         if "https://account.microsoft.com/" in url:
             return True
@@ -112,12 +114,21 @@ class Rewards:
             raise RuntimeError(
                 "Must confirm account identity by signing in manually first. Please login again with your Microsoft account in Google Chrome."
             )
+        
+        # 2FA page, wait till user approves
+        elif "https://login.live.com" in url and driver.find_element_by_id("loginHeader").text == "Check Microsoft Authenticator":
+            authenticator_code = driver.find_element_by_id("idRemoteNGC_DisplaySign").text 
+            self.__sys_out(f"Waiting for user to approve 2FA, please select {authenticator_code} on your 2FA device", 2)
+            WebDriverWait(driver, 30).until(
+                EC.url_contains("https://login.live.com/ppsecure")
+            )
+            
         else:
             raise RuntimeError("Made it to an unrecognized page during login process.")
         # login process not complete yet
         return False
 
-    def __login(self, driver):
+    def __login(self, driver: EventFiringWebDriver):
         self.__sys_out("Logging in", 2)
 
         driver.get(self.__LOGIN_URL)
