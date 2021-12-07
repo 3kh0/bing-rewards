@@ -123,7 +123,7 @@ class Driver:
 
         return options
 
-    def get_driver(path, device, headless, cookies):
+    def get_driver(path, device, headless, cookies) -> EventFiringWebDriver:
         system = platform.system()
         if system == "Windows":
             if not path.endswith(".exe"):
