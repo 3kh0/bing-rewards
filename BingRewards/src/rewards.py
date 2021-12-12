@@ -18,7 +18,7 @@ import ssl
 
 
 class Rewards:
-    __LOGIN_URL = "https://login.live.com"
+    __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
     __DASHBOARD_URL = "https://account.microsoft.com/rewards/"
     __POINTS_URL = "https://account.microsoft.com/rewards/pointsbreakdown"
@@ -88,7 +88,7 @@ class Rewards:
                 self.stdout.append(out)
 
     def __check_login_url(self, driver:EventFiringWebDriver, url):
-        
+
         #made it to the home page! login complete
         if "https://account.microsoft.com/" in url:
             return True
@@ -114,15 +114,28 @@ class Rewards:
             raise RuntimeError(
                 "Must confirm account identity by signing in manually first. Please login again with your Microsoft account in Google Chrome."
             )
-        
-        # 2FA page, wait till user approves
-        elif "https://login.live.com" in url and driver.find_element_by_id("loginHeader").text == "Check Microsoft Authenticator":
-            authenticator_code = driver.find_element_by_id("idRemoteNGC_DisplaySign").text 
-            self.__sys_out(f"Waiting for user to approve 2FA, please select {authenticator_code} on your 2FA device", 2)
-            WebDriverWait(driver, 30).until(
-                EC.url_contains("https://login.live.com/ppsecure")
-            )
-            
+
+        # 2FA page: login url doesn't change
+        elif url == self.__LOGIN_URL:
+            # standard 2FA page, no cookies
+            try:
+                e = driver.find_element_by_id("loginHeader")
+                authenticator_code = driver.find_element_by_id("idRemoteNGC_DisplaySign").text
+                self.__sys_out(f"Waiting for user to approve 2FA, please select {authenticator_code} in Microsoft Authenticator", 2)
+                WebDriverWait(driver, 30).until(
+                    EC.url_contains("https://login.live.com/ppsecure")
+                    )
+            except NoSuchElementException:
+                # approve sign in request page, cookies
+                try:
+                    # sign in frequently checkbox
+                    e = driver.find_element_by_id("idChkBx_SAOTCAS_TD").click()
+                    self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please click approve.", 2)
+                except NoSuchElementException:
+                    raise RuntimeError(f"Unable to handle {url}")
+            except TimeoutException:
+                raise TimeoutException("You did not select code within Microsoft Authenticator in time.")
+
         else:
             raise RuntimeError("Made it to an unrecognized page during login process.")
         # login process not complete yet
@@ -149,8 +162,7 @@ class Rewards:
         is_login_complete = False
         while not is_login_complete:
             time.sleep(1)
-            url = driver.current_url
-            is_login_complete = self.__check_login_url(driver, url)
+            is_login_complete = self.__check_login_url(driver, driver.current_url)
 
         self.__sys_out("Successfully logged in", 2, True)
         VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES', 'mkt=EN-AU', 'mkt=ZH-CN', 'mkt=IT-IT']
