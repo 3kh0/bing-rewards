@@ -47,7 +47,10 @@ You may want to use your operating system's scheduler to run this program automa
 4. When adding the action, point the program to *__python.exe__* (most likely located in *__C:/Program Files__*) and add the argument line `BingRewards/BingRewards.py`. In the *Start in* box, place the absolute path to where you've cloned this repository.
 5. It's also recommended to select the option to only execute when there is a network connection available under the *Conditions* tab.
 
+
 #### Mac / Linux (crontab)
+
+
 1. Open up the terminal and go to your home directory `cd ~`
 2. Type `crontab -e`.
 3. Now append the following line with the correct path: `0 9 * * * /absolute/path/to/python /absolute/path/to/BingRewards/BingRewards.py`. The second digit, in this case the 9, is the hour (0-23) in your local timezone when the program will be run. Also note the default text editor for crontab is VIM so you'll need to hit `i` before editing text, and `esc` to go back to vim mode whereupon you can type in `:wq` which will write the changes and quit.
@@ -61,6 +64,13 @@ Each time you log-in, a code will be printed out in the console, and you will ne
 
 ## Multiple accounts
 Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
+
+## Telegram Notification
+if you want to setup telegram notification system please follow this steps:
+1. create bot in telegram from [@BotFather](https://t.me/BotFather)
+2. get your userid from this bot [@userinfobot](https://t.me/userinfobot)
+3. run setup `python setup.py` and enter your credentials
+4. enjoy of ride
 
 ## Acknowledgement
 - Original author took down the code from their GitHub back in July 2018. Author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.

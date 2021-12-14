@@ -19,6 +19,7 @@ def print_args(args):
     result = ", ".join(
         str(key) + '=' + str(value) for key, value in d_args.items()
     )
+
     print(f'\nCommand line options selected:\n{result}\n')
 
 
@@ -128,7 +129,24 @@ def parse_arguments():
         help='run browser without cookies'
     )
 
-    parser.set_defaults(search_type='remaining', headless=True, cookies=True)
+    notification_group = parser.add_mutually_exclusive_group()
+    notification_group.add_argument(
+        '-t',
+        '--telegram',
+        dest='telegram',
+        action='store_true',
+        help='send notification to telegram'
+    )
+    notification_group.add_argument(
+        '-nt',
+        '--no-telegram',
+        dest='telegram',
+        action='store_false',
+        help='Do not send the result in the telegram , this is the default'
+    )
+
+
+    parser.set_defaults(search_type='remaining', headless=True, cookies=True )
 
     args = parser.parse_args()
 
