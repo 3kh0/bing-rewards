@@ -57,9 +57,7 @@ You may want to use your operating system's scheduler to run this program automa
 ## Two-factor Authentication
 2FA is supported, but only through `Microsoft Authenticator`.
 
-If you use the (default) `cookies` option, you will only have to approve once in Authenticator.  
-
-If you use `no cookies` option, each time you log-in, you will need to select the correct code in Authenticator- the console will print the code.
+Each time you log-in, a code will be printed out in the console, and you will need to select it in Authenticator. You will have to do this an additional time when you do the mobile search.
 
 ## Multiple accounts
 Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
