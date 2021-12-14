@@ -129,24 +129,23 @@ def parse_arguments():
         help='run browser without cookies'
     )
 
-    notification_group = parser.add_mutually_exclusive_group()
-    notification_group.add_argument(
+    telegram_group = parser.add_mutually_exclusive_group()
+    telegram_group.add_argument(
         '-t',
         '--telegram',
         dest='telegram',
         action='store_true',
-        help='send notification to telegram'
+        help='send notification to telegram using setup.py credentials, this is the default'
     )
-    notification_group.add_argument(
+    telegram_group.add_argument(
         '-nt',
         '--no-telegram',
         dest='telegram',
         action='store_false',
-        help='Do not send the result in the telegram , this is the default'
+        help='do not send notifications to telegram'
     )
 
-
-    parser.set_defaults(search_type='remaining', headless=True, cookies=True )
+    parser.set_defaults(search_type='remaining', headless=True, cookies=False, telegram=True)
 
     args = parser.parse_args()
 

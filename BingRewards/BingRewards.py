@@ -2,6 +2,7 @@ import sys
 import os
 from src.rewards import Rewards
 from src.log import HistLog
+from src.telegram import TelegramMessenger
 import logging
 import base64
 from options import parse_arguments
@@ -18,19 +19,19 @@ DEBUG = True
 
 
 def __decode(encoded):
-    return base64.b64decode(encoded).decode()
+    if encoded:
+        return base64.b64decode(encoded).decode()
 
 
 def complete_search(rewards, completion, search_type, search_hist):
-    print(f"\n\tYou selected {search_type}\n")
+    print(f"\nYou selected {search_type}\n")
     if not completion.is_search_type_completed(search_type):
         rewards.complete_search_type(search_type, completion, search_hist)
     else:
-        print(f'{search_type.capitalize()} already completed')
+        print(f'{search_type.capitalize()} already completed\n')
 
 
 def __main():
-    args = parse_arguments()
     # change to top dir
     dir_run_from = os.getcwd()
     top_dir = os.path.dirname(sys.argv[0])
@@ -42,16 +43,17 @@ def __main():
     hist_log = HistLog(
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
     )
+    if not os.path.exists(DRIVERS_DIR):
+        os.mkdir(DRIVERS_DIR)
 
+    args = parse_arguments()
     #browser cookies
     cookies = args.cookies
 
-    # get credentials
+    # microsoft email/pw
     if args.email and args.password:
         email = args.email
         password = args.password
-        telegrambotkey = args.telegrambotkey
-        telegramuserid = args.telegramuserid
         cookies = False
     else:
         try:
@@ -68,14 +70,17 @@ def __main():
             raise
         email = __decode(config.credentials['email'])
         password = __decode(config.credentials['password'])
-        telegrambotkey = config.credentials['telegrambotkey']
-        telegramuserid = config.credentials['telegramuserid']
 
-    if not os.path.exists(DRIVERS_DIR):
-        os.mkdir(DRIVERS_DIR)
+    # telegram credentials
+    telegram_api_token = __decode(config.credentials.get('telegram_api_token'))
+    telegram_userid = __decode(config.credentials.get('telegram_userid'))
+    if not args.telegram or not telegram_api_token or not telegram_userid:
+        telegram_messenger = None
+    else:
+        telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
 
-    rewards = Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), email, password,telegrambotkey,telegramuserid, DEBUG, args.headless, cookies
+    rewards= Rewards(
+        os.path.join(DRIVERS_DIR, DRIVER), email, password, telegram_messenger, DEBUG, args.headless, cookies
     )
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
@@ -107,6 +112,11 @@ def __main():
         logging.exception(hist_log.get_timestamp())
         logging.debug("")
         hist_log.write(rewards.completion, rewards.search_hist)
+        if telegram_messenger:
+            # send error msg to telegram
+            import traceback
+            error_msg = traceback.format_exc()
+            telegram_messenger.send_message(error_msg)
         raise
 
 

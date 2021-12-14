@@ -23,12 +23,18 @@ Please note:
 * `-a` or `--all`: all tasks (web search, mobile search and daily offers)
 
 #### Additional Optional Arguments
-* `-hl` or `--headless`: Run in [headless](https://developers.google.com/web/updates/2017/06/headless-karma-mocha-chai) mode- this is the *default*
-* `-nhl` or `--no-headless`: Don't run in headless mode
-* `-e` or `--email`: email to use, supersedes the config email
-* `-p` or `--password`: the email password to use. Use -p with no argument to trigger a secure pw prompt
-* `-c` or `--cookies`: Run browser with cookies to preserve username and pw- this is the *default*
-* `-nc` or `--no-cookies`: Browser does not save cookies
+* Email/Password
+	* `-e` or `--email`: email to use, supersedes the config email
+	* `-p` or `--password`: the email password to use. Use -p with no argument to trigger a secure pw prompt
+* Headless
+	* `-hl` or `--headless`: Run in [headless](https://developers.google.com/web/updates/2017/06/headless-karma-mocha-chai) mode- this is the *default*
+	* `-nhl` or `--no-headless`: Don't run in headless mode
+* Cookies
+	* `-nc` or `--no-cookies`: Browser does not save cookies- this has been updated to be the *default* due to a few people reporting issues with the cookies option.
+	* `-c` or `--cookies`: Run browser with cookies to preserve username and pw each session.
+* Telegram
+	* `-t` or `--telegram`: Send notifications to telegram (more instructions below). This is the *default*, but will only work if telegram credentials were entered during setup
+	* `-nt` or `--no-telegram`: Do not send notifications to telegram
 
 #### Examples
 The following `python BingRewards.py` 
@@ -62,17 +68,19 @@ You may want to use your operating system's scheduler to run this program automa
 
 Each time you log-in, a code will be printed out in the console, and you will need to select it in Authenticator. You will have to do this an additional time when you do the mobile search.
 
+## Telegram Notification
+if you want to setup telegram notification system please follow these steps:
+1. Create bot in telegram from [@BotFather](https://t.me/BotFather). File away the API token generated in the BotFather chat- you'll need it later.
+2. Get your telegram userid from [@userinfobot](https://t.me/userinfobot) or alternatively [@MissRose_bot](https://t.me/MissRose_bot)
+3. Run setup `python setup.py` and enter 
+	- your token generated from step 1
+	- your userid from step 2
+
 ## Multiple accounts
 Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
-
-## Telegram Notification
-if you want to setup telegram notification system please follow this steps:
-1. create bot in telegram from [@BotFather](https://t.me/BotFather)
-2. get your userid from this bot [@userinfobot](https://t.me/userinfobot)
-3. run setup `python setup.py` and enter your credentials
-4. enjoy of ride
 
 ## Acknowledgement
 - Original author took down the code from their GitHub back in July 2018. Author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
 - UK quiz updates written and tested by `chris987789`
 - 2FA code written by `revolutionisme`
+- Telegram notifications written by `hosein-hub`

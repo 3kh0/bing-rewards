@@ -32,12 +32,11 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password,telegrambotkey = None ,telegramuserid = None , debug=True, headless=True, cookies=True):
+    def __init__(self, path, email, password, telegram_messenger=None, debug=True, headless=True, cookies=True):
         self.path = path
         self.email = email
         self.password = password
-        self.telegrambotkey = telegrambotkey
-        self.telegramuserid = telegramuserid
+        self.telegram_messenger = telegram_messenger
         self.debug = debug
         self.headless = headless
         self.cookies = cookies
@@ -120,18 +119,16 @@ class Rewards:
 
         # 2FA page: login url doesn't change
         elif url == self.__LOGIN_URL:
-            # standard 2FA page, no cookies
+            # standard 2FA page
             try:
-                e = driver.find_element_by_id("loginHeader")
                 authenticator_code = driver.find_element_by_id("idRemoteNGC_DisplaySign").text
                 self.__sys_out(f"Waiting for user to approve 2FA, please select {authenticator_code} in Microsoft Authenticator", 2)
                 WebDriverWait(driver, 30).until(
                     EC.url_contains("https://login.live.com/ppsecure")
                     )
             except NoSuchElementException:
-                # approve sign in request page, cookies
+                # approve sign in request page
                 try:
-                    # sign in frequently checkbox
                     e = driver.find_element_by_id("idChkBx_SAOTCAS_TD").click()
                     self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please click approve.", 2)
                 except NoSuchElementException:
@@ -240,7 +237,7 @@ class Rewards:
         if is_edge:
             search_types = ['EDGE']
         elif device == Driver.WEB_DEVICE:
-            search_types = ['PC','DESKTOP']
+            search_types = ['PC', 'DESKTOP']
         elif device == Driver.MOBILE_DEVICE:
             search_types = ['MOBILE', 'MÓVILES', 'MOBILI']
 
@@ -1215,77 +1212,50 @@ class Rewards:
                 '//mee-rewards-counter-animation//span'
             )
 
+            #level 2
             earned_index = 4
             streak_index = 2
             days_till_bonus_index = 3
             avail_index = 0
 
+            #level 1
             if len(stats) == 6:
-                IS_LEVEL_TWO = False
-            elif len(stats) == 5:
-                IS_LEVEL_TWO = True
+                earned_index += 1
+                streak_index += 1
+                days_till_bonus_index += 1
+                avail_index += 1
 
-            if IS_LEVEL_TWO:
-                self.__sys_out("Summary", 1, flush=True)
-                self.__sys_out(
-                    "Points earned: " +
-                    stats[earned_index].text.replace(" ", ""), 2
-                )
-                self.__sys_out("Streak count: " + stats[streak_index].text, 2)
-                self.__sys_out(
-                    stats[days_till_bonus_index].text, 2, end=True
-                )  # streak details, ex. how many days remaining, bonus earned
-                self.__sys_out(
-                    "Available points: " + stats[avail_index].text, 2
-                )
-                if (self.telegrambotkey and self.telegramuserid):
-                    self.__sys_out(
-                        "Sending Telegram Notification", 2
-                    )
-                    now = datetime.now()
-                    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-                    to_send = f'\n Summary for {self.email} at : {current_time} \n\n' \
-                              f'Points earned today: {stats[earned_index].text.replace(" ", "")} \n' \
-                              f'Streak count : {stats[streak_index].text} \n' \
-                              f'{stats[days_till_bonus_index].text} \n' \
-                              f'Available points: {stats[avail_index].text} \n'
-                    reply_url = 'https://api.telegram.org/bot' + self.telegrambotkey + '/sendMessage?chat_id=' + self.telegramuserid + '&text=' + str(to_send)
-                    requests.get(reply_url)
-                    self.__sys_out(
-                        "Telegram Notification Sent", 3, end=True
-                    )
+            self.__sys_out("Summary", 1, flush=True)
+            self.__sys_out(
+                "Points earned: " +
+                stats[earned_index].text.replace(" ", ""), 2
+            )
+            self.__sys_out("Streak count: " + stats[streak_index].text, 2)
+            self.__sys_out(
+                stats[days_till_bonus_index].text, 2, end=True
+            )  # streak details, ex. how many days remaining, bonus earned
+            self.__sys_out(
+                "Available points: " + stats[avail_index].text, 2
+            )
 
-            else:
-                self.__sys_out("Summary", 1, flush=True)
+            if self.telegram_messenger:
                 self.__sys_out(
-                    "Points earned: " +
-                    stats[earned_index + 1].text.replace(" ", ""), 2
+                    "Sending Telegram Notification", 2
                 )
-                self.__sys_out(
-                    "Streak count: " + stats[streak_index + 1].text, 2
-                )
-                self.__sys_out(
-                    stats[days_till_bonus_index + 1].text, 2, end=True
-                )  # streak details, ex. how many days remaining, bonus earned
-                self.__sys_out(
-                    "Available points: " + stats[avail_index + 1].text, 2
-                )
-
-                if (self.telegrambotkey and self.telegramuserid):
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                to_send = f'\n Summary for {self.email} at : {current_time} \n\n' \
+                          f'Points earned today: {stats[earned_index].text.replace(" ", "")} \n' \
+                          f'Streak count : {stats[streak_index].text} \n' \
+                          f'{stats[days_till_bonus_index].text} \n' \
+                          f'Available points: {stats[avail_index].text} \n'
+                resp = self.telegram_messenger.send_message(to_send)
+                if resp.status_code == 200:
                     self.__sys_out(
-                        "Sending Telegram Notification" , 2
+                        "Telegram notification sent", 3
                     )
-                    now = datetime.now()
-                    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-                    to_send = f'\n Summary for : {current_time} \n\n' \
-                              f'Points earned today: {stats[earned_index + 1].text.replace(" ", "")} \n' \
-                              f'Streak count : {stats[streak_index + 1].text} \n' \
-                              f'{stats[days_till_bonus_index + 1].text} \n' \
-                              f'Available points: {stats[avail_index + 1].text} \n'
-                    reply_url = 'https://api.telegram.org/bot' + self.telegrambotkey + '/sendMessage?chat_id=' + self.telegramuserid + '&text=' + str(to_send)
-                    requests.get(reply_url)
+                else:
                     self.__sys_out(
-                        "Telegram Notification Sent" , 3 ,end=True
+                        f"Boo! Telegram notification NOT sent, response is: {resp}", 3
                     )
 
         except Exception as e:
@@ -1295,7 +1265,7 @@ class Rewards:
         self.__print_stats(driver)
         driver.quit()
 
-    def complete_edge_search(self, search_hist, is_print_stats=True):
+    def complete_edge_search(self, search_hist, is_print_stats=False):
         self.search_hist = search_hist
         driver = self.__complete_edge_search()
         if is_print_stats:

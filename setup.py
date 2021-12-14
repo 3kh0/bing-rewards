@@ -8,23 +8,28 @@ CONFIG_FILE_PATH = "BingRewards/src/config.py"
 CONFIG_FILE_TEMPLATE = """credentials = dict(
     email = '{0}',
     password = '{1}',
-    telegrambotkey = '{2}',
-    telegramuserid = '{3}',
+    telegram_api_token = '{2}',
+    telegram_userid = '{3}'
 )
 """
 
-# get hashed credentials
-try:
-    email = base64.b64encode(raw_input("   *Email: ").encode()).decode()
-except:
-    email = base64.b64encode(input("   *Email: ").encode()).decode()
-print("   Hashed: {}\n".format(email))
-password = base64.b64encode(getpass.getpass("*Password: ").encode()).decode()
-print("   Hashed: {}\n".format(password))
-telegrambotkey = input("Telegram Bot Key :  " )
-telegramuserid = input("Telegram User ID :  ")
 
-new_config = CONFIG_FILE_TEMPLATE.format(email, password , telegrambotkey , telegramuserid)
+def encode_input(s):
+    return base64.b64encode(s.encode()).decode()
+
+
+# get hashed credentials
+email = encode_input(input("   *Email: "))
+print(f"   Hashed: {email}\n")
+password = encode_input(getpass.getpass("*Password: "))
+print(f"   Hashed: {password}\n")
+
+telegram_api_token = encode_input(input("*Telegram API Token (optional, press enter to skip): "))
+print(f"   Hashed: {telegram_api_token}\n")
+telegram_userid = encode_input(input("*Telegram User ID (optional, press enter to skip): "))
+print(f"   Hashed: {telegram_userid}\n")
+
+new_config = CONFIG_FILE_TEMPLATE.format(email, password, telegram_api_token, telegram_userid)
 
 # check if config file exists
 if not os.path.isfile(CONFIG_FILE_PATH):
