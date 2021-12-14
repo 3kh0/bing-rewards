@@ -50,6 +50,8 @@ def __main():
     if args.email and args.password:
         email = args.email
         password = args.password
+        telegrambotkey = args.telegrambotkey
+        telegramuserid = args.telegramuserid
         cookies = False
     else:
         try:
@@ -66,12 +68,14 @@ def __main():
             raise
         email = __decode(config.credentials['email'])
         password = __decode(config.credentials['password'])
+        telegrambotkey = config.credentials['telegrambotkey']
+        telegramuserid = config.credentials['telegramuserid']
 
     if not os.path.exists(DRIVERS_DIR):
         os.mkdir(DRIVERS_DIR)
 
     rewards = Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), email, password, DEBUG, args.headless, cookies
+        os.path.join(DRIVERS_DIR, DRIVER), email, password,telegrambotkey,telegramuserid, DEBUG, args.headless, cookies
     )
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()

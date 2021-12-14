@@ -8,6 +8,8 @@ CONFIG_FILE_PATH = "BingRewards/src/config.py"
 CONFIG_FILE_TEMPLATE = """credentials = dict(
     email = '{0}',
     password = '{1}',
+    telegrambotkey = '{2}',
+    telegramuserid = '{3}',
 )
 """
 
@@ -19,8 +21,10 @@ except:
 print("   Hashed: {}\n".format(email))
 password = base64.b64encode(getpass.getpass("*Password: ").encode()).decode()
 print("   Hashed: {}\n".format(password))
+telegrambotkey = input("Telegram Bot Key :  " )
+telegramuserid = input("Telegram User ID :  ")
 
-new_config = CONFIG_FILE_TEMPLATE.format(email, password)
+new_config = CONFIG_FILE_TEMPLATE.format(email, password , telegrambotkey , telegramuserid)
 
 # check if config file exists
 if not os.path.isfile(CONFIG_FILE_PATH):

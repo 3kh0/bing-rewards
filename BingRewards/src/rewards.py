@@ -15,6 +15,7 @@ import random
 from datetime import datetime, timedelta
 import json
 import ssl
+import requests
 
 
 class Rewards:
@@ -31,10 +32,12 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, debug=True, headless=True, cookies=True):
+    def __init__(self, path, email, password,telegrambotkey = None ,telegramuserid = None , debug=True, headless=True, cookies=True):
         self.path = path
         self.email = email
         self.password = password
+        self.telegrambotkey = telegrambotkey
+        self.telegramuserid = telegramuserid
         self.debug = debug
         self.headless = headless
         self.cookies = cookies
@@ -1235,6 +1238,22 @@ class Rewards:
                 self.__sys_out(
                     "Available points: " + stats[avail_index].text, 2
                 )
+                if (self.telegrambotkey and self.telegramuserid):
+                    self.__sys_out(
+                        "Sending Telegram Notification", 2
+                    )
+                    now = datetime.now()
+                    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+                    to_send = f'\n Summary for {self.email} at : {current_time} \n\n' \
+                              f'Points earned today: {stats[earned_index].text.replace(" ", "")} \n' \
+                              f'Streak count : {stats[streak_index].text} \n' \
+                              f'{stats[days_till_bonus_index].text} \n' \
+                              f'Available points: {stats[avail_index].text} \n'
+                    reply_url = 'https://api.telegram.org/bot' + self.telegrambotkey + '/sendMessage?chat_id=' + self.telegramuserid + '&text=' + str(to_send)
+                    requests.get(reply_url)
+                    self.__sys_out(
+                        "Telegram Notification Sent", 3, end=True
+                    )
 
             else:
                 self.__sys_out("Summary", 1, flush=True)
@@ -1251,6 +1270,23 @@ class Rewards:
                 self.__sys_out(
                     "Available points: " + stats[avail_index + 1].text, 2
                 )
+
+                if (self.telegrambotkey and self.telegramuserid):
+                    self.__sys_out(
+                        "Sending Telegram Notification" , 2
+                    )
+                    now = datetime.now()
+                    current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+                    to_send = f'\n Summary for : {current_time} \n\n' \
+                              f'Points earned today: {stats[earned_index + 1].text.replace(" ", "")} \n' \
+                              f'Streak count : {stats[streak_index + 1].text} \n' \
+                              f'{stats[days_till_bonus_index + 1].text} \n' \
+                              f'Available points: {stats[avail_index + 1].text} \n'
+                    reply_url = 'https://api.telegram.org/bot' + self.telegrambotkey + '/sendMessage?chat_id=' + self.telegramuserid + '&text=' + str(to_send)
+                    requests.get(reply_url)
+                    self.__sys_out(
+                        "Telegram Notification Sent" , 3 ,end=True
+                    )
 
         except Exception as e:
             print('    Error checking rewards status - ', e)
