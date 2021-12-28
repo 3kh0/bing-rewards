@@ -78,12 +78,20 @@ def parse_arguments():
         help='run offers'
     )
     search_group.add_argument(
+        '-pc',
+        '--punchcard',
+        const='punch card',
+        action='store_const',
+        dest='search_type',
+        help='run punch card'
+    )
+    search_group.add_argument(
         '-a',
         '--all',
         const='all',
         action='store_const',
         dest='search_type',
-        help='run web, mobile, and offers'
+        help='run web, mobile, offers, and punch cards'
     )
 
     headless_group = parser.add_mutually_exclusive_group()

@@ -171,7 +171,7 @@ class Rewards:
                     f"Logged in, but user not located in one of these valid markets: {VALID_MARKETS}."
             )
 
-    def __open_dashboard(self, driver, try_count):
+    def __open_dashboard(self, driver, try_count=0):
         if try_count == 2:
             return
 
@@ -198,10 +198,25 @@ class Rewards:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.presence_of_element_located((By.XPATH, offer_xpath)))
         #if offers dont load, start function over
         except TimeoutException:
-            self.__open_dashboard(self, driver, try_count + 1)
+            self.__open_dashboard(driver, try_count + 1)
 
-    def _open_dashboard(self, driver):
-        self.__open_dashboard(driver, try_count=0)
+    def find_between(self, s: str, first: str, last: str) -> str:
+        try:
+            start = s.index(first) + len(first)
+            end = s.index(last, start)
+            return s[start:end]
+        except ValueError:
+            return ""
+
+    def get_dashboard_data(self, driver):
+        self.__open_dashboard(driver)
+        dashboard = self.find_between(
+            driver.find_element_by_xpath('/html/body').get_attribute('innerHTML'),
+            "var dashboard = ",
+            ";\n        appDataModule.constant(\"prefetchedDashboard\", dashboard);"
+        )
+        dashboard = json.loads(dashboard)
+        return dashboard
 
     def __get_search_progress(self, driver, device, is_edge=False):
         if len(driver.window_handles) == 1:  # open new tab
@@ -691,7 +706,7 @@ class Rewards:
 
                 if exit_code == -1:
                     self.__sys_out(
-                        "Failed to complete quiz1 - tried every choice", 3,
+                        "Failed to complete quiz1- drag and drop - tried every choice", 3,
                         True, True
                     )
                     return False
@@ -752,7 +767,8 @@ class Rewards:
                             )
                         )
                         #if header.text == "Way to go!":
-                        if "you earned" in header.text.lower():
+                        finish_msg = header.text.lower()
+                        if "you earned" in finish_msg or 'great job' in finish_msg:
                             if prev_complete_progress > 0:
                                 self.__sys_out_progress(
                                     prev_complete_progress,
@@ -773,7 +789,7 @@ class Rewards:
                         break
                 if option_index in prev_options:
                     self.__sys_out(
-                        "Failed to complete quiz1 - tried every choice", 3,
+                        "Failed to complete quiz1 multiple choice - tried every choice", 3,
                         True, True
                     )
                     return False
@@ -999,7 +1015,7 @@ class Rewards:
                 self.__sys_out("Failed to complete {0}".format(title), 2, True)
 
             driver.switch_to.window(driver.window_handles[0])
-            self._open_dashboard(driver)  # for stale element exception
+            self.__open_dashboard(driver)  # for stale element exception
 
         return completed
 
@@ -1008,7 +1024,7 @@ class Rewards:
         Creates a dictionary where (k, v)= (offer title, offer element)
         Useful for testing individual offers
         '''
-        self._open_dashboard(driver)
+        self.__open_dashboard(driver)
         title_to_offer = {}
         for i in range(3):
             offer = driver.find_element(By.XPATH,
@@ -1031,22 +1047,15 @@ class Rewards:
                 pass
         return title_to_offer
 
-    def __offers(self, driver):
-        # showcase offer
-        self._open_dashboard(driver)
-        completed = []
+    def __iterate_offers(self, driver, offer_xpath, completed, offer_count):
         #try statement in case we try to find an offer that exceeded the range index
         try:
-            #daily set
-            for i in range(3):
-                #c will remain -1 if sign in bug page is reached
+            for i in range(offer_count):
                 c = -1
-                #try the page again if sign in bug
                 try_count = 0
                 while c == -1 and try_count <= 2:
                     offer = driver.find_element(By.XPATH,
-                        '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
-                        .format(i + 1)
+                        offer_xpath.format(offer_index=i + 1)
                     )
                     c = self.__click_offer(
                         driver, offer, './div[2]/h3',
@@ -1054,37 +1063,96 @@ class Rewards:
                     )
                     try_count += 1
                 #first quiz never started (MS bug) but pts still awarded
-                if i == 0:
+                if i == 0 and offer_count == 3:
                     completed.append(True)
                 else:
                     completed.append(c)
         except NoSuchElementException:
             completed.append(-1)
+        return completed
 
-        try:
-            remaining_offers = driver.find_elements(By.XPATH,
-                '//*[@id="more-activities"]/div/mee-card'
-            )
-            for i in range(len(remaining_offers)):
-                c = -1
-                try_count = 0
-                while c == -1 and try_count <= 2:
-                    offer = driver.find_element(By.XPATH,
-                        '//*[@id="more-activities"]/div/mee-card[{}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
-                        .format(i + 1)
-                    )
-                    c = self.__click_offer(
-                        driver, offer, './div[2]/h3',
-                        './mee-rewards-points/div/div/span[1]'
-                    )
-                    try_count += 1
-                completed.append(c)
+    def __offers(self, driver):
+        # showcase offer
+        self.__open_dashboard(driver)
+        completed = []
 
-        except NoSuchElementException:
-            print(NoSuchElementException)
-            completed.append(-1)
+        #daily set
+        offer_xpath = '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
+        self.__iterate_offers(driver, offer_xpath, completed, offer_count=3)
+
+        # remaining offers
+        remaining_offer_count = len(driver.find_elements(By.XPATH,
+            '//*[@id="more-activities"]/div/mee-card'
+        ))
+        offer_xpath = '//*[@id="more-activities"]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
+        self.__iterate_offers(driver, offer_xpath, completed, offer_count=remaining_offer_count)
+
         return min(completed)
 
+    def __punchcard_activity(self, driver, parent_url, childPromotions):
+        """
+        Each punch card has multiple activities.
+        Completes the latest punch card activity.
+        """
+        for activity_index, activity in enumerate(childPromotions):
+            if activity['complete'] is False:
+                activity_title = activity['title']
+                self.__sys_out(f'Starting activity "{activity_title}"', 2)
+                if activity['promotionType'] == "quiz":
+                    activity_url = activity['attributes']['destination']
+                    #can't use redirect link b/c it disappears if you want to start a quiz that was already in progress
+                    driver.get(activity_url)
+                    time.sleep(2)
+                    if self.__is_offer_sign_in_bug(driver):
+                        driver.get(activity_url)
+                    if self.__has_overlay(driver):
+                        self.__quiz(driver)
+                    else:
+                        self.__quiz2(driver)
+                elif activity['promotionType'] == "urlreward":
+                    driver.get(parent_url)
+                    time.sleep(2)
+                    #will only get points if you click the redirect link, can't go to the page directly
+                    driver.execute_script("document.getElementsByClassName('offer-cta')[0].click()")
+                    time.sleep(2)
+                    driver.close()
+                    driver.switch_to.window(driver.window_handles[0])
+
+                #no point doing remaining activities due to 24 hour wait restriction
+                break
+        # return the activity number so we can get it's progress later
+        return activity_index
+
+    def __punchcard(self, driver):
+        is_complete_activity = True
+        punchcards = self.get_dashboard_data(driver)['punchCards']
+        # find valid punchcard
+        for punchcard_index, punchcard in enumerate(punchcards):
+            # Check if valid punchcard
+            if punchcard['parentPromotion'] \
+            and 'appstore' not in punchcard['parentPromotion']['attributes']['type'] \
+            and punchcard['parentPromotion']['pointProgressMax'] != 0 \
+            and punchcard['childPromotions']:
+                parent_url = punchcard['parentPromotion']['attributes']['destination']
+                title = punchcard['parentPromotion']['attributes']['title']
+                # check if valid punchcard is completed
+                is_complete_punchcard = punchcard['parentPromotion']['complete']
+                if not is_complete_punchcard:
+                    self.__sys_out(f'Punch card "{title}" is not complete yet.', 2)
+                    #complete latest punch card activity
+                    activity_index = self.__punchcard_activity(driver, parent_url, punchcard['childPromotions'])
+                    is_complete_activity = self.get_dashboard_data(driver)['punchCards'][punchcard_index]['childPromotions'][activity_index]['complete']
+                    if is_complete_activity:
+                        self.__sys_out('Latest punch card activity successfully completed!', 3)
+                    else:
+                        self.__sys_out('Latest punch card activity NOT successfully completed. Possibly not enough time has elapsed since last punch.', 3)
+                else:
+                    self.__sys_out(f'Punch card "{title}" is already completed.', 2)
+
+        driver.get(parent_url)
+        punchcard_progress = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
+        self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
+        return is_complete_punchcard or is_complete_activity
     def __complete_edge_search(self, driver=None, close=False):
         self.__sys_out("Starting Edge search", 1)
 
@@ -1194,9 +1262,32 @@ class Rewards:
 
         return driver
 
+    def __complete_punchcard(self, driver=None):
+        self.__sys_out("Starting punch card", 1)
+        try:
+            if not driver:
+                driver = Driver.get_driver(
+                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
+                )
+                self.__login(driver)
+
+            self.completion.punchcard = self.__punchcard(driver)
+            if not self.completion.punchcard:
+                self.__sys_out("Failed to complete latest punch card activity", 1, True)
+            else:
+                self.__sys_out("Completed latest punch card activity OR entire punch card already completed", 1, True)
+        except:
+            try:
+                driver.quit()
+            except AttributeError:
+                pass
+            raise
+
+        return driver
+
     def __print_stats(self, driver):
         try:
-            self._open_dashboard(driver)
+            self.__open_dashboard(driver)
             #once pointsbreakdown link is clickable, page is loaded
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                 EC.element_to_be_clickable(
@@ -1288,6 +1379,11 @@ class Rewards:
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
 
+    def complete_punchcard(self, is_print_stats=True):
+        driver = self.__complete_punchcard()
+        if is_print_stats:
+            self.print_stats(driver, is_print_stats)
+
     def complete_both_searches(self, search_hist, is_print_stats=True):
         self.search_hist = search_hist
         driver = self.__complete_edge_search()
@@ -1303,6 +1399,7 @@ class Rewards:
         self.__complete_offers(driver)
         driver.quit()
         driver = self.__complete_mobile_search()
+        driver = self.__complete_punchcard(driver)
         if is_print_stats:
             self.print_stats(driver, is_print_stats)
 
@@ -1321,6 +1418,8 @@ class Rewards:
                     self.complete_offers()
                 if not prev_completion.is_mobile_search_completed():
                     self.complete_mobile_search(search_hist)
+                if not prev_completion.is_punchcard_completed():
+                    self.complete_punchcard(search_hist)
         # if either web/mobile, check if edge is complete
         elif search_type in ('web', 'mobile'):
             if not prev_completion.is_edge_search_completed():
@@ -1332,6 +1431,8 @@ class Rewards:
         elif search_type == 'both':
             self.complete_both_searches(search_hist)
         elif search_type == 'offers':
-            self.complete_offers(search_hist)
+            self.complete_offers()
+        elif search_type == 'punch card':
+            self.complete_punchcard()
         elif search_type == 'all':
             self.complete_all(search_hist)

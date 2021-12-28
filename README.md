@@ -85,3 +85,4 @@ Multiple accounts is not supported currently, and there is no plans to add this 
 - UK quiz updates written and tested by `chris987789`
 - 2FA code written by `revolutionisme`
 - Telegram notifications written by `hosein-hub`
+- Punchcard code taken directly from Charles Bel [repo](https://github.com/ddday/micro/blob/main/ms_rewards_farmer.py). His code is far cleaner than anything I could imagine.
