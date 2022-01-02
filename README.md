@@ -8,10 +8,11 @@ Please note:
 1. Download [Chrome](https://www.google.com/chrome/)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install `requirements.txt` file included in the repo: `pip install -r BingRewards/requirements.txt`.
-4. Create config file by running `python setup.py`. If you need to update your email or password, re-run this. 
+4. If you want notifications via Telegram, follow the steps [below](https://github.com/jjjchens235/bing-rewards#telegram-notification), else continue ahead
+5. Create config file by running `python setup.py`. If you need to update your email or password, re-run this. 
 	- Please note your email and password will be saved essentially as plain text (base64 encoded). If you prefer, leave the setup arguments blank and use the --email and --password command line arguments instead.
-5. You must have signed onto your account using this machine before. Open Chrome and visit https://login.live.com. The site may ask to send you a verification email or text.
-6. And you're all set! Run `python BingRewards/BingRewards.py` to start earning points.
+6. You must have signed onto your account using this machine before. Open Chrome and visit https://login.live.com. The site may ask to send you a verification email or text.
+7. And you're all set! Run `python BingRewards/BingRewards.py` to start earning points.
 
 ## Command Line Arguments
 #### Search Arguments

@@ -46,6 +46,19 @@ def __main():
     if not os.path.exists(DRIVERS_DIR):
         os.mkdir(DRIVERS_DIR)
 
+    try:
+        from src import config
+    except ImportError:
+        print("\nFailed to import configuration file")
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(message)s',
+            filename=os.path.join(LOG_DIR, ERROR_LOG)
+        )
+        logging.exception(hist_log.get_timestamp())
+        logging.debug("")
+        raise
+
     args = parse_arguments()
     #browser cookies
     cookies = args.cookies
@@ -56,18 +69,6 @@ def __main():
         password = args.password
         cookies = False
     else:
-        try:
-            from src import config
-        except ImportError:
-            print("\nFailed to import configuration file")
-            logging.basicConfig(
-                level=logging.DEBUG,
-                format='%(message)s',
-                filename=os.path.join(LOG_DIR, ERROR_LOG)
-            )
-            logging.exception(hist_log.get_timestamp())
-            logging.debug("")
-            raise
         email = __decode(config.credentials['email'])
         password = __decode(config.credentials['password'])
 
