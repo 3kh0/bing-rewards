@@ -1,5 +1,7 @@
 import argparse
 import getpass
+from dataclasses import dataclass
+from src.driver import Driver, ChromeDriver, MsEdgeDriver
 
 
 class PasswordAction(argparse.Action):
@@ -11,6 +13,19 @@ class PasswordAction(argparse.Action):
             setattr(namespace, self.dest, values)
         else:
             setattr(namespace, self.dest, getpass.getpass())
+
+
+class DriverAction(argparse.Action):
+
+    @dataclass
+    class DriverArg:
+        name: str
+        cls: Driver
+
+    def __call__(self, parser, namespace, value, option_string=None):
+        mapping = {"chrome": DriverAction.DriverArg("chromedriver", ChromeDriver),
+                   "msedge": DriverAction.DriverArg("msedgedriver", MsEdgeDriver)}
+        setattr(namespace, self.dest, mapping[value])
 
 
 def print_args(args):
@@ -144,8 +159,17 @@ def parse_arguments():
         action='store_false',
         help='do not send notifications to telegram'
     )
+    parser.add_argument(
+        '-d',
+        '--driver',
+        dest='driver',
+        type=str.lower,
+        choices=['chrome', 'msedge'],
+        action=DriverAction
+    )
 
-    parser.set_defaults(search_type='remaining', headless=True, cookies=False, telegram=True)
+    parser.set_defaults(search_type='remaining', headless=True,
+                        cookies=False, telegram=True, driver=DriverAction.DriverArg("chromedriver", ChromeDriver))
 
     args = parser.parse_args()
 

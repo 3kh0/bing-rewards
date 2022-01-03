@@ -8,7 +8,6 @@ import base64
 from options import parse_arguments
 
 DRIVERS_DIR = "drivers"
-DRIVER = "chromedriver"
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
@@ -60,7 +59,7 @@ def __main():
         raise
 
     args = parse_arguments()
-    #browser cookies
+    # browser cookies
     cookies = args.cookies
 
     # microsoft email/pw
@@ -79,9 +78,10 @@ def __main():
         telegram_messenger = None
     else:
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
-
-    rewards= Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), email, password, telegram_messenger, DEBUG, args.headless, cookies
+    
+    rewards = Rewards(
+        os.path.join(
+            DRIVERS_DIR, args.driver.name), email, password, telegram_messenger, DEBUG, args.headless, cookies, args.driver.cls
     )
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()

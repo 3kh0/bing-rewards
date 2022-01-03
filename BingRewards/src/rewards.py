@@ -1,4 +1,4 @@
-﻿from src.driver import Driver
+﻿from src.driver import ChromeDriver
 from src.log import Completion
 from urllib.request import urlopen
 from selenium.webdriver.common.keys import Keys
@@ -32,7 +32,7 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, telegram_messenger=None, debug=True, headless=True, cookies=True):
+    def __init__(self, path, email, password, telegram_messenger=None, debug=True, headless=True, cookies=True, driver=ChromeDriver):
         self.path = path
         self.email = email
         self.password = password
@@ -44,6 +44,7 @@ class Rewards:
         self.stdout = []
         self.search_hist = []
         self.__queries = []
+        self.driver = driver
 
     def __get_sys_out_prefix(self, lvl, end):
         prefix = " " * (self.__SYS_OUT_TAB_LEN * (lvl - 1) - (lvl - 1))
@@ -236,9 +237,9 @@ class Rewards:
 
         if is_edge:
             search_types = ['EDGE']
-        elif device == Driver.WEB_DEVICE:
+        elif device == self.driver.WEB_DEVICE:
             search_types = ['PC', 'DESKTOP']
-        elif device == Driver.MOBILE_DEVICE:
+        elif device == self.driver.MOBILE_DEVICE:
             search_types = ['MOBILE', 'MÓVILES', 'MOBILI']
 
         progress_text = None
@@ -256,7 +257,7 @@ class Rewards:
 
         if progress_text is None:
             msg = f"Ending {search_types[0]} search. Could not detect search progress."
-            if device == Driver.MOBILE_DEVICE:
+            if device == self.driver.MOBILE_DEVICE:
                 msg += " Most likely because user is at LEVEL 1 and mobile searches are unavailable."
             self.__sys_out(msg, 3, True)
             return False
@@ -1090,12 +1091,12 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
+                driver = self.driver.get_driver(
+                    self.path, self.driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
             self.completion.edge_search = self.__search(
-                driver, Driver.WEB_DEVICE, is_edge=True
+                driver, self.driver.WEB_DEVICE, is_edge=True
             )
             if self.completion.edge_search:
                 self.__sys_out("Successfully completed edge search", 1, True)
@@ -1118,12 +1119,12 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
+                driver = self.driver.get_driver(
+                    self.path, self.driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
             self.completion.web_search = self.__search(
-                driver, Driver.WEB_DEVICE
+                driver, self.driver.WEB_DEVICE
             )
             if self.completion.web_search:
                 self.__sys_out("Successfully completed web search", 1, True)
@@ -1146,13 +1147,13 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(
-                    self.path, Driver.MOBILE_DEVICE, self.headless, self.cookies
+                driver = self.driver.get_driver(
+                    self.path, self.driver.MOBILE_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 
             self.completion.mobile_search = self.__search(
-                driver, Driver.MOBILE_DEVICE
+                driver, self.driver.MOBILE_DEVICE
             )
             if self.completion.mobile_search:
                 self.__sys_out("Successfully completed mobile search", 1, True)
@@ -1175,8 +1176,8 @@ class Rewards:
 
         try:
             if not driver:
-                driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
+                driver = self.driver.get_driver(
+                    self.path, self.driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 
