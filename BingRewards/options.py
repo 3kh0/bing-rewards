@@ -1,7 +1,6 @@
 import argparse
 import getpass
-from dataclasses import dataclass
-from src.driver import Driver, ChromeDriver, MsEdgeDriver
+from src.driver import ChromeDriver, MsEdgeDriver
 
 
 class PasswordAction(argparse.Action):
@@ -16,12 +15,6 @@ class PasswordAction(argparse.Action):
 
 
 class DriverAction(argparse.Action):
-
-    @dataclass
-    class DriverArg:
-        name: str
-        cls: Driver
-
     def __call__(self, parser, namespace, value, option_string=None):
         mapping = {"chrome": ChromeDriver,
                    "msedge": MsEdgeDriver}

@@ -17,7 +17,7 @@ class EventListener(AbstractEventListener):
 
     def after_click_on(self, url, driver):
         animation =\
-            """
+        """
         try { jQuery.fx.off = true; } catch(e) {}
         """
         driver.execute_script(animation)
