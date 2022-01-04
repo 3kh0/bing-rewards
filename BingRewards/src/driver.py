@@ -17,7 +17,7 @@ class EventListener(AbstractEventListener):
 
     def after_click_on(self, url, driver):
         animation =\
-        """
+            """
         try { jQuery.fx.off = true; } catch(e) {}
         """
         driver.execute_script(animation)
@@ -26,11 +26,18 @@ class EventListener(AbstractEventListener):
 class Driver(ABC):
     WEB_DEVICE = 0
     MOBILE_DEVICE = 1
+    DRIVERS_DIR = "drivers"
 
     # Microsoft Edge user agents for additional points
     # agent src: https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
     __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36 Edg/96.0.1054.29"
     __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Mobile Safari/537.36 EdgA/95.0.1020.42"
+
+    @property
+    @staticmethod
+    @abstractmethod
+    def VERSION_MISMATCH_STR():
+        pass
 
     @property
     @staticmethod
@@ -47,17 +54,17 @@ class Driver(ABC):
     @property
     @staticmethod
     @abstractmethod
-    def VERSION_MISMATCH_STR():
+    def driver_name():
         pass
 
     @staticmethod
     @abstractmethod
-    def _get_latest_driver_url(system, dl_try_count):
+    def _get_latest_driver_url( dl_try_count):
         raise NotImplementedError
 
     @classmethod
-    def __download_driver(cls, driver_path, system, dl_try_count=0):
-        url = cls._get_latest_driver_url(system, dl_try_count)
+    def __download_driver(cls, dl_try_count=0):
+        url = cls._get_latest_driver_url(dl_try_count)
         try:
             response = urlopen(
                 url, context=ssl.SSLContext(ssl.PROTOCOL_TLS)
@@ -65,7 +72,7 @@ class Driver(ABC):
         except ssl.SSLError:
             response = urlopen(url)  # context args for mac
         zip_file_path = os.path.join(
-            os.path.dirname(driver_path), os.path.basename(url)
+            cls.DRIVERS_DIR, os.path.basename(url)
         )
         with open(zip_file_path, 'wb') as zip_file:
             while True:
@@ -79,12 +86,12 @@ class Driver(ABC):
             zip_file.extractall(extracted_dir)
         os.remove(zip_file_path)
 
-        driver = os.path.basename(driver_path)
+        driver_path = os.path.join(cls.DRIVERS_DIR, cls.driver_name)
         try:
-            os.rename(os.path.join(extracted_dir, driver), driver_path)
-        #for Windows
+            os.rename(os.path.join(extracted_dir, cls.driver_name), driver_path)
+        # for Windows
         except FileExistsError:
-            os.replace(os.path.join(extracted_dir, driver), driver_path)
+            os.replace(os.path.join(extracted_dir, cls.driver_name), driver_path)
 
         shutil.rmtree(extracted_dir)
         os.chmod(driver_path, 0o755)
@@ -123,13 +130,12 @@ class Driver(ABC):
         return options
 
     @classmethod
-    def get_driver(cls, path, device, headless, cookies) -> EventFiringWebDriver:
-        system = platform.system()
-        if system == "Windows":
-            if not path.endswith(".exe"):
-                path += ".exe"
-        if not os.path.exists(path):
-            cls.__download_driver(path, system)
+    def get_driver(cls, device, headless, cookies) -> EventFiringWebDriver:
+        if not os.path.exists(cls.DRIVERS_DIR):
+            os.mkdir(cls.DRIVERS_DIR)
+        driver_path = os.path.join(cls.DRIVERS_DIR, cls.driver_name)
+        if not os.path.exists(driver_path):
+            cls.__download_driver()
 
         # we start at dl_try_count = 1 b/c we already downloaded the most recent version
         dl_try_count = 1
@@ -139,21 +145,21 @@ class Driver(ABC):
 
         while not is_dl_success:
             try:
-                driver = cls.WebDriverCls(path, options=options)
+                driver = cls.WebDriverCls(driver_path, options=options)
                 is_dl_success = True
 
             except SessionNotCreatedException as se:
                 error_msg = str(se).lower()
                 if cls.VERSION_MISMATCH_STR not in error_msg:
                     raise SessionNotCreatedException(error_msg)
-                #driver not up to date with Chrome browser, try different version
+                # driver not up to date with Chrome browser, try different version
                 if dl_try_count == MAX_TRIES:
                     raise SessionNotCreatedException(
                         f'Tried downloading the {dl_try_count} most recent drivers. None match your browswer version. Aborting now, please update your browser.')
-                cls.__download_driver(path, system, dl_try_count)
+                cls.__download_driver(dl_try_count)
                 dl_try_count += 1
 
-            #WebDriverException is Selenium generic exception
+            # WebDriverException is Selenium generic exception
             except WebDriverException as wde:
                 error_msg = str(wde)
 
@@ -176,8 +182,9 @@ class ChromeDriver(Driver):
     WebDriverCls = webdriver.Chrome
     WebDriverOptions = webdriver.ChromeOptions
     VERSION_MISMATCH_STR = 'this version of chromedriver only supports chrome version'
+    driver_name = "chromedriver.exe" if platform.system() == "Windows" else "chromedriver"
 
-    def _get_latest_driver_url(system, dl_try_count):
+    def _get_latest_driver_url(dl_try_count):
         # determine latest chromedriver version
         # version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         CHROME_RELEASE_URL = "https://sites.google.com/chromium.org/driver/downloads?authuser=0"
@@ -197,6 +204,7 @@ class ChromeDriver(Driver):
         )[dl_try_count].decode().split()[1]
         print('Downloading chromedriver version: ' + latest_version)
 
+        system = platform.system()
         if system == "Windows":
             url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_win32.zip"
         elif system == "Darwin":
@@ -214,8 +222,9 @@ class MsEdgeDriver(Driver):
     WebDriverCls = webdriver.Edge
     WebDriverOptions = webdriver.EdgeOptions
     VERSION_MISMATCH_STR = 'this version of msedgedriver only supports msedge version'
+    driver_name = "msedgedriver.exe" if platform.system() == "Windows" else "msedgedriver"
 
-    def _get_latest_driver_url(system, dl_try_count):
+    def _get_latest_driver_url(dl_try_count):
         EDGE_RELEASE_URL = "https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
         try:
             response = urlopen(
@@ -232,6 +241,7 @@ class MsEdgeDriver(Driver):
         )[dl_try_count].decode().split()[1]
         print('Downloading msedgedriver version: ' + latest_version)
 
+        system = platform.system()
         if system == "Windows":
             url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_win64.zip"
         elif system == "Darwin":

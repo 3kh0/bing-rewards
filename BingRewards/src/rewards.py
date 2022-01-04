@@ -32,8 +32,7 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, telegram_messenger=None, debug=True, headless=True, cookies=True, driver=ChromeDriver):
-        self.path = path
+    def __init__(self, email, password, telegram_messenger=None, debug=True, headless=True, cookies=True, driver=ChromeDriver):
         self.email = email
         self.password = password
         self.telegram_messenger = telegram_messenger
@@ -1092,7 +1091,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = self.driver.get_driver(
-                    self.path, self.driver.WEB_DEVICE, self.headless, self.cookies
+                    self.driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
             self.completion.edge_search = self.__search(
@@ -1120,7 +1119,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = self.driver.get_driver(
-                    self.path, self.driver.WEB_DEVICE, self.headless, self.cookies
+                    self.driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
             self.completion.web_search = self.__search(
@@ -1148,7 +1147,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = self.driver.get_driver(
-                    self.path, self.driver.MOBILE_DEVICE, self.headless, self.cookies
+                    self.driver.MOBILE_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 
@@ -1177,7 +1176,7 @@ class Rewards:
         try:
             if not driver:
                 driver = self.driver.get_driver(
-                    self.path, self.driver.WEB_DEVICE, self.headless, self.cookies
+                    self.driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 

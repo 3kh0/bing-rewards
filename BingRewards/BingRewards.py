@@ -1,5 +1,6 @@
 import sys
 import os
+from src.driver import Driver
 from src.rewards import Rewards
 from src.log import HistLog
 from src.telegram import TelegramMessenger
@@ -7,7 +8,6 @@ import logging
 import base64
 from options import parse_arguments
 
-DRIVERS_DIR = "drivers"
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
@@ -42,8 +42,6 @@ def __main():
     hist_log = HistLog(
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
     )
-    if not os.path.exists(DRIVERS_DIR):
-        os.mkdir(DRIVERS_DIR)
 
     try:
         from src import config
@@ -79,10 +77,7 @@ def __main():
     else:
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
     
-    rewards = Rewards(
-        os.path.join(
-            DRIVERS_DIR, args.driver.name), email, password, telegram_messenger, DEBUG, args.headless, cookies, args.driver.cls
-    )
+    rewards = Rewards(email, password, telegram_messenger, DEBUG, args.headless, cookies, args.driver)
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
     search_type = args.search_type

@@ -23,8 +23,8 @@ class DriverAction(argparse.Action):
         cls: Driver
 
     def __call__(self, parser, namespace, value, option_string=None):
-        mapping = {"chrome": DriverAction.DriverArg("chromedriver", ChromeDriver),
-                   "msedge": DriverAction.DriverArg("msedgedriver", MsEdgeDriver)}
+        mapping = {"chrome": ChromeDriver,
+                   "msedge": MsEdgeDriver}
         setattr(namespace, self.dest, mapping[value])
 
 
@@ -169,7 +169,7 @@ def parse_arguments():
     )
 
     parser.set_defaults(search_type='remaining', headless=True,
-                        cookies=False, telegram=True, driver=DriverAction.DriverArg("chromedriver", ChromeDriver))
+                        cookies=False, telegram=True, driver=ChromeDriver)
 
     args = parser.parse_args()
 
