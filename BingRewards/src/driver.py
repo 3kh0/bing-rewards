@@ -17,7 +17,7 @@ class EventListener(AbstractEventListener):
 
     def after_click_on(self, url, driver):
         animation =\
-            """
+        """
         try { jQuery.fx.off = true; } catch(e) {}
         """
         driver.execute_script(animation)
@@ -90,7 +90,6 @@ class Driver(ABC):
         os.chmod(driver_path, 0o755)
 
     @classmethod
-    @abstractmethod
     def add_driver_options(cls, device, headless, cookies):
         options = cls.WebDriverOptions()
 
