@@ -1,5 +1,7 @@
 import argparse
 import getpass
+import selenium
+import sys
 from src.driver import ChromeDriver, MsEdgeDriver
 
 
@@ -18,6 +20,9 @@ class DriverAction(argparse.Action):
     def __call__(self, parser, namespace, value, option_string=None):
         mapping = {"chrome": ChromeDriver,
                    "msedge": MsEdgeDriver}
+        if value == "msedge" and int(selenium.__version__.split('.')[0]) < 4:
+            print("msedge is only supported on selenium 4 and above\nRun 'pip install -U selenium' to update", file=sys.stderr)
+            sys.exit(-1)
         setattr(namespace, self.dest, mapping[value])
 
 

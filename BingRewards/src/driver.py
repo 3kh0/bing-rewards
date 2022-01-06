@@ -6,6 +6,7 @@ import ssl
 import zipfile
 import shutil
 from selenium import webdriver
+import selenium
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from selenium.common.exceptions import SessionNotCreatedException, WebDriverException
@@ -218,34 +219,40 @@ class ChromeDriver(Driver):
         return url
 
 
-class MsEdgeDriver(Driver):
-    WebDriverCls = webdriver.Edge
-    WebDriverOptions = webdriver.EdgeOptions
-    VERSION_MISMATCH_STR = 'this version of msedgedriver only supports msedge version'
-    driver_name = "msedgedriver.exe" if platform.system() == "Windows" else "msedgedriver"
 
-    def _get_latest_driver_url(dl_try_count):
-        EDGE_RELEASE_URL = "https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
-        try:
-            response = urlopen(
-                EDGE_RELEASE_URL,
-                context=ssl.SSLContext(ssl.PROTOCOL_TLS)
-            ).read()
-        except ssl.SSLError:
-            response = urlopen(
-                EDGE_RELEASE_URL
-            ).read()
+# Selenium only support Edge after Selenium 4
+if int(selenium.__version__.split('.')[0]) < 4:
+    class MsEdgeDriver(Driver):
+        pass
+else:    
+    class MsEdgeDriver(Driver):
+        WebDriverCls = webdriver.Edge
+        WebDriverOptions = webdriver.EdgeOptions
+        VERSION_MISMATCH_STR = 'this version of msedgedriver only supports msedge version'
+        driver_name = "msedgedriver.exe" if platform.system() == "Windows" else "msedgedriver"
 
-        latest_version = re.findall(
-            b"Version: \d{2,3}\.0\.\d{4}\.\d+", response
-        )[dl_try_count].decode().split()[1]
-        print('Downloading msedgedriver version: ' + latest_version)
+        def _get_latest_driver_url(dl_try_count):
+            EDGE_RELEASE_URL = "https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
+            try:
+                response = urlopen(
+                    EDGE_RELEASE_URL,
+                    context=ssl.SSLContext(ssl.PROTOCOL_TLS)
+                ).read()
+            except ssl.SSLError:
+                response = urlopen(
+                    EDGE_RELEASE_URL
+                ).read()
 
-        system = platform.system()
-        if system == "Windows":
-            url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_win64.zip"
-        elif system == "Darwin":
-            url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_mac64.zip"
-        elif system == "Linux":
-            url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_linux64.zip"
-        return url
+            latest_version = re.findall(
+                b"Version: \d{2,3}\.0\.\d{4}\.\d+", response
+            )[dl_try_count].decode().split()[1]
+            print('Downloading msedgedriver version: ' + latest_version)
+
+            system = platform.system()
+            if system == "Windows":
+                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_win64.zip"
+            elif system == "Darwin":
+                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_mac64.zip"
+            elif system == "Linux":
+                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_linux64.zip"
+            return url
