@@ -5,7 +5,7 @@ Please note:
 - multiple accounts NOT supported
 
 ## Getting Started
-1. Download [Chrome](https://www.google.com/chrome/)
+1. Download [Chrome](https://www.google.com/chrome/) or [Edge](https://www.microsoft.com/edge)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install `requirements.txt` file included in the repo: `pip install -r BingRewards/requirements.txt`.
 4. If you want notifications via Telegram, follow the steps [below](https://github.com/jjjchens235/bing-rewards#telegram-notification), else continue ahead
@@ -36,10 +36,12 @@ Please note:
 * Telegram
 	* `-t` or `--telegram`: Send notifications to telegram (more instructions below). This is the *default*, but will only work if telegram credentials were entered during setup
 	* `-nt` or `--no-telegram`: Do not send notifications to telegram
+* Driver
+	* `-d` or `--driver`: Driver to use, acceptable choice: `chrome`, `msedge`
 
 #### Examples
 The following `python BingRewards.py` 
-actually translates to `python BingRewards.py -r -hl`, i.e run the remaining searches in headless mode.
+actually translates to `python BingRewards.py -r -hl -d chrome`, i.e run the remaining searches in chrome headless mode.
 
 Here's an example of running non-default arguments
 `python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, password will be prompted for separately.

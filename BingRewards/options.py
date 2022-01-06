@@ -1,5 +1,8 @@
 import argparse
 import getpass
+import selenium
+import sys
+from src.driver import ChromeDriver, MsEdgeDriver
 
 
 class PasswordAction(argparse.Action):
@@ -11,6 +14,16 @@ class PasswordAction(argparse.Action):
             setattr(namespace, self.dest, values)
         else:
             setattr(namespace, self.dest, getpass.getpass())
+
+
+class DriverAction(argparse.Action):
+    def __call__(self, parser, namespace, value, option_string=None):
+        mapping = {"chrome": ChromeDriver,
+                   "msedge": MsEdgeDriver}
+        if value == "msedge" and int(selenium.__version__.split('.')[0]) < 4:
+            print("msedge is only supported on selenium 4 and above\nRun 'pip install -U selenium' to update", file=sys.stderr)
+            sys.exit(-1)
+        setattr(namespace, self.dest, mapping[value])
 
 
 def print_args(args):
@@ -152,8 +165,17 @@ def parse_arguments():
         action='store_false',
         help='do not send notifications to telegram'
     )
+    parser.add_argument(
+        '-d',
+        '--driver',
+        dest='driver',
+        type=str.lower,
+        choices=['chrome', 'msedge'],
+        action=DriverAction
+    )
 
-    parser.set_defaults(search_type='remaining', headless=True, cookies=False, telegram=True)
+    parser.set_defaults(search_type='remaining', headless=True,
+                        cookies=False, telegram=True, driver=ChromeDriver)
 
     args = parser.parse_args()
 
