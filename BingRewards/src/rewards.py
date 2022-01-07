@@ -121,7 +121,7 @@ class Rewards:
         elif url == self.__LOGIN_URL:
             # standard 2FA page
             try:
-                authenticator_code = driver.find_element_by_id("idRemoteNGC_DisplaySign").text
+                authenticator_code = driver.find_element(By.ID, "idRemoteNGC_DisplaySign").text
                 self.__sys_out(f"Waiting for user to approve 2FA, please select {authenticator_code} in Microsoft Authenticator", 2)
                 WebDriverWait(driver, 30).until(
                     EC.url_contains("https://login.live.com/ppsecure")
@@ -129,7 +129,7 @@ class Rewards:
             except NoSuchElementException:
                 # approve sign in request page
                 try:
-                    e = driver.find_element_by_id("idChkBx_SAOTCAS_TD").click()
+                    e = driver.find_element(By.ID, "idChkBx_SAOTCAS_TD").click()
                     self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please click approve.", 2)
                 except NoSuchElementException:
                     raise RuntimeError(f"Unable to handle {url}")
@@ -211,7 +211,7 @@ class Rewards:
     def get_dashboard_data(self, driver):
         self.__open_dashboard(driver)
         dashboard = self.find_between(
-            driver.find_element_by_xpath('/html/body').get_attribute('innerHTML'),
+            driver.find_element(By.XPATH, '/html/body').get_attribute('innerHTML'),
             "var dashboard = ",
             ";\n        appDataModule.constant(\"prefetchedDashboard\", dashboard);"
         )

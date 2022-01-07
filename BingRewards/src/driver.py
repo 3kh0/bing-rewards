@@ -60,7 +60,7 @@ class Driver(ABC):
 
     @staticmethod
     @abstractmethod
-    def _get_latest_driver_url( dl_try_count):
+    def _get_latest_driver_url(dl_try_count):
         raise NotImplementedError
 
     @classmethod
@@ -132,11 +132,17 @@ class Driver(ABC):
 
     @classmethod
     def get_driver(cls, device, headless, cookies) -> EventFiringWebDriver:
-        if not os.path.exists(cls.DRIVERS_DIR):
-            os.mkdir(cls.DRIVERS_DIR)
-        driver_path = os.path.join(cls.DRIVERS_DIR, cls.driver_name)
-        if not os.path.exists(driver_path):
-            cls.__download_driver()
+
+        # raspberry pi: assumes driver already installed via `sudo apt-get install chromium-chromedriver`
+        if platform.machine() == "armv7l":
+            driver_path = "/usr/lib/chromium-browser/chromedriver"
+        # all others
+        else:
+            if not os.path.exists(cls.DRIVERS_DIR):
+                os.mkdir(cls.DRIVERS_DIR)
+            driver_path = os.path.join(cls.DRIVERS_DIR, cls.driver_name)
+            if not os.path.exists(driver_path):
+                cls.__download_driver()
 
         # we start at dl_try_count = 1 b/c we already downloaded the most recent version
         dl_try_count = 1
@@ -198,12 +204,11 @@ class ChromeDriver(Driver):
             response = urlopen(
                 CHROME_RELEASE_URL
             ).read()
-        # download second latest version,most recent is sometimes not out to public yet
 
         latest_version = re.findall(
             b"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+", response
         )[dl_try_count].decode().split()[1]
-        print('Downloading chromedriver version: ' + latest_version)
+        print(f'Downloading {platform.system()} chromedriver version: {latest_version}')
 
         system = platform.system()
         if system == "Windows":
@@ -219,12 +224,11 @@ class ChromeDriver(Driver):
         return url
 
 
-
 # Selenium only support Edge after Selenium 4
 if int(selenium.__version__.split('.')[0]) < 4:
     class MsEdgeDriver(Driver):
         pass
-else:    
+else:
     class MsEdgeDriver(Driver):
         WebDriverCls = webdriver.Edge
         WebDriverOptions = webdriver.EdgeOptions
@@ -246,7 +250,7 @@ else:
             latest_version = re.findall(
                 b"Version: \d{2,3}\.0\.\d{4}\.\d+", response
             )[dl_try_count].decode().split()[1]
-            print('Downloading msedgedriver version: ' + latest_version)
+            print(f'Downloading {platform.system()} msedgedriver version: {latest_version}')
 
             system = platform.system()
             if system == "Windows":

@@ -21,7 +21,7 @@ class DriverAction(argparse.Action):
         mapping = {"chrome": ChromeDriver,
                    "msedge": MsEdgeDriver}
         if value == "msedge" and int(selenium.__version__.split('.')[0]) < 4:
-            print("msedge is only supported on selenium 4 and above\nRun 'pip install -U selenium' to update", file=sys.stderr)
+            print("Microsoft Edge is only supported on selenium 4 and above\nRun 'pip install -U selenium' to update", file=sys.stderr)
             sys.exit(-1)
         setattr(namespace, self.dest, mapping[value])
 

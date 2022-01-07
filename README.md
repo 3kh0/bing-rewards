@@ -11,7 +11,7 @@ Please note:
 4. If you want notifications via Telegram, follow the steps [below](https://github.com/jjjchens235/bing-rewards#telegram-notification), else continue ahead
 5. Create config file by running `python setup.py`. If you need to update your email or password, re-run this. 
 	- Please note your email and password will be saved essentially as plain text (base64 encoded). If you prefer, leave the setup arguments blank and use the --email and --password command line arguments instead.
-6. You must have signed onto your account using this machine before. Open Chrome and visit https://login.live.com. The site may ask to send you a verification email or text.
+6. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
 7. And you're all set! Run `python BingRewards/BingRewards.py` to start earning points.
 
 ## Command Line Arguments
@@ -21,12 +21,15 @@ Please note:
 * `-m` or `--mobile`: mobile search
 * `-b` or `--both`: both searches (web search and mobile search)
 * `-o` or `--offers`: daily offers
-* `-a` or `--all`: all tasks (web search, mobile search and daily offers)
+* `-pc` or `--punchcard`: punch card
+* `-a` or `--all`: all tasks (web search, mobile search, daily offers, punch card)
 
 #### Additional Optional Arguments
 * Email/Password
-	* `-e` or `--email`: email to use, supersedes the config email
-	* `-p` or `--password`: the email password to use. Use -p with no argument to trigger a secure pw prompt
+	* `-e` or `--email`: Email to use, supersedes the config email
+	* `-p` or `--password`: The email password to use. Use -p with no argument to trigger a secure pw prompt
+* Driver
+	* `-d` or `--driver`: Driver to use, choose either `chrome` or `msedge`. Chrome is the *default*.
 * Headless
 	* `-hl` or `--headless`: Run in [headless](https://developers.google.com/web/updates/2017/06/headless-karma-mocha-chai) mode- this is the *default*
 	* `-nhl` or `--no-headless`: Don't run in headless mode
@@ -35,9 +38,7 @@ Please note:
 	* `-c` or `--cookies`: Run browser with cookies to preserve username and pw each session.
 * Telegram
 	* `-t` or `--telegram`: Send notifications to telegram (more instructions below). This is the *default*, but will only work if telegram credentials were entered during setup
-	* `-nt` or `--no-telegram`: Do not send notifications to telegram
-* Driver
-	* `-d` or `--driver`: Driver to use, acceptable choice: `chrome`, `msedge`
+	* `-nt` or `--no-telegram`: Do not send notifications to telegram.
 
 #### Examples
 The following `python BingRewards.py` 
@@ -66,25 +67,26 @@ You may want to use your operating system's scheduler to run this program automa
 4. An example cronjob using an Anaconda Python build that runs daily at 9am: `0 9 * * * /Applications/anaconda/bin/python ~/Programming/Python/bing-rewards-master/BingRewards/BingRewards.py`
 5. Note that cronjobs are not run if your computer is sleeping. To wake your computer at a scheduled time follow the instructions in this [link](https://alvinalexander.com/mac-os-x/mac-wake-up-schedule-automatic-time-sleep).
 
-## Two-factor Authentication
-2FA is supported, but only through `Microsoft Authenticator`.
-
-Each time you log-in, a code will be printed out in the console, and you will need to select it in Authenticator. You will have to do this an additional time when you do the mobile search.
-
 ## Telegram Notification
 if you want to setup telegram notification system please follow these steps:
-1. Create bot in telegram from [@BotFather](https://t.me/BotFather). File away the API token generated in the BotFather chat- you'll need it later.
+1. Create bot in telegram from [@BotFather](https://t.me/BotFather). Note the API token generated in the BotFather chat- you'll need it later.
 2. Get your telegram userid from [@userinfobot](https://t.me/userinfobot) or alternatively [@MissRose_bot](https://t.me/MissRose_bot)
 3. Run setup `python setup.py` and enter 
 	- your token generated from step 1
 	- your userid from step 2
+
+## Two-factor Authentication
+2FA is supported, but only through `Microsoft Authenticator`.
+
+Each time you log-in, a code will be printed out in the console, and you will need to select it in Authenticator. You will have to do this an additional time when you do the mobile search.
 
 ## Multiple accounts
 Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
 
 ## Acknowledgement
 - Original author took down the code from their GitHub back in July 2018. Author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
-- UK quiz updates written and tested by `chris987789`
-- 2FA code written by `revolutionisme`
-- Telegram notifications written by `hosein-hub`
-- Punchcard code taken directly from Charles Bel [repo](https://github.com/ddday/micro/blob/main/ms_rewards_farmer.py). His code is far cleaner than anything I could imagine.
+- UK quiz updates by `chris987789`
+- 2FA code by `revolutionisme`
+- Telegram notifications by `hosein-hub`
+- Punch card and dashboard code based on `Charles Bel's` [repo](https://github.com/ddday/micro/blob/main/ms_rewards_farmer.py).
+- Microsoft Edge support by `Summon528`
