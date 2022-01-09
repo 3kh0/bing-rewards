@@ -951,30 +951,35 @@ class Rewards:
                     return False
                 time.sleep(2)
 
-    def __click_offer(self, driver, offer, title_xpath, checked_xpath):
-        title = offer.find_element(By.XPATH, title_xpath).text
-        self.__sys_out("Trying {0}".format(title), 2)
-
+    def __check_offer_status(self, driver, offer):
         # check whether it was already completed
-
         checked = False
         try:
+            checked_xpath = './mee-rewards-points/div/div/span[1]'
             icon = offer.find_element(By.XPATH, checked_xpath)
             if icon.get_attribute('class').startswith(
                 "mee-icon mee-icon-SkypeCircleCheck"
             ):
                 checked = True
-                self.__sys_out("Already checked", 2, True)
         #quiz does not contain a check-mark icon, implying no points offered
         except NoSuchElementException:
             checked = True
-            self.__sys_out("skipping quiz - assuming it offers no points", 3)
+        return checked
+
+    def __click_offer(self, driver, offer):
+        title_xpath = './div[2]/h3'
+        title = offer.find_element(By.XPATH, title_xpath).text
+        self.__sys_out("Trying {0}".format(title), 2)
 
         completed = True
-        if not checked:
+        checked = self.__check_offer_status(driver, offer)
+
+        if checked:
+            self.__sys_out("Already completed or no points offered", 2, True)
+
+        else:
             offer.click()
             driver.switch_to.window(driver.window_handles[-1])
-
             #Check for cookies popup - UK thing
             if self.cookieclearquiz == 0:
 
@@ -1047,7 +1052,7 @@ class Rewards:
                 pass
         return title_to_offer
 
-    def __iterate_offers(self, driver, offer_xpath, completed, offer_count):
+    def __perform_action_on_offers(self, action, driver, offer_xpath, completed, offer_count):
         #try statement in case we try to find an offer that exceeded the range index
         try:
             for i in range(offer_count):
@@ -1057,19 +1062,13 @@ class Rewards:
                     offer = driver.find_element(By.XPATH,
                         offer_xpath.format(offer_index=i + 1)
                     )
-                    c = self.__click_offer(
-                        driver, offer, './div[2]/h3',
-                        './mee-rewards-points/div/div/span[1]'
-                    )
+                    c = action(driver, offer)
                     try_count += 1
                 #first quiz never started (MS bug) but pts still awarded
-                if i == 0 and offer_count == 3:
-                    completed.append(True)
-                else:
-                    completed.append(c)
+                completed.append(c)
         except NoSuchElementException:
             completed.append(-1)
-        return completed
+
 
     def __offers(self, driver):
         # showcase offer
@@ -1077,15 +1076,19 @@ class Rewards:
         completed = []
 
         #daily set
-        offer_xpath = '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
-        self.__iterate_offers(driver, offer_xpath, completed, offer_count=3)
+        daily_sets_xpath = '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
+        self.__perform_action_on_offers(self.__click_offer, driver, daily_sets_xpath, [], offer_count=3)
 
         # remaining offers
         remaining_offer_count = len(driver.find_elements(By.XPATH,
             '//*[@id="more-activities"]/div/mee-card'
         ))
-        offer_xpath = '//*[@id="more-activities"]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
-        self.__iterate_offers(driver, offer_xpath, completed, offer_count=remaining_offer_count)
+        more_activities_xpath = '//*[@id="more-activities"]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
+        self.__perform_action_on_offers(self.__click_offer, driver, more_activities_xpath, [], offer_count=remaining_offer_count)
+
+        # check offers status after all offers have been tried
+        self.__perform_action_on_offers(self.__check_offer_status, driver, daily_sets_xpath, completed, offer_count=3)
+        self.__perform_action_on_offers(self.__check_offer_status, driver, more_activities_xpath, completed, offer_count=remaining_offer_count)
 
         return min(completed)
 
