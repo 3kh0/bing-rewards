@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 import json
 import ssl
 import requests
+import traceback
+
 
 
 class Rewards:
@@ -32,7 +34,7 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, email, password, telegram_messenger=None, debug=True, headless=True, cookies=True, driver=ChromeDriver):
+    def __init__(self, email, password, telegram_messenger=None, debug=True, headless=True, cookies=False, driver=ChromeDriver):
         self.email = email
         self.password = password
         self.telegram_messenger = telegram_messenger
@@ -521,8 +523,16 @@ class Rewards:
     def __solve_tot(self, driver):
         '''
         Solves This or That quiz
-        The answers are randomly selected, so on average, only half the points will be earned.
+        Logic to always get correct answer is from:
+        https://github.com/charlesbel/Microsoft-Rewards-Farmer/blob/master/ms_rewards_farmer.py#L439
         '''
+        def get_answer_code(key, title):
+            t = 0
+            for i in range(len(title)):
+                t += ord(title[i])
+            t += int(key[-2:], 16)
+            return str(t)
+
         try_count = 0
         while True:
             try:
@@ -531,9 +541,24 @@ class Rewards:
                     int, progress.split(' of ')
                 )
                 self.__sys_out_progress(current_question - 1, complete_progress, 4)
-                driver.find_element(By.ID,
-                    'rqAnswerOption' + str(random.choice([0, 1]))
-                ).click()
+
+                answer_encode_key = driver.execute_script("return _G.IG")
+
+                answer1 = driver.find_element(By.ID, "rqAnswerOption0")
+                answer1_title = answer1.get_attribute('data-option')
+                answer1_code = get_answer_code(answer_encode_key, answer1_title)
+
+                answer2 = driver.find_element(By.ID, "rqAnswerOption1")
+                answer2_title = answer2.get_attribute('data-option')
+                answer2_code = get_answer_code(answer_encode_key, answer2_title)
+
+                correct_answer_code = driver.execute_script("return _w.rewardsQuizRenderInfo.correctAnswer")
+
+                if answer1_code == correct_answer_code:
+                    answer1.click()
+                else:
+                    answer2.click()
+
                 time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                 if current_question == complete_progress:
                     try:
@@ -550,8 +575,10 @@ class Rewards:
                 try_count += 1
                 if try_count >= 2:
                     self.__sys_out(
-                        "Failed to complete This or That quiz", 3, True, True
+                            "Failed to complete This or That quiz due to following exception:", 3, True, True
                     )
+                    error_msg = traceback.format_exc()
+                    self.__sys_out(error_msg, 3)
                     return False
 
     def __solve_hot_take(self, driver):
@@ -975,7 +1002,7 @@ class Rewards:
         checked = self.__check_offer_status(driver, offer)
 
         if checked:
-            self.__sys_out("Already completed or no points offered", 2, True)
+            self.__sys_out("Already completed, or no points offered", 2, True)
 
         else:
             offer.click()
@@ -1073,7 +1100,6 @@ class Rewards:
     def __offers(self, driver):
         # showcase offer
         self.__open_dashboard(driver)
-        completed = []
 
         #daily set
         daily_sets_xpath = '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-daily-set-item-content/div/a'
@@ -1086,6 +1112,7 @@ class Rewards:
         more_activities_xpath = '//*[@id="more-activities"]/div/mee-card[{offer_index}]/div/card-content/mee-rewards-more-activities-card-item/div/a'
         self.__perform_action_on_offers(self.__click_offer, driver, more_activities_xpath, [], offer_count=remaining_offer_count)
 
+        completed = []
         # check offers status after all offers have been tried
         self.__perform_action_on_offers(self.__check_offer_status, driver, daily_sets_xpath, completed, offer_count=3)
         self.__perform_action_on_offers(self.__check_offer_status, driver, more_activities_xpath, completed, offer_count=remaining_offer_count)

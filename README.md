@@ -88,5 +88,5 @@ Multiple accounts is not supported currently, and there is no plans to add this 
 - UK quiz updates by `chris987789`
 - 2FA code by `revolutionisme`
 - Telegram notifications by `hosein-hub`
-- Punch card and dashboard code based on `Charles Bel's` [repo](https://github.com/ddday/micro/blob/main/ms_rewards_farmer.py).
+- Punch card, dashboard json, This or That perfect score, and more based on `Charles Bel's` wonderful [repo](https://github.com/charlesbel/Microsoft-Rewards-Farmer).
 - Microsoft Edge support by `Summon528`
