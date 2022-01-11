@@ -1296,8 +1296,8 @@ class Rewards:
         self.__sys_out("Starting punch card", 1)
         try:
             if not driver:
-                driver = Driver.get_driver(
-                    Driver.WEB_DEVICE, self.headless, self.cookies
+                driver = self.driver.get_driver(
+                    self.driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 
