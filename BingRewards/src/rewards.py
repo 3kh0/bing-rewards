@@ -1297,7 +1297,7 @@ class Rewards:
         try:
             if not driver:
                 driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless, self.cookies
+                    Driver.WEB_DEVICE, self.headless, self.cookies
                 )
                 self.__login(driver)
 
