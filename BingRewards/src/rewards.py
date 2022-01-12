@@ -34,10 +34,11 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, email, password, telegram_messenger=None, debug=True, headless=True, cookies=False, driver=ChromeDriver):
+    def __init__(self, email, password, telegram_messenger=None, googlespreadsheet_reporting=None, debug=True, headless=True, cookies=False, driver=ChromeDriver):
         self.email = email
         self.password = password
         self.telegram_messenger = telegram_messenger
+        self.googlespreadsheet_reporting = googlespreadsheet_reporting
         self.debug = debug
         self.headless = headless
         self.cookies = cookies
@@ -1377,6 +1378,26 @@ class Rewards:
                 else:
                     self.__sys_out(
                         f"Boo! Telegram notification NOT sent, response is: {resp}", 3
+                    )
+
+            if self.googlespreadsheet_reporting:
+                self.__sys_out(
+                    "Adding row to Google SpreadSheet", 2
+                )
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                user = f'{self.email}'
+                points_earned_today = f'{stats[earned_index].text.replace(" ", "")}'
+                streak_count = f'{stats[streak_index].text}'
+                days_till_bonus_count = f'{stats[days_till_bonus_index].text}'
+                available_points = int(f'{stats[avail_index].text.replace(".", "").replace(",", "")}')
+                resp = self.googlespreadsheet_reporting.add_row(current_time, user, points_earned_today, streak_count, days_till_bonus_count, available_points)
+                if int(f"{resp['updates']['updatedRows']}") >= 1:
+                    self.__sys_out(
+                        "Row added to Google SpreadSheet succesfully", 3
+                    )
+                else:
+                    self.__sys_out(
+                        f"Boo! Row NOT added to Google SpreadSheet, response is: {resp}", 3
                     )
 
         except Exception as e:

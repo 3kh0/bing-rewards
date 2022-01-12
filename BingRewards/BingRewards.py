@@ -4,6 +4,7 @@ from src.driver import Driver
 from src.rewards import Rewards
 from src.log import HistLog
 from src.telegram import TelegramMessenger
+from src.googlespreadsheet import GoogleSpreadSheetReporting
 import logging
 import base64
 from options import parse_arguments
@@ -77,7 +78,22 @@ def __main():
     else:
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
     
-    rewards = Rewards(email, password, telegram_messenger, DEBUG, args.headless, cookies, args.driver)
+    # googlespreadsheet credentials and values
+    googlespreadsheet_id = __decode(config.credentials.get('googlespreadsheet_id'))
+    googlespreadsheet_credentials = __decode(config.credentials.get('googlespreadsheet_credentials'))
+    with open('credentials.json', 'w') as f:
+        f.write(googlespreadsheet_credentials)
+    googlespreadsheet_token = __decode(config.credentials.get('googlespreadsheet_token'))
+    with open('token.json', 'w') as f:
+        f.write(googlespreadsheet_token)
+    googlespreadsheet_sheetname = config.credentials.get('googlespreadsheet_sheetname')
+
+    if not args.googlespreadsheet or not googlespreadsheet_id or not googlespreadsheet_credentials:
+        googlespreadsheet_reporting = None
+    else:
+        googlespreadsheet_reporting = GoogleSpreadSheetReporting(googlespreadsheet_id, googlespreadsheet_sheetname)
+
+    rewards = Rewards(email, password, telegram_messenger, googlespreadsheet_reporting, DEBUG, args.headless, cookies, args.driver)
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
     search_type = args.search_type

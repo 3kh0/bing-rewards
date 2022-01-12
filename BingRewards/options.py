@@ -165,6 +165,23 @@ def parse_arguments():
         action='store_false',
         help='do not send notifications to telegram'
     )
+
+    google_spreadsheet_group = parser.add_mutually_exclusive_group()
+    google_spreadsheet_group.add_argument(
+        '-gs',
+        '--googlespreadsheet',
+        dest='googlespreadsheet',
+        action='store_true',
+        help='add row to existing Google Spreadsheet using setup.py credentials'
+    )
+    google_spreadsheet_group.add_argument(
+        '-ngs',
+        '--no-googlespreadsheet',
+        dest='googlespreadsheet',
+        action='store_false',
+        help='do not add row to existing Google Spreadsheet, this is the default'
+    )
+
     parser.add_argument(
         '-d',
         '--driver',
@@ -175,7 +192,7 @@ def parse_arguments():
     )
 
     parser.set_defaults(search_type='remaining', headless=True,
-                        cookies=False, telegram=True, driver=ChromeDriver)
+                        cookies=False, telegram=True, googlespreadsheet=False, driver=ChromeDriver)
 
     args = parser.parse_args()
 

@@ -9,10 +9,11 @@ Please note:
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install `requirements.txt` file included in the repo: `pip install -r BingRewards/requirements.txt`.
 4. If you want notifications via Telegram, follow the steps [below](https://github.com/jjjchens235/bing-rewards#telegram-notification), else continue ahead
-5. Create config file by running `python setup.py`. If you need to update your email or password, re-run this. 
+5. If you want report on Google Spreadsheet , follow the steps [below](https://github.com/jjjchens235/bing-rewards#google-spreadsheet-reporting), else continue ahead
+6. Create config file by running `python setup.py`. If you need to update your email or password, re-run this. 
 	- Please note your email and password will be saved essentially as plain text (base64 encoded). If you prefer, leave the setup arguments blank and use the --email and --password command line arguments instead.
-6. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
-7. And you're all set! Run `python BingRewards/BingRewards.py` to start earning points.
+7. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
+8. And you're all set! Run `python BingRewards/BingRewards.py` to start earning points.
 
 ## Command Line Arguments
 #### Search Arguments
@@ -39,6 +40,9 @@ Please note:
 * Telegram
 	* `-t` or `--telegram`: Send notifications to telegram (more instructions below). This is the *default*, but will only work if telegram credentials were entered during setup
 	* `-nt` or `--no-telegram`: Do not send notifications to telegram.
+* Google Spreadsheet
+	*  `-gs` or `--googlespreadsheet`: Send reporting to Google Spreadsheet (more instructions below). 
+	*  `-ngs` or `--no-googlespreadsheet`: Do not add row to Google Spreadsheet. This is the *defaul
 
 #### Examples
 The following `python BingRewards.py` 
@@ -74,6 +78,20 @@ if you want to setup telegram notification system please follow these steps:
 3. Run setup `python setup.py` and enter 
 	- your token generated from step 1
 	- your userid from step 2
+
+## Google Spreadsheet reporting
+if you want to setup google Google Spreadsheet reporting system please follow these steps:
+1. Setup and Access Google Sheets API With Python
+	- You need to create a new or use existing  [Google Cloud Platform project](https://console.cloud.google.com/cloud-resource-manager).
+	- Enable  [Sheets API](https://console.developers.google.com/apis/library/sheets.googleapis.com)  in  [API Library](https://console.developers.google.com/apis/library).
+2.  Setup Credentials
+	- Goto  `Google Cloud Console -> Credentials ->`  [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent).
+	- Go back to  `Credentials`  to create  `OAuth client ID`:
+		-   `Application type`: Web application, Android, Chrome App, iOS, Other; I choose  `Others`  as I am running a local script.
+		-   `Name`: For you to identify the usage of this key
+	- You will be shown client ID and secret. Click OK.
+	- Click  `Download JSON`  and save the file as  `credentials.json`.
+	- Encode `credentials.json` text to Base64 format and store on `config.py`
 
 ## Two-factor Authentication
 2FA is supported, but only through `Microsoft Authenticator`.
