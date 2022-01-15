@@ -222,65 +222,28 @@ class Rewards:
 
     def __get_search_progress(self, driver, device, is_edge=False):
         if len(driver.window_handles) == 1:  # open new tab
-            driver.execute_script(
-                '''window.open("{0}");'''.format(self.__POINTS_URL)
-            )
+            driver.execute_script('''window.open("");''')
         driver.switch_to.window(driver.window_handles[-1])
-        driver.refresh()
-        time.sleep(1)
 
-        try_count = 0
-        while True:
-            try:
-                progress_elements = WebDriverWait(
-                    driver, self.__WEB_DRIVER_WAIT_LONG
-                ).until(
-                    EC.visibility_of_all_elements_located(
-                        (
-                            By.XPATH,
-                            '//*[@id="userPointsBreakdown"]/div/div[2]/div/div[*]'
-                        )
-                    )
-                )
-                break
-            except TimeoutException:
-                try_count += 1
-                time.sleep(3)
-            if try_count == 2:
-                msg = 'When searching, too many time out exceptions when getting progress elements'
-                self.__sys_out(msg, 3, True)
-                raise NoSuchElementException(msg)
+        user_status = self.get_dashboard_data(driver)['userStatus']
+        counters = user_status['counters']
 
         if is_edge:
-            search_types = ['EDGE']
+            search_key = 'pcSearch'
+            search_index = 1
         elif device == self.driver.WEB_DEVICE:
-            search_types = ['PC', 'DESKTOP']
+            search_key = 'pcSearch'
+            search_index = 0
         elif device == self.driver.MOBILE_DEVICE:
-            search_types = ['MOBILE', 'MÓVILES', 'MOBILI']
+            search_key = 'mobileSearch'
+            search_index = 0
+            if user_status['levelInfo']['activeLevel'] == 'Level1':
+                self.__sys_out("Account is 'LEVEL 1' - mobile searches not yet available.", 2, True)
+                return False
 
-        progress_text = None
-        for element in progress_elements:
-            progress_name = element.find_element(By.XPATH,
-                './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[1]'
-            ).text.upper()
+        current_progress = counters[search_key][search_index]['pointProgress']
+        complete_progress = counters[search_key][search_index]['pointProgressMax']
 
-            for search_type in search_types:
-                if search_type in progress_name:
-                    progress_text = element.find_element(By.XPATH,
-                        './div/div[2]/mee-rewards-user-points-details/div/div/div/div/p[2]'
-                    ).text
-                    break
-
-        if progress_text is None:
-            msg = f"Ending {search_types[0]} search. Could not detect search progress."
-            if device == self.driver.MOBILE_DEVICE:
-                msg += " Most likely because user is at LEVEL 1 and mobile searches are unavailable."
-            self.__sys_out(msg, 3, True)
-            return False
-
-        current_progress, complete_progress = [
-            int(match) for match in re.findall('\d+', progress_text)
-        ]
         driver.switch_to.window(driver.window_handles[0])
         return current_progress, complete_progress
 
