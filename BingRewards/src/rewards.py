@@ -1095,23 +1095,30 @@ class Rewards:
                     activity_url = activity['attributes']['destination']
                     #can't use redirect link b/c it disappears if you want to start a quiz that was already in progress
                     driver.get(activity_url)
-                    time.sleep(2)
+                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                     if self.__is_offer_sign_in_bug(driver):
                         driver.get(activity_url)
+
                     if self.__has_overlay(driver):
                         self.__quiz(driver)
                     else:
                         self.__quiz2(driver)
+
                 elif activity['promotionType'] == "urlreward":
                     driver.get(parent_url)
-                    time.sleep(2)
+                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                    #reached error page
+                    if 'error' in driver.current_url:
+                        self.__sys_out('Reached error page', 3, end=True)
+                        return activity_index
+
                     #will only get points if you click the redirect link, can't go to the page directly
                     driver.execute_script("document.getElementsByClassName('offer-cta')[0].click()")
                     time.sleep(2)
                     driver.close()
                     driver.switch_to.window(driver.window_handles[0])
 
-                #no point doing remaining activities due to 24 hour wait restriction
+                #stop after completing one activity
                 break
         # return the activity number so we can get it's progress later
         return activity_index
