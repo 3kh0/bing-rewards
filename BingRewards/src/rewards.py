@@ -1153,7 +1153,7 @@ class Rewards:
         punchcard_progress = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
         self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
         return is_complete_punchcard or is_complete_activity
-    def __complete_edge_search(self, driver=None, close=False):
+    def __complete_edge_search(self, driver=None, print_stats=False, close=False):
         self.__sys_out("Starting Edge search", 1)
 
         try:
@@ -1176,12 +1176,15 @@ class Rewards:
                 pass
             raise
 
+        if print_stats:
+            self.__print_stats(driver)
+
         if close:
             driver.quit()
         else:
             return driver
 
-    def __complete_web_search(self, driver=None, close=False):
+    def __complete_web_search(self, driver=None, print_stats=False, close=False):
         self.__sys_out("Starting web search", 1)
 
         try:
@@ -1204,12 +1207,15 @@ class Rewards:
                 pass
             raise
 
+        if print_stats:
+            self.__print_stats(driver)
+
         if close:
             driver.quit()
         else:
             return driver
 
-    def __complete_mobile_search(self, driver=None, close=False):
+    def __complete_mobile_search(self, driver=None, print_stats=False, close=False):
         self.__sys_out("Starting mobile search", 1)
 
         try:
@@ -1233,12 +1239,15 @@ class Rewards:
                 pass
             raise
 
+        if print_stats:
+            self.__print_stats(driver)
+
         if close:
             driver.quit()
         else:
             return driver
 
-    def __complete_offers(self, driver=None):
+    def __complete_offers(self, driver=None, print_stats=False, close=False):
         self.__sys_out("Starting offers", 1)
 
         try:
@@ -1260,9 +1269,15 @@ class Rewards:
                 pass
             raise
 
-        return driver
+        if print_stats:
+            self.__print_stats(driver)
 
-    def __complete_punchcard(self, driver=None):
+        if close:
+            driver.quit()
+        else:
+            return driver
+
+    def __complete_punchcard(self, driver=None, print_stats=False, close=False):
         self.__sys_out("Starting punch card", 1)
         try:
             if not driver:
@@ -1283,7 +1298,13 @@ class Rewards:
                 pass
             raise
 
-        return driver
+        if print_stats:
+            self.__print_stats(driver)
+
+        if close:
+            driver.quit()
+        else:
+            return driver
 
     def __print_stats(self, driver):
         try:
@@ -1352,87 +1373,49 @@ class Rewards:
         except Exception as e:
             print('    Error checking rewards status - ', e)
 
-    def print_stats(self, driver, is_print_stats):
-        self.__print_stats(driver)
-        driver.quit()
-
-    def complete_edge_search(self, search_hist, is_print_stats=False):
-        self.search_hist = search_hist
-        driver = self.__complete_edge_search()
-        if is_print_stats:
-            self.print_stats(driver, is_print_stats)
-
-    def complete_web_search(self, search_hist, is_print_stats=True):
-        self.search_hist = search_hist
-        driver = self.__complete_web_search()
-        if is_print_stats:
-            self.print_stats(driver, is_print_stats)
-
-    def complete_mobile_search(self, search_hist, is_print_stats=True):
-        self.search_hist = search_hist
-        driver = self.__complete_mobile_search()
-        if is_print_stats:
-            self.print_stats(driver, is_print_stats)
-
-    def complete_offers(self, is_print_stats=True):
-        driver = self.__complete_offers()
-        if is_print_stats:
-            self.print_stats(driver, is_print_stats)
-
-    def complete_punchcard(self, is_print_stats=True):
-        driver = self.__complete_punchcard()
-        if is_print_stats:
-            self.print_stats(driver, is_print_stats)
-
-    def complete_both_searches(self, search_hist, is_print_stats=True):
-        self.search_hist = search_hist
+    def complete_both_searches(self):
         driver = self.__complete_edge_search()
         self.__complete_web_search(driver, close=True)
-        driver = self.__complete_mobile_search()
-        if is_print_stats:
-            self.print_stats(driver, is_print_stats)
+        self.__complete_mobile_search(print_stats=True, close=True)
 
-    def complete_all(self, search_hist, is_print_stats=True):
-        self.search_hist = search_hist
-        driver = self.__complete_edge_search()
-        self.__complete_web_search(driver)
-        self.__complete_offers(driver)
-        driver.quit()
-        driver = self.__complete_mobile_search()
-        driver = self.__complete_punchcard(driver)
-        if is_print_stats:
-            self.print_stats(driver, is_print_stats)
+    def complete_remaining_searches(self, search_type, prev_completion):
+        driver = None
+        is_search_all = search_type == 'all'
+
+        if not prev_completion.is_edge_search_completed() or is_search_all:
+            driver = self.__complete_edge_search(driver)
+        if not prev_completion.is_web_search_completed() or is_search_all:
+            driver = self.__complete_web_search(driver)
+        if not prev_completion.is_offers_completed() or is_search_all:
+            driver = self.__complete_offers(driver)
+        if not prev_completion.is_mobile_search_completed() or is_search_all:
+            if driver:
+                driver.quit()
+            driver = self.__complete_mobile_search(driver=None)
+        if not prev_completion.is_punchcard_completed() or is_search_all:
+            driver = self.__complete_punchcard(driver)
+
+        if driver:
+            driver.quit()
 
     def complete_search_type(self, search_type, prev_completion, search_hist):
-        if search_type == 'remaining':
-            #complete_all() has lower overhead but tries all searches
-            if not prev_completion.is_web_search_completed() and not prev_completion.is_mobile_search_completed():
-                self.complete_all(search_hist)
-            #higher overhead, opens a new webdriver for each unfinished search type
-            else:
-                if not prev_completion.is_edge_search_completed():
-                    self.complete_edge_search(search_hist)
-                if not prev_completion.is_web_search_completed():
-                    self.complete_web_search(search_hist)
-                if not prev_completion.is_offers_completed():
-                    self.complete_offers()
-                if not prev_completion.is_mobile_search_completed():
-                    self.complete_mobile_search(search_hist)
-                if not prev_completion.is_punchcard_completed():
-                    self.complete_punchcard(search_hist)
+        self.search_hist = search_hist
+
+        if search_type in ('remaining', 'all'):
+            self.complete_remaining_searches(search_type, prev_completion)
+
         # if either web/mobile, check if edge is complete
         elif search_type in ('web', 'mobile'):
             if not prev_completion.is_edge_search_completed():
-                self.complete_edge_search(search_hist)
+                self.__complete_edge_search(print_stats=True, close=True)
             if search_type == 'web':
-                self.complete_web_search(search_hist)
+                self.__complete_web_search(print_stats=True, close=True)
             elif search_type == 'mobile':
-                self.complete_mobile_search(search_hist)
-        elif search_type == 'both':
-            self.complete_both_searches(search_hist)
+                self.__complete_mobile_search(print_stats=True, close=True)
+
         elif search_type == 'offers':
-            self.complete_offers()
+            self.__complete_offers(print_stats=True, close=True)
         elif search_type == 'punch card':
-            self.complete_punchcard()
-        elif search_type == 'all':
-            self.complete_all(search_hist)
+            self.__complete_punchcard(print_stats=True, close=True)
+        elif search_type == 'both':
+            self.complete_both_searches()
