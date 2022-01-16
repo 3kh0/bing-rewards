@@ -15,7 +15,6 @@ import random
 from datetime import datetime, timedelta
 import json
 import ssl
-import requests
 import traceback
 
 
@@ -24,7 +23,6 @@ class Rewards:
     __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
     __DASHBOARD_URL = "https://account.microsoft.com/rewards/"
-    __POINTS_URL = "https://account.microsoft.com/rewards/pointsbreakdown"
     __TRENDS_URL = "https://trends.google.com/trends/api/dailytrends?hl=en-US&ed={}&geo=US&ns=15"
 
     __WEB_DRIVER_WAIT_LONG = 30
@@ -220,7 +218,7 @@ class Rewards:
         dashboard = json.loads(dashboard)
         return dashboard
 
-    def __get_search_progress(self, driver, device, is_edge=False):
+    def __get_search_progress(self, driver, search_type):
         if len(driver.window_handles) == 1:  # open new tab
             driver.execute_script('''window.open("");''')
         driver.switch_to.window(driver.window_handles[-1])
@@ -228,13 +226,13 @@ class Rewards:
         user_status = self.get_dashboard_data(driver)['userStatus']
         counters = user_status['counters']
 
-        if is_edge:
+        if search_type == 'edge':
             search_key = 'pcSearch'
             search_index = 1
-        elif device == self.driver.WEB_DEVICE:
+        elif search_type == 'web':
             search_key = 'pcSearch'
             search_index = 0
-        elif device == self.driver.MOBILE_DEVICE:
+        elif search_type == 'mobile':
             search_key = 'mobileSearch'
             search_index = 0
             if user_status['levelInfo']['activeLevel'] == 'Level1':
@@ -278,7 +276,7 @@ class Rewards:
                 self.__queries.append(related_topic["query"].lower())
         return last_request_time
 
-    def __search(self, driver, device, is_edge=False):
+    def __search(self, driver, search_type):
         self.__sys_out("Starting search", 2)
         driver.get(self.__BING_URL)
 
@@ -293,7 +291,7 @@ class Rewards:
                 trending_date, last_request_time
             )
         while True:
-            progress = self.__get_search_progress(driver, device, is_edge)
+            progress = self.__get_search_progress(driver, search_type)
             if not progress:
                 return False
             else:
@@ -1153,22 +1151,21 @@ class Rewards:
         punchcard_progress = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
         self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
         return is_complete_punchcard or is_complete_activity
-    def __complete_edge_search(self, driver=None, print_stats=False, close=False):
-        self.__sys_out("Starting Edge search", 1)
+
+    def __complete_action(self, action, description, driver, print_stats, close, device_type, **action_kwargs):
+        self.__sys_out(f"Starting {description}", 1)
 
         try:
             if driver is None:
                 driver = self.driver.get_driver(
-                    self.driver.WEB_DEVICE, self.headless, self.cookies
+                    device_type, self.headless, self.cookies
                 )
                 self.__login(driver)
-            self.completion.edge_search = self.__search(
-                driver, self.driver.WEB_DEVICE, is_edge=True
-            )
-            if self.completion.edge_search:
-                self.__sys_out("Successfully completed edge search", 1, True)
+            completion = action(driver, **action_kwargs)
+            if completion:
+                self.__sys_out(f"Successfully completed {description}", 1, True)
             else:
-                self.__sys_out("Failed to complete edge search", 1, True)
+                self.__sys_out(f"Failed to complete {description}", 1, True)
         except:
             try:
                 driver.quit()
@@ -1181,130 +1178,58 @@ class Rewards:
 
         if close:
             driver.quit()
-        else:
-            return driver
+            driver = None
+        return driver, completion
+
+    def __complete_edge_search(self, driver=None, print_stats=False, close=False):
+        action = self.__search
+        action_kwargs = {'search_type': 'edge'}
+        description = 'Edge search'
+        device_type = self.driver.WEB_DEVICE
+
+        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        self.completion.edge_search = completion
+        return driver
 
     def __complete_web_search(self, driver=None, print_stats=False, close=False):
-        self.__sys_out("Starting web search", 1)
+        action = self.__search
+        action_kwargs = {'search_type': 'web'}
+        description = 'Web search'
+        device_type = self.driver.WEB_DEVICE
 
-        try:
-            if driver is None:
-                driver = self.driver.get_driver(
-                    self.driver.WEB_DEVICE, self.headless, self.cookies
-                )
-                self.__login(driver)
-            self.completion.web_search = self.__search(
-                driver, self.driver.WEB_DEVICE
-            )
-            if self.completion.web_search:
-                self.__sys_out("Successfully completed web search", 1, True)
-            else:
-                self.__sys_out("Failed to complete web search", 1, True)
-        except:
-            try:
-                driver.quit()
-            except AttributeError:  # not yet initialized
-                pass
-            raise
-
-        if print_stats:
-            self.__print_stats(driver)
-
-        if close:
-            driver.quit()
-        else:
-            return driver
+        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        self.completion.web_search = completion
+        return driver
 
     def __complete_mobile_search(self, driver=None, print_stats=False, close=False):
-        self.__sys_out("Starting mobile search", 1)
+        action = self.__search
+        action_kwargs = {'search_type': 'mobile'}
+        description = 'Mobile search'
+        device_type = self.driver.MOBILE_DEVICE
 
-        try:
-            if driver is None:
-                driver = self.driver.get_driver(
-                    self.driver.MOBILE_DEVICE, self.headless, self.cookies
-                )
-                self.__login(driver)
-
-            self.completion.mobile_search = self.__search(
-                driver, self.driver.MOBILE_DEVICE
-            )
-            if self.completion.mobile_search:
-                self.__sys_out("Successfully completed mobile search", 1, True)
-            else:
-                self.__sys_out("Failed to complete mobile search", 1, True)
-        except:
-            try:
-                driver.quit()
-            except AttributeError:  # not yet initialized
-                pass
-            raise
-
-        if print_stats:
-            self.__print_stats(driver)
-
-        if close:
-            driver.quit()
-        else:
-            return driver
+        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        self.completion.mobile_search = completion
+        return driver
 
     def __complete_offers(self, driver=None, print_stats=False, close=False):
-        self.__sys_out("Starting offers", 1)
+        action = self.__offers
+        action_kwargs = {}
+        description = 'Offers'
+        device_type = self.driver.WEB_DEVICE
 
-        try:
-            if not driver:
-                driver = self.driver.get_driver(
-                    self.driver.WEB_DEVICE, self.headless, self.cookies
-                )
-                self.__login(driver)
-
-            self.completion.offers = self.__offers(driver)
-            if self.completion.offers == -1 or not self.completion.offers:
-                self.__sys_out("Failed to complete offers", 1, True)
-            else:
-                self.__sys_out("Successfully completed offers", 1, True)
-        except:
-            try:
-                driver.quit()
-            except AttributeError:
-                pass
-            raise
-
-        if print_stats:
-            self.__print_stats(driver)
-
-        if close:
-            driver.quit()
-        else:
-            return driver
+        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        self.completion.offers = completion
+        return driver
 
     def __complete_punchcard(self, driver=None, print_stats=False, close=False):
-        self.__sys_out("Starting punch card", 1)
-        try:
-            if not driver:
-                driver = self.driver.get_driver(
-                    self.driver.WEB_DEVICE, self.headless, self.cookies
-                )
-                self.__login(driver)
+        action = self.__punchcard
+        action_kwargs = {}
+        description = 'punch card'
+        device_type = self.driver.WEB_DEVICE
 
-            self.completion.punchcard = self.__punchcard(driver)
-            if not self.completion.punchcard:
-                self.__sys_out("Failed to complete latest punch card activity", 1, True)
-            else:
-                self.__sys_out("Completed latest punch card activity OR entire punch card already completed", 1, True)
-        except:
-            try:
-                driver.quit()
-            except AttributeError:
-                pass
-            raise
-
-        if print_stats:
-            self.__print_stats(driver)
-
-        if close:
-            driver.quit()
-        else:
-            return driver
+        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        self.completion.punchcard = completion
+        return driver
 
     def __print_stats(self, driver):
         try:
@@ -1396,6 +1321,7 @@ class Rewards:
             driver = self.__complete_punchcard(driver)
 
         if driver:
+            self.__print_stats(driver)
             driver.quit()
 
     def complete_search_type(self, search_type, prev_completion, search_hist):
@@ -1403,16 +1329,15 @@ class Rewards:
 
         if search_type in ('remaining', 'all'):
             self.complete_remaining_searches(search_type, prev_completion)
-
         # if either web/mobile, check if edge is complete
         elif search_type in ('web', 'mobile'):
+            driver = None
             if not prev_completion.is_edge_search_completed():
-                self.__complete_edge_search(print_stats=True, close=True)
+                driver = self.__complete_edge_search(print_stats=True)
             if search_type == 'web':
-                self.__complete_web_search(print_stats=True, close=True)
+                self.__complete_web_search(driver, print_stats=True, close=True)
             elif search_type == 'mobile':
-                self.__complete_mobile_search(print_stats=True, close=True)
-
+                self.__complete_mobile_search(driver, print_stats=True, close=True)
         elif search_type == 'offers':
             self.__complete_offers(print_stats=True, close=True)
         elif search_type == 'punch card':
