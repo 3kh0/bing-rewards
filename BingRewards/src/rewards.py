@@ -17,8 +17,6 @@ import json
 import ssl
 import traceback
 
-
-
 class Rewards:
     __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
@@ -1152,9 +1150,73 @@ class Rewards:
         self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
         return is_complete_punchcard or is_complete_activity
 
+    def __print_stats(self, driver):
+        try:
+            # dashboard dictionary data
+            dashboard = self.get_dashboard_data(driver)
+            user_d = dashboard['userStatus']
+            streak_d = dashboard["streakBonusPromotions"][0]
+
+            # get the values from the dictionary
+            earned_today = user_d['counters']['dailyPoint'][0]['pointProgress']
+            available_points = user_d['availablePoints']
+            lifetime_points = user_d['lifetimePoints']
+            streak_count = streak_d['activityProgress']
+            days_to_bonus = streak_d['activityProgressMax'] - streak_count
+
+            # build strings for sys_out & Telegram
+            earned_today_str = f"Points earned: {earned_today}"
+            streak_count_str = f"Streak count: {streak_count}"
+            available_points_str = f"Available points: {available_points:,}"
+            lifetime_points_str = f"Lifetime points: {lifetime_points:,}"
+
+            #use xpath to get days till streak bonus
+            user_level = user_d['levelInfo']['activeLevel']
+            if user_level == 'Level2':
+                days_to_bonus_index = 3
+            else:
+                days_to_bonus_index = 4
+            days_to_bonus_str = driver.find_elements(
+                By.XPATH, '//mee-rewards-counter-animation//span'
+            )[days_to_bonus_index].text
+
+            stats_str = [
+                earned_today_str, streak_count_str,
+                days_to_bonus_str, available_points_str,
+                lifetime_points_str
+            ]
+            self.__sys_out("Summary", 1, flush=True)
+            for stat_str in stats_str:
+                if 'until bonus' in stat_str:
+                    self.__sys_out(stat_str, 2, end=True)
+                else:
+                    self.__sys_out(stat_str, 2)
+
+            if self.telegram_messenger:
+                self.__sys_out(
+                    "Sending Telegram Notification", 2
+                )
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                to_send = f'\n Summary for {self.email} at : {current_time} \n\n' + \
+                "\n".join(stats_str)
+              #f'Completion status:{self.completion}\n' \
+
+                resp = self.telegram_messenger.send_message(to_send)
+                if resp.status_code == 200:
+                    self.__sys_out(
+                        "Telegram notification sent", 3
+                    )
+                else:
+                    self.__sys_out(
+                        f"Boo! Telegram notification NOT sent, response is: {resp}", 3
+                    )
+
+        except Exception as e:
+            error_msg = traceback.format_exc()
+            self.__sys_out(f'Error checking rewards status -\n {error_msg}', 1)
+
     def __complete_action(self, action, description, driver, print_stats, close, device_type, **action_kwargs):
         self.__sys_out(f"Starting {description}", 1)
-
         try:
             if driver is None:
                 driver = self.driver.get_driver(
@@ -1230,73 +1292,6 @@ class Rewards:
         driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
         self.completion.punchcard = completion
         return driver
-
-    def __print_stats(self, driver):
-        try:
-            self.__open_dashboard(driver)
-            #once pointsbreakdown link is clickable, page is loaded
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                EC.element_to_be_clickable(
-                    (
-                        By.XPATH,
-                        '//*[@id="rx-user-status-action"]/span/ng-transclude'
-                    )
-                )
-            )
-            #sleep an additional 5 seconds to make sure stats are loaded
-            time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
-            stats = driver.find_elements(By.XPATH,
-                '//mee-rewards-counter-animation//span'
-            )
-
-            #level 2
-            earned_index = 4
-            streak_index = 2
-            days_till_bonus_index = 3
-            avail_index = 0
-
-            #level 1
-            if len(stats) == 6:
-                earned_index += 1
-                streak_index += 1
-                days_till_bonus_index += 1
-                avail_index += 1
-
-            self.__sys_out("Summary", 1, flush=True)
-            self.__sys_out(
-                "Points earned: " +
-                stats[earned_index].text.replace(" ", ""), 2
-            )
-            self.__sys_out("Streak count: " + stats[streak_index].text, 2)
-            self.__sys_out(
-                stats[days_till_bonus_index].text, 2, end=True
-            )  # streak details, ex. how many days remaining, bonus earned
-            self.__sys_out(
-                "Available points: " + stats[avail_index].text, 2
-            )
-
-            if self.telegram_messenger:
-                self.__sys_out(
-                    "Sending Telegram Notification", 2
-                )
-                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                to_send = f'\n Summary for {self.email} at : {current_time} \n\n' \
-                          f'Points earned today: {stats[earned_index].text.replace(" ", "")} \n' \
-                          f'Streak count : {stats[streak_index].text} \n' \
-                          f'{stats[days_till_bonus_index].text} \n' \
-                          f'Available points: {stats[avail_index].text} \n'
-                resp = self.telegram_messenger.send_message(to_send)
-                if resp.status_code == 200:
-                    self.__sys_out(
-                        "Telegram notification sent", 3
-                    )
-                else:
-                    self.__sys_out(
-                        f"Boo! Telegram notification NOT sent, response is: {resp}", 3
-                    )
-
-        except Exception as e:
-            print('    Error checking rewards status - ', e)
 
     def complete_both_searches(self):
         driver = self.__complete_edge_search()
