@@ -134,7 +134,7 @@ class Driver(ABC):
     def get_driver(cls, device, headless, cookies) -> EventFiringWebDriver:
 
         # raspberry pi: assumes driver already installed via `sudo apt-get install chromium-chromedriver`
-        if platform.machine() == "armv7l":
+        if platform.machine() in ["armv7l","aarch64"]:
             driver_path = "/usr/lib/chromium-browser/chromedriver"
         # all others
         else:
