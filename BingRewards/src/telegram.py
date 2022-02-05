@@ -7,5 +7,4 @@ class TelegramMessenger():
 
     def send_message(self, message):
         reply_url = f'https://api.telegram.org/bot{self.api_token}/sendMessage?chat_id={self.userid}&text={message}'
-        resp = requests.get(reply_url)
-        return resp
+        return requests.get(reply_url)
