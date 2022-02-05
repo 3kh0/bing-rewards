@@ -285,12 +285,11 @@ class Rewards:
         cookieclear = 0
         prev_progress = -1
         try_count = 0
-        trending_date = datetime.now()
 
         last_request_time = None
         if len(self.__queries) == 0:
             last_request_time = self.__update_search_queries(
-                trending_date, last_request_time
+                last_request_time
             )
         while True:
             if progress := self.__get_search_progress(driver, search_type):
