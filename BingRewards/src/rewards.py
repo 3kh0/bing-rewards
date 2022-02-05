@@ -1,4 +1,4 @@
-﻿from src.driver import ChromeDriver
+from src.driver import ChromeDriver
 from src.log import Completion
 import requests
 from selenium.webdriver.common.keys import Keys
