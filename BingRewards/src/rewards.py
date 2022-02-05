@@ -1121,7 +1121,9 @@ class Rewards:
 
     def __punchcard(self, driver):
         is_complete_activity = True
+        has_valid_punch = False
         punchcards = self.get_dashboard_data(driver)['punchCards']
+
         # find valid punchcard
         for punchcard_index, punchcard in enumerate(punchcards):
             # Check if valid punchcard
@@ -1129,6 +1131,7 @@ class Rewards:
             and 'appstore' not in punchcard['parentPromotion']['attributes']['type'] \
             and punchcard['parentPromotion']['pointProgressMax'] != 0 \
             and punchcard['childPromotions']:
+                has_valid_punch = True
                 parent_url = punchcard['parentPromotion']['attributes']['destination']
                 title = punchcard['parentPromotion']['attributes']['title']
                 # check if valid punchcard is completed
@@ -1144,6 +1147,11 @@ class Rewards:
                         self.__sys_out('Latest punch card activity NOT successfully completed. Possibly not enough time has elapsed since last punch.', 3)
                 else:
                     self.__sys_out(f'Punch card "{title}" is already completed.', 2)
+
+        # no punchcards offered
+        if not has_valid_punch:
+            self.__sys_out('No valid punch cards offered', 3)
+            return True
 
         driver.get(parent_url)
         punchcard_progress = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
