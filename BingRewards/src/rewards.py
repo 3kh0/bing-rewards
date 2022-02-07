@@ -27,6 +27,7 @@ class Rewards:
     __SYS_OUT_TAB_LEN = 8
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
+    _ON_POSIX = 'posix' in sys.builtin_module_names
 
     def __init__(self, email, password, telegram_messenger=None, debug=True, headless=True, cookies=False, driver=ChromeDriver):
         self.email = email
@@ -248,7 +249,12 @@ class Rewards:
                 )
             )  # sleep at least 20 seconds to avoid over requesting server
 
-        (lang, geo) = locale.getlocale()[0].split("_")  # en and US
+        if self._ON_POSIX: #TODO: fix locale for windows
+            (lang, geo) = locale.getlocale()[0].split("_")  # en and US
+        else:
+            lang = "en"
+            geo = "US"
+        
         trends_url = "https://trends.google.com/trends/api/dailytrends"
 
         search_terms = []
