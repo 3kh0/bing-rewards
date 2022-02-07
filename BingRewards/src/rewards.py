@@ -1,5 +1,6 @@
 ﻿from src.driver import ChromeDriver
 from src.log import Completion
+from src.log import StatsLog
 from urllib.request import urlopen
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,12 +17,16 @@ from datetime import datetime, timedelta
 import json
 import ssl
 import traceback
+import os
 
 class Rewards:
     __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
     __DASHBOARD_URL = "https://account.microsoft.com/rewards/"
     __TRENDS_URL = "https://trends.google.com/trends/api/dailytrends?hl=en-US&ed={}&geo=US&ns=15"
+    
+    __LOG_DIR = "logs"
+    __STATS_LOG = "stats.log"
 
     __WEB_DRIVER_WAIT_LONG = 30
     __WEB_DRIVER_WAIT_SHORT = 5
@@ -34,6 +39,7 @@ class Rewards:
         self.email = email
         self.password = password
         self.telegram_messenger = telegram_messenger
+        self.stats_log = StatsLog(os.path.join(self.__LOG_DIR, self.__STATS_LOG))
         self.debug = debug
         self.headless = headless
         self.cookies = cookies
@@ -1218,6 +1224,8 @@ class Rewards:
                     self.__sys_out(
                         f"Boo! Telegram notification NOT sent, response is: {resp}", 3
                     )
+            
+            self.stats_log.write(stats_str)
 
         except Exception as e:
             error_msg = traceback.format_exc()
