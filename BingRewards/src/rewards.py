@@ -257,7 +257,7 @@ class Rewards:
         
         trends_url = "https://trends.google.com/trends/api/dailytrends"
 
-        search_terms = []
+        search_terms = set()
         trends_dict = {
             "hl": lang,
             "ed": str(
@@ -274,12 +274,12 @@ class Rewards:
         for topic in google_trends["default"]["trendingSearchesDays"][0][
             "trendingSearches"
         ]:
-            search_terms.append(topic["title"]["query"].lower())
+            search_terms.add(topic["title"]["query"].lower())
             for related_topic in topic["relatedQueries"]:
-                search_terms.append(related_topic["query"].lower())
-        search_terms = list(set(search_terms))
+                search_terms.add(related_topic["query"].lower())
+        search_terms = list(search_terms)
         random.shuffle(search_terms)
-        self.__queries = [search_terms]
+        self.__queries = search_terms
 
         last_request_time = datetime.now()
         return last_request_time
