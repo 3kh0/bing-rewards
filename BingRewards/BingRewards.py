@@ -47,13 +47,7 @@ def __main():
         from src import config
     except ImportError:
         print("\nFailed to import configuration file")
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(message)s',
-            filename=os.path.join(LOG_DIR, ERROR_LOG)
-        )
-        logging.exception(hist_log.get_timestamp())
-        logging.debug("")
+        _log_hist_log(hist_log)
         raise
 
     args = parse_arguments()
@@ -76,7 +70,7 @@ def __main():
         telegram_messenger = None
     else:
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
-    
+
     rewards = Rewards(email, password, telegram_messenger, DEBUG, args.headless, cookies, args.driver)
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
@@ -100,13 +94,7 @@ def __main():
             logging.debug("")
 
     except:  # catch *all* exceptions
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(message)s',
-            filename=os.path.join(LOG_DIR, ERROR_LOG)
-        )
-        logging.exception(hist_log.get_timestamp())
-        logging.debug("")
+        _log_hist_log(hist_log)
         hist_log.write(rewards.completion, rewards.search_hist)
         if telegram_messenger:
             # send error msg to telegram
@@ -114,6 +102,15 @@ def __main():
             error_msg = traceback.format_exc()
             telegram_messenger.send_message(error_msg)
         raise
+
+def _log_hist_log(hist_log):
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(message)s',
+        filename=os.path.join(LOG_DIR, ERROR_LOG)
+    )
+    logging.exception(hist_log.get_timestamp())
+    logging.debug("")
 
 
 if __name__ == "__main__":

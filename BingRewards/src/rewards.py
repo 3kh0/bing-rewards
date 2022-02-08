@@ -1,6 +1,6 @@
-﻿from src.driver import ChromeDriver
+from src.driver import ChromeDriver
 from src.log import Completion
-from urllib.request import urlopen
+import requests
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -12,16 +12,14 @@ import time
 import sys
 import re
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
-import ssl
 import traceback
-
+import locale
 class Rewards:
     __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
     __DASHBOARD_URL = "https://account.microsoft.com/rewards/"
-    __TRENDS_URL = "https://trends.google.com/trends/api/dailytrends?hl=en-US&ed={}&geo=US&ns=15"
 
     __WEB_DRIVER_WAIT_LONG = 30
     __WEB_DRIVER_WAIT_SHORT = 5
@@ -29,6 +27,7 @@ class Rewards:
     __SYS_OUT_TAB_LEN = 8
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
+    _ON_POSIX = 'posix' in sys.builtin_module_names
 
     def __init__(self, email, password, telegram_messenger=None, debug=True, headless=True, cookies=False, driver=ChromeDriver):
         self.email = email
@@ -63,9 +62,8 @@ class Rewards:
                 "\n" if lvl == 1 and end else ""
             )
             print(out)
-            if len(self.stdout) > 0:
-                if self.stdout[-1].startswith("\r"):
-                    self.stdout[-1] = self.stdout[-1][2:]
+            if len(self.stdout) > 0 and self.stdout[-1].startswith("\r"):
+                self.stdout[-1] = self.stdout[-1][2:]
             self.stdout.append(out)
 
     def __sys_out_progress(self, current_progress, complete_progress, lvl):
@@ -164,7 +162,7 @@ class Rewards:
 
         self.__sys_out("Successfully logged in", 2, True)
         VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES', 'mkt=EN-AU', 'mkt=ZH-CN', 'mkt=IT-IT', 'mkt=DE-DE']
-        if not any(market in driver.current_url for market in VALID_MARKETS):
+        if all(market not in driver.current_url for market in VALID_MARKETS):
             raise RuntimeError(
                     f"Logged in, but user not located in one of these valid markets: {VALID_MARKETS}."
             )
@@ -243,35 +241,47 @@ class Rewards:
         driver.switch_to.window(driver.window_handles[0])
         return current_progress, complete_progress
 
-    def __update_search_queries(self, timestamp, last_request_time):
+    def __update_search_queries(self, last_request_time):
         if last_request_time:
             time.sleep(
                 max(
                     0, 20 - (datetime.now() - last_request_time).total_seconds()
                 )
             )  # sleep at least 20 seconds to avoid over requesting server
-        try:
-            response = urlopen(
-                self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d")),
-                context=ssl.SSLContext(ssl.PROTOCOL_TLS)
-            )
-        except ssl.SSLError:
-            response = urlopen(
-                self.__TRENDS_URL.format(timestamp.strftime("%Y%m%d"))
-            )
+
+        if self._ON_POSIX: #TODO: fix locale for windows
+            (lang, geo) = locale.getlocale()[0].split("_")  # en and US
+        else:
+            lang = "en"
+            geo = "US"
+        
+        trends_url = "https://trends.google.com/trends/api/dailytrends"
+
+        search_terms = set()
+        trends_dict = {
+            "hl": lang,
+            "ed": str(
+                (date.today() - timedelta(days=random.randint(1, 20))).strftime(
+                    "%Y%m%d"
+                )
+            ),
+            "geo": geo,
+            "ns": 15,
+        }
+
+        req = requests.get(trends_url, params=trends_dict)
+        google_trends = json.loads(req.text[6:])
+        for topic in google_trends["default"]["trendingSearchesDays"][0][
+            "trendingSearches"
+        ]:
+            search_terms.add(topic["title"]["query"].lower())
+            for related_topic in topic["relatedQueries"]:
+                search_terms.add(related_topic["query"].lower())
+        search_terms = list(search_terms)
+        random.shuffle(search_terms)
+        self.__queries = search_terms
 
         last_request_time = datetime.now()
-        output = response.read()[5:]
-        if type(output) == bytes:
-            output = output.decode('utf-8')
-        response = json.loads(output)
-
-        #self.__queries = [] # will already be empty
-        for topic in response["default"]["trendingSearchesDays"][0][
-            "trendingSearches"]:
-            self.__queries.append(topic["title"]["query"].lower())
-            for related_topic in topic["relatedQueries"]:
-                self.__queries.append(related_topic["query"].lower())
         return last_request_time
 
     def __search(self, driver, search_type):
@@ -281,19 +291,17 @@ class Rewards:
         cookieclear = 0
         prev_progress = -1
         try_count = 0
-        trending_date = datetime.now()
 
         last_request_time = None
         if len(self.__queries) == 0:
             last_request_time = self.__update_search_queries(
-                trending_date, last_request_time
+                last_request_time
             )
         while True:
-            progress = self.__get_search_progress(driver, search_type)
-            if not progress:
-                return False
-            else:
+            if progress := self.__get_search_progress(driver, search_type):
                 current_progress, complete_progress = progress
+            else:
+                return False
             if complete_progress > 0:
                 self.__sys_out_progress(current_progress, complete_progress, 3)
             if current_progress == complete_progress:
@@ -320,9 +328,8 @@ class Rewards:
                     query = self.__queries[0]
                     self.__queries = self.__queries[1:]
                 else:
-                    trending_date -= timedelta(days=1)
                     last_request_time = self.__update_search_queries(
-                        trending_date, last_request_time
+                        last_request_time
                     )
                     continue
                 if query not in self.search_hist:
@@ -444,21 +451,23 @@ class Rewards:
                 question_progress = '0/5'
                 question_progresses = [question_progress]
                 while True:
-                    if len(
-                        driver.find_elements(By.ID,
-                            'rqAnswerOption{0}'.format(option_index)
+                    if (
+                        len(
+                            driver.find_elements(
+                                By.ID, 'rqAnswerOption{0}'.format(option_index)
+                            )
                         )
-                    ) > 0:
-                        #find_element_by_id returns an EventFiringWebElement object, to get the web element, must use wrapped_element attribute
-                        element = driver.find_element(By.ID,
-                            'rqAnswerOption{0}'.format(option_index)
-                        ).wrapped_element
-                        #must use ActionChains due to error 'element is not clickable at point', for more info see this link:https://stackoverflow.com/questions/11908249/debugging-element-is-not-clickable-at-point-error
-                        ActionChains(driver).move_to_element(element).click(
-                            element
-                        ).perform()
-                    else:
+                        <= 0
+                    ):
                         return False
+                    #find_element_by_id returns an EventFiringWebElement object, to get the web element, must use wrapped_element attribute
+                    element = driver.find_element(By.ID,
+                        'rqAnswerOption{0}'.format(option_index)
+                    ).wrapped_element
+                    #must use ActionChains due to error 'element is not clickable at point', for more info see this link:https://stackoverflow.com/questions/11908249/debugging-element-is-not-clickable-at-point-error
+                    ActionChains(driver).move_to_element(element).click(
+                        element
+                    ).perform()
                     time.sleep(random.uniform(1, 4))
                     prev_progress = question_progress
                     #returns a string like '1/5' (1 out of 5 answers selected correctly so far)
@@ -466,11 +475,10 @@ class Rewards:
                         'bt_corOpStat'
                     ).text
                     #once the last correct answer is clicked, question progress becomes '' or 5/5, tho in the past it became '0/5' sometimes, hence 2nd cond
-                    if (question_progress == '' or
-                        question_progress == '5/5') or (
-                            prev_progress != question_progress and
-                            question_progress in question_progresses
-                        ):
+                    if question_progress in ['', '5/5'] or (
+                        prev_progress != question_progress
+                        and question_progress in question_progresses
+                    ):
                         #wait for the next question to appear
                         time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
                         break
@@ -486,9 +494,7 @@ class Rewards:
         https://github.com/charlesbel/Microsoft-Rewards-Farmer/blob/master/ms_rewards_farmer.py#L439
         '''
         def get_answer_code(key, title):
-            t = 0
-            for i in range(len(title)):
-                t += ord(title[i])
+            t = sum(ord(title[i]) for i in range(len(title)))
             t += int(key[-2:], 16)
             return str(t)
 
@@ -1180,10 +1186,7 @@ class Rewards:
 
             #use xpath to get days till streak bonus
             user_level = user_d['levelInfo']['activeLevel']
-            if user_level == 'Level2':
-                days_to_bonus_index = 3
-            else:
-                days_to_bonus_index = 4
+            days_to_bonus_index = 3 if user_level == 'Level2' else 4
             days_to_bonus_str = driver.find_elements(
                 By.XPATH, '//mee-rewards-counter-animation//span'
             )[days_to_bonus_index].text
