@@ -16,6 +16,8 @@ from datetime import datetime, timedelta, date
 import json
 import traceback
 import locale
+
+
 class Rewards:
     __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
@@ -85,7 +87,7 @@ class Rewards:
             else:
                 self.stdout.append(out)
 
-    def __check_login_url(self, driver:EventFiringWebDriver, url):
+    def __check_login_url(self, driver: EventFiringWebDriver, url):
 
         #made it to the home page! login complete
         if "https://account.microsoft.com/" in url:
@@ -125,7 +127,7 @@ class Rewards:
             except NoSuchElementException:
                 # approve sign in request page
                 try:
-                    e = driver.find_element(By.ID, "idChkBx_SAOTCAS_TD").click()
+                    driver.find_element(By.ID, "idChkBx_SAOTCAS_TD").click()
                     self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please click approve.", 2)
                 except NoSuchElementException:
                     raise RuntimeError(f"Unable to handle {url}")
@@ -164,7 +166,7 @@ class Rewards:
         VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES', 'mkt=EN-AU', 'mkt=ZH-CN', 'mkt=IT-IT', 'mkt=DE-DE']
         if all(market not in driver.current_url for market in VALID_MARKETS):
             raise RuntimeError(
-                    f"Logged in, but user not located in one of these valid markets: {VALID_MARKETS}."
+                f"Logged in, but user not located in one of these valid markets: {VALID_MARKETS}."
             )
 
     def __open_dashboard(self, driver, try_count=0):
@@ -249,12 +251,12 @@ class Rewards:
                 )
             )  # sleep at least 20 seconds to avoid over requesting server
 
-        if self._ON_POSIX: #TODO: fix locale for windows
+        if self._ON_POSIX:
             (lang, geo) = locale.getlocale()[0].split("_")  # en and US
         else:
             lang = "en"
             geo = "US"
-        
+
         trends_url = "https://trends.google.com/trends/api/dailytrends"
 
         search_terms = set()
@@ -514,8 +516,6 @@ class Rewards:
                 answer1_code = get_answer_code(answer_encode_key, answer1_title)
 
                 answer2 = driver.find_element(By.ID, "rqAnswerOption1")
-                answer2_title = answer2.get_attribute('data-option')
-                answer2_code = get_answer_code(answer_encode_key, answer2_title)
 
                 correct_answer_code = driver.execute_script("return _w.rewardsQuizRenderInfo.correctAnswer")
 
@@ -540,7 +540,7 @@ class Rewards:
                 try_count += 1
                 if try_count >= 2:
                     self.__sys_out(
-                            "Failed to complete This or That quiz due to following exception:", 3, True, True
+                        "Failed to complete This or That quiz due to following exception:", 3, True, True
                     )
                     error_msg = traceback.format_exc()
                     self.__sys_out(error_msg, 3)
@@ -1176,7 +1176,6 @@ class Rewards:
             available_points = user_d['availablePoints']
             lifetime_points = user_d['lifetimePoints']
             streak_count = streak_d['activityProgress']
-            days_to_bonus = streak_d['activityProgressMax'] - streak_count
 
             # build strings for sys_out & Telegram
             earned_today_str = f"Points earned: {earned_today}"
@@ -1210,7 +1209,6 @@ class Rewards:
                 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 to_send = f'\n Summary for {self.email} at : {current_time} \n\n' + \
                 "\n".join(stats_str)
-              #f'Completion status:{self.completion}\n' \
 
                 resp = self.telegram_messenger.send_message(to_send)
                 if resp.status_code == 200:
