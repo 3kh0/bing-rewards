@@ -249,7 +249,7 @@ class Rewards:
                 )
             )  # sleep at least 20 seconds to avoid over requesting server
 
-        if self._ON_POSIX: #TODO: fix locale for windows
+        if self._ON_POSIX and locale.getlocale()[0] is not None:
             (lang, geo) = locale.getlocale()[0].split("_")  # en and US
         else:
             lang = "en"
