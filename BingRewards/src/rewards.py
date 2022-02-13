@@ -207,14 +207,21 @@ class Rewards:
             return ""
 
     def get_dashboard_data(self, driver):
-        self.__open_dashboard(driver)
-        dashboard = self.find_between(
-            driver.find_element(By.XPATH, '/html/body').get_attribute('innerHTML'),
-            "var dashboard = ",
-            ";\n        appDataModule.constant(\"prefetchedDashboard\", dashboard);"
-        )
-        dashboard = json.loads(dashboard)
-        return dashboard
+        max_try_count = 3
+        for try_count in range(1, max_try_count + 1):
+            self.__open_dashboard(driver)
+            dashboard = self.find_between(
+                driver.find_element(By.XPATH, '/html/body').get_attribute('innerHTML'),
+                "var dashboard = ",
+                ";\n        appDataModule.constant(\"prefetchedDashboard\", dashboard);"
+            )
+            try:
+                dashboard = json.loads(dashboard)
+                return dashboard
+            except (json.decoder.JSONDecodeError, ValueError):
+                print(f'\nJSONDecodeError try_count {try_count}')
+                if try_count == (max_try_count):
+                    raise
 
     def __get_search_progress(self, driver, search_type):
         if len(driver.window_handles) == 1:  # open new tab
