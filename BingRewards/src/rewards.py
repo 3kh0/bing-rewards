@@ -344,6 +344,8 @@ class Rewards:
                 if query not in self.search_hist:
                     break
 
+            #new chromedriver does not like special characters
+            query = re.sub(r"[^a-zA-Z0-9\s]", "", query)
             search_box.send_keys(query, Keys.RETURN)  # unique search term
             self.search_hist.append(query)
             time.sleep(random.uniform(2, 4.5))
