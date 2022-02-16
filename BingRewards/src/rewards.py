@@ -170,32 +170,33 @@ class Rewards:
             )
 
     def __open_dashboard(self, driver, try_count=0):
-        if try_count == 2:
-            return
-
+        '''
+        Opens dashboard url
+        Checks that the url is correct
+        And all the offer elements are loaded
+        '''
+        max_try_count = 2
         driver.get(self.__DASHBOARD_URL)
+
+        #check the url
         try:
+            # 'any_of' checks for either/or condition
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                EC.url_contains("https://rewards.microsoft.com/?redref")
-            )
-        except TimeoutException:
-            # need to sign in via welcome page
-            try:
-                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.any_of(
+                    EC.url_contains("https://rewards.microsoft.com/?redref"),
                     EC.url_contains("https://rewards.microsoft.com/welcome")
                 )
-                driver.find_element(By.XPATH, '//*[@id="raf-signin-link-id"]'
-                                            ).click()
-            except TimeoutException:
-                raise RuntimeError(
-                    'Cannot proceed to dashboard page for offers'
-                )
-        #wait for offers to load completely
-        try:
+            )
+            # need to sign in via welcome page first
+            if 'welcome' in driver.current_url:
+                driver.find_element(By.XPATH, '//*[@id="raf-signin-link-id"]').click()
+
+            #wait for offers to load completely
             offer_xpath = '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[1]/div/card-content/mee-rewards-daily-set-item-content/div/a'
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.presence_of_element_located((By.XPATH, offer_xpath)))
-        #if offers dont load, start function over
-        except TimeoutException:
+        except (TimeoutException, NoSuchElementException) as e:
+            if try_count == max_try_count:
+                raise(e)
             self.__open_dashboard(driver, try_count + 1)
 
     def find_between(self, s: str, first: str, last: str) -> str:
