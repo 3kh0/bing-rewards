@@ -307,10 +307,11 @@ class Rewards:
                 last_request_time
             )
         while True:
-            if progress := self.__get_search_progress(driver, search_type):
-                current_progress, complete_progress = progress
-            else:
+            progress = self.__get_search_progress(driver, search_type)
+            if not progress:
                 return False
+            else:
+                current_progress, complete_progress = progress
             if complete_progress > 0:
                 self.__sys_out_progress(current_progress, complete_progress, 3)
             if current_progress == complete_progress:
