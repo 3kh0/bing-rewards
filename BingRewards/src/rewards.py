@@ -1175,7 +1175,7 @@ class Rewards:
         self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
         return is_complete_punchcard or is_complete_activity
 
-    def __print_stats(self, driver):
+    def __print_stats(self, driver, init_points):
         try:
             # dashboard dictionary data
             dashboard = self.get_dashboard_data(driver)
@@ -1185,11 +1185,13 @@ class Rewards:
             # get the values from the dictionary
             earned_today = user_d['counters']['dailyPoint'][0]['pointProgress']
             available_points = user_d['availablePoints']
+            earned_now = available_points - init_points
             lifetime_points = user_d['lifetimePoints']
             streak_count = streak_d['activityProgress']
 
             # build strings for sys_out & Telegram
-            earned_today_str = f"Points earned: {earned_today}"
+            earned_now_str = f"Points earned now: {earned_now}"
+            earned_today_str = f"Points earned today: {earned_today}"
             streak_count_str = f"Streak count: {streak_count}"
             available_points_str = f"Available points: {available_points:,}"
             lifetime_points_str = f"Lifetime points: {lifetime_points:,}"
@@ -1202,7 +1204,7 @@ class Rewards:
             )[days_to_bonus_index].text
 
             stats_str = [
-                earned_today_str, streak_count_str,
+                earned_now_str, earned_today_str, streak_count_str,
                 days_to_bonus_str, available_points_str,
                 lifetime_points_str
             ]
@@ -1235,14 +1237,41 @@ class Rewards:
             error_msg = traceback.format_exc()
             self.__sys_out(f'Error checking rewards status -\n {error_msg}', 1)
 
-    def __complete_action(self, action, description, driver, print_stats, close, device_type, **action_kwargs):
-        self.__sys_out(f"Starting {description}", 1)
+    def __get_driver(self, driver, device_type):
         try:
             if driver is None:
                 driver = self.driver.get_driver(
                     device_type, self.headless, self.cookies
                 )
                 self.__login(driver)
+        except:
+            try:
+                driver.quit()
+            except AttributeError:  # not yet initialized
+                pass
+            raise
+        return driver
+
+    def __get_available_points(self, driver, device_type):
+        if driver is None:
+            driver = self.__get_driver(driver, device_type)
+        try:
+            dashboard = self.get_dashboard_data(driver)
+            user_d = dashboard['userStatus']
+            available_points = user_d['availablePoints']
+
+        except Exception as e:
+            error_msg = traceback.format_exc()
+            self.__sys_out(f'Error checking rewards status -\n {error_msg}', 1)
+
+        return available_points, driver
+
+    def __complete_action(self, action, description, driver, print_stats, close, device_type, **action_kwargs):
+        self.__sys_out(f"Starting {description}", 1)
+        try:
+            if driver is None:
+                driver = self.__get_driver(driver, device_type)
+            init_points, driver = self.__get_available_points(driver, device_type)
             completion = action(driver, **action_kwargs)
             if completion:
                 self.__sys_out(f"Successfully completed {description}", 1, True)
@@ -1256,7 +1285,7 @@ class Rewards:
             raise
 
         if print_stats:
-            self.__print_stats(driver)
+            self.__print_stats(driver, init_points)
 
         if close:
             driver.quit()
@@ -1322,6 +1351,9 @@ class Rewards:
         driver = None
         is_search_all = search_type == 'all'
 
+        self.__sys_out(f"Getting Initial Available Points", 1)
+        init_points, driver = self.__get_available_points(driver, self.driver.WEB_DEVICE)
+
         if not prev_completion.is_edge_search_completed() or is_search_all:
             driver = self.__complete_edge_search(driver)
         if not prev_completion.is_web_search_completed() or is_search_all:
@@ -1336,7 +1368,7 @@ class Rewards:
             driver = self.__complete_punchcard(driver)
 
         if driver:
-            self.__print_stats(driver)
+            self.__print_stats(driver, init_points)
             driver.quit()
 
     def complete_search_type(self, search_type, prev_completion, search_hist):
