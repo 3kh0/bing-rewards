@@ -16,11 +16,8 @@ import re
 class EventListener(AbstractEventListener):
     """Attempt to disable animations"""
 
-    def after_click_on(self, url, driver):
-        animation =\
-        """
-        try { jQuery.fx.off = true; } catch(e) {}
-        """
+    def after_click(self, url, driver):
+        animation = r"try { jQuery.fx.off = true; } catch(e) {}"
         driver.execute_script(animation)
 
 
