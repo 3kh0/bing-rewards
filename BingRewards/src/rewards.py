@@ -88,7 +88,6 @@ class Rewards:
                 self.stdout.append(out)
 
     def __check_login_url(self, driver: EventFiringWebDriver, url):
-
         #made it to the home page! login complete
         if "https://account.microsoft.com/" in url:
             return True
@@ -178,10 +177,10 @@ class Rewards:
         max_try_count = 2
         driver.get(self.__DASHBOARD_URL)
 
-        #check the url
         try:
-            # 'any_of' checks for either/or condition
+            #check the url
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                # 'any_of' checks for either condition
                 EC.any_of(
                     EC.url_contains("https://rewards.microsoft.com/?redref"),
                     EC.url_contains("https://rewards.microsoft.com/welcome")
@@ -319,6 +318,7 @@ class Rewards:
                 break
             elif current_progress == prev_progress:
                 try_count += 1
+                driver.refresh()
                 if try_count == 4:
                     self.__sys_out("Failed to complete search", 2, True, True)
                     return False
@@ -393,6 +393,14 @@ class Rewards:
                 return 0, -1
 
     def __start_quiz(self, driver):
+        # check for cookies
+        try:
+            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
+            ).click()
+        except TimeoutException:
+            pass
+
         try_count = 0
         while True:
             try:
@@ -1292,11 +1300,12 @@ class Rewards:
             driver = None
         return driver, completion
 
-    def __complete_edge_search(self, driver=None, print_stats=False, close=False):
+    def __complete_edge_search(self, driver=None, print_stats=False, close=False, device_type=None):
         action = self.__search
         action_kwargs = {'search_type': 'edge'}
         description = 'Edge search'
-        device_type = self.driver.WEB_DEVICE
+        if device_type is None:
+            device_type = self.driver.WEB_DEVICE
 
         driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
         self.completion.edge_search = completion
@@ -1355,7 +1364,7 @@ class Rewards:
         init_points, driver = self.__get_available_points(driver, self.driver.WEB_DEVICE)
 
         if not prev_completion.is_edge_search_completed() or is_search_all:
-            driver = self.__complete_edge_search(driver)
+            driver = self.__complete_edge_search()
         if not prev_completion.is_web_search_completed() or is_search_all:
             driver = self.__complete_web_search(driver)
         if not prev_completion.is_offers_completed() or is_search_all:
@@ -1380,11 +1389,15 @@ class Rewards:
         elif search_type in ('web', 'mobile'):
             driver = None
             if not prev_completion.is_edge_search_completed():
-                driver = self.__complete_edge_search(print_stats=True)
+                if search_type == 'mobile':
+                    device_type = self.driver.MOBILE_DEVICE
+                else:
+                    device_type = self.driver.WEB_DEVICE
+                driver = self.__complete_edge_search(device_type=device_type)
             if search_type == 'web':
                 self.__complete_web_search(driver, print_stats=True, close=True)
             elif search_type == 'mobile':
-                self.__complete_mobile_search(driver, print_stats=True, close=True)
+                driver = self.__complete_mobile_search(driver, print_stats=True, close=True)
         elif search_type == 'offers':
             self.__complete_offers(print_stats=True, close=True)
         elif search_type == 'punch card':
