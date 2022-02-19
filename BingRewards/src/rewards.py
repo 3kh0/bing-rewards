@@ -1183,7 +1183,7 @@ class Rewards:
         self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
         return is_complete_punchcard or is_complete_activity
 
-    def __print_stats(self, driver, init_points):
+    def __print_stats(self, driver, init_points=0):
         try:
             # dashboard dictionary data
             dashboard = self.get_dashboard_data(driver)
@@ -1198,8 +1198,8 @@ class Rewards:
             streak_count = streak_d['activityProgress']
 
             # build strings for sys_out & Telegram
-            earned_now_str = f"Points earned now: {earned_now}"
-            earned_today_str = f"Points earned today: {earned_today}"
+            earned_now_str = f"Points earned this run: {earned_now}"
+            earned_today_str = f"Microsoft \"Points earned\" today: {earned_today}"
             streak_count_str = f"Streak count: {streak_count}"
             available_points_str = f"Available points: {available_points:,}"
             lifetime_points_str = f"Lifetime points: {lifetime_points:,}"
@@ -1245,13 +1245,12 @@ class Rewards:
             error_msg = traceback.format_exc()
             self.__sys_out(f'Error checking rewards status -\n {error_msg}', 1)
 
-    def __get_driver(self, driver, device_type):
+    def __get_driver(self, device_type):
         try:
-            if driver is None:
-                driver = self.driver.get_driver(
-                    device_type, self.headless, self.cookies
-                )
-                self.__login(driver)
+            driver = self.driver.get_driver(
+                device_type, self.headless, self.cookies
+            )
+            self.__login(driver)
         except:
             try:
                 driver.quit()
@@ -1262,7 +1261,7 @@ class Rewards:
 
     def __get_available_points(self, driver, device_type):
         if driver is None:
-            driver = self.__get_driver(driver, device_type)
+            driver = self.__get_driver(device_type)
         try:
             dashboard = self.get_dashboard_data(driver)
             user_d = dashboard['userStatus']
@@ -1274,12 +1273,11 @@ class Rewards:
 
         return available_points, driver
 
-    def __complete_action(self, action, description, driver, print_stats, close, device_type, **action_kwargs):
+    def __complete_action(self, action, description, driver, close, device_type, **action_kwargs):
         self.__sys_out(f"Starting {description}", 1)
         try:
             if driver is None:
-                driver = self.__get_driver(driver, device_type)
-            init_points, driver = self.__get_available_points(driver, device_type)
+                driver = self.__get_driver(device_type)
             completion = action(driver, **action_kwargs)
             if completion:
                 self.__sys_out(f"Successfully completed {description}", 1, True)
@@ -1292,79 +1290,73 @@ class Rewards:
                 pass
             raise
 
-        if print_stats:
-            self.__print_stats(driver, init_points)
-
         if close:
             driver.quit()
             driver = None
         return driver, completion
 
-    def __complete_edge_search(self, driver=None, print_stats=False, close=False, device_type=None):
+    def __complete_edge_search(self, driver=None, close=False, device_type=None):
         action = self.__search
         action_kwargs = {'search_type': 'edge'}
         description = 'Edge search'
         if device_type is None:
             device_type = self.driver.WEB_DEVICE
 
-        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        driver, completion = self.__complete_action(action, description, driver, close, device_type, **action_kwargs)
         self.completion.edge_search = completion
         return driver
 
-    def __complete_web_search(self, driver=None, print_stats=False, close=False):
+    def __complete_web_search(self, driver=None, close=False):
         action = self.__search
         action_kwargs = {'search_type': 'web'}
         description = 'Web search'
         device_type = self.driver.WEB_DEVICE
 
-        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        driver, completion = self.__complete_action(action, description, driver, close, device_type, **action_kwargs)
         self.completion.web_search = completion
         return driver
 
-    def __complete_mobile_search(self, driver=None, print_stats=False, close=False):
+    def __complete_mobile_search(self, driver=None, close=False):
         action = self.__search
         action_kwargs = {'search_type': 'mobile'}
         description = 'Mobile search'
         device_type = self.driver.MOBILE_DEVICE
 
-        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        driver, completion = self.__complete_action(action, description, driver, close, device_type, **action_kwargs)
         self.completion.mobile_search = completion
         return driver
 
-    def __complete_offers(self, driver=None, print_stats=False, close=False):
+    def __complete_offers(self, driver=None, close=False):
         action = self.__offers
         action_kwargs = {}
         description = 'Offers'
         device_type = self.driver.WEB_DEVICE
 
-        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        driver, completion = self.__complete_action(action, description, driver, close, device_type, **action_kwargs)
         self.completion.offers = completion
         return driver
 
-    def __complete_punchcard(self, driver=None, print_stats=False, close=False):
+    def __complete_punchcard(self, driver=None, close=False):
         action = self.__punchcard
         action_kwargs = {}
         description = 'punch card'
         device_type = self.driver.WEB_DEVICE
 
-        driver, completion = self.__complete_action(action, description, driver, print_stats, close, device_type, **action_kwargs)
+        driver, completion = self.__complete_action(action, description, driver, close, device_type, **action_kwargs)
         self.completion.punchcard = completion
         return driver
 
     def complete_both_searches(self):
         driver = self.__complete_edge_search()
         self.__complete_web_search(driver, close=True)
-        self.__complete_mobile_search(print_stats=True, close=True)
+        self.__complete_mobile_search(close=True)
 
     def complete_remaining_searches(self, search_type, prev_completion):
         driver = None
         is_search_all = search_type == 'all'
 
-        self.__sys_out(f"Getting Initial Available Points", 1)
-        init_points, driver = self.__get_available_points(driver, self.driver.WEB_DEVICE)
-
         if not prev_completion.is_edge_search_completed() or is_search_all:
-            driver = self.__complete_edge_search()
+            driver = self.__complete_edge_search(driver)
         if not prev_completion.is_web_search_completed() or is_search_all:
             driver = self.__complete_web_search(driver)
         if not prev_completion.is_offers_completed() or is_search_all:
@@ -1377,10 +1369,12 @@ class Rewards:
             driver = self.__complete_punchcard(driver)
 
         if driver:
-            self.__print_stats(driver, init_points)
             driver.quit()
 
     def complete_search_type(self, search_type, prev_completion, search_hist):
+        self.__sys_out(f"Getting Initial Available Points", 1)
+        init_points, driver = self.__get_available_points(None, self.driver.WEB_DEVICE)
+
         self.search_hist = search_hist
 
         if search_type in ('remaining', 'all'):
@@ -1395,12 +1389,14 @@ class Rewards:
                     device_type = self.driver.WEB_DEVICE
                 driver = self.__complete_edge_search(device_type=device_type)
             if search_type == 'web':
-                self.__complete_web_search(driver, print_stats=True, close=True)
+                self.__complete_web_search(driver, close=True)
             elif search_type == 'mobile':
-                driver = self.__complete_mobile_search(driver, print_stats=True, close=True)
+                driver = self.__complete_mobile_search(driver, close=True)
         elif search_type == 'offers':
-            self.__complete_offers(print_stats=True, close=True)
+            self.__complete_offers(close=True)
         elif search_type == 'punch card':
-            self.__complete_punchcard(print_stats=True, close=True)
+            self.__complete_punchcard(close=True)
         elif search_type == 'both':
             self.complete_both_searches()
+
+        self.__print_stats(driver, init_points)
