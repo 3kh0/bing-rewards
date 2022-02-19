@@ -22,8 +22,18 @@ def __decode(encoded):
         return base64.b64decode(encoded).decode()
 
 
+def get_telegram_messenger(config, args):
+    telegram_api_token = __decode(config.credentials.get('telegram_api_token'))
+    telegram_userid = __decode(config.credentials.get('telegram_userid'))
+    if not args.telegram or not telegram_api_token or not telegram_userid:
+        telegram_messenger = None
+    else:
+        telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
+    return telegram_messenger
+
+
 def complete_search(rewards, completion, search_type, search_hist):
-    print(f"\nYou selected {search_type}\n")
+    print(f"\nYou selected {search_type}")
     if not completion.is_search_type_completed(search_type):
         rewards.complete_search_type(search_type, completion, search_hist)
     else:
@@ -64,20 +74,17 @@ def __main():
         password = __decode(config.credentials['password'])
 
     # telegram credentials
-    telegram_api_token = __decode(config.credentials.get('telegram_api_token'))
-    telegram_userid = __decode(config.credentials.get('telegram_userid'))
-    if not args.telegram or not telegram_api_token or not telegram_userid:
-        telegram_messenger = None
-    else:
-        telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
+    telegram_messenger = get_telegram_messenger(config, args)
 
-    rewards = Rewards(email, password, telegram_messenger, DEBUG, args.headless, cookies, args.driver)
+    rewards = Rewards(email, password, DEBUG, args.headless, cookies, args.driver)
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
     search_type = args.search_type
 
     try:
         complete_search(rewards, completion, search_type, search_hist)
+        if telegram_messenger and hasattr(rewards, 'stats'):
+            telegram_messenger.send_reward_message(rewards.stats, email)
         hist_log.write(rewards.completion, rewards.search_hist)
         completion = hist_log.get_completion()
 
@@ -102,6 +109,7 @@ def __main():
             error_msg = traceback.format_exc()
             telegram_messenger.send_message(error_msg)
         raise
+
 
 def _log_hist_log(hist_log):
     logging.basicConfig(

@@ -31,10 +31,9 @@ class Rewards:
     cookieclearquiz = 0
     _ON_POSIX = 'posix' in sys.builtin_module_names
 
-    def __init__(self, email, password, telegram_messenger=None, debug=True, headless=True, cookies=False, driver=ChromeDriver):
+    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver=ChromeDriver):
         self.email = email
         self.password = password
-        self.telegram_messenger = telegram_messenger
         self.debug = debug
         self.headless = headless
         self.cookies = cookies
@@ -1197,13 +1196,6 @@ class Rewards:
             lifetime_points = user_d['lifetimePoints']
             streak_count = streak_d['activityProgress']
 
-            # build strings for sys_out & Telegram
-            earned_now_str = f"Points earned this run: {earned_now}"
-            earned_today_str = f'Microsoft "Points earned" today: {earned_today}'
-            streak_count_str = f"Streak count: {streak_count}"
-            available_points_str = f"Available points: {available_points:,}"
-            lifetime_points_str = f"Lifetime points: {lifetime_points:,}"
-
             #use xpath to get days till streak bonus
             user_level = user_d['levelInfo']['activeLevel']
             days_to_bonus_index = 3 if user_level == 'Level2' else 4
@@ -1211,35 +1203,17 @@ class Rewards:
                 By.XPATH, '//mee-rewards-counter-animation//span'
             )[days_to_bonus_index].text
 
-            stats_str = [
-                earned_now_str, earned_today_str, streak_count_str,
-                days_to_bonus_str, available_points_str,
-                lifetime_points_str
-            ]
+            self.stats = RewardStats(
+            earned_now, earned_today, streak_count, available_points,
+            lifetime_points, days_to_bonus_str
+            )
+
             self.__sys_out("Summary", 1, flush=True)
-            for stat_str in stats_str:
+            for stat_str in self.stats.stats_str:
                 if 'until bonus' in stat_str:
                     self.__sys_out(stat_str, 2, end=True)
                 else:
                     self.__sys_out(stat_str, 2)
-
-            if self.telegram_messenger:
-                self.__sys_out(
-                    "Sending Telegram Notification", 2
-                )
-                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                to_send = f'\n Summary for {self.email} at : {current_time} \n\n' + \
-                "\n".join(stats_str)
-
-                resp = self.telegram_messenger.send_message(to_send)
-                if resp.status_code == 200:
-                    self.__sys_out(
-                        "Telegram notification sent", 3
-                    )
-                else:
-                    self.__sys_out(
-                        f"Boo! Telegram notification NOT sent, response is: {resp}", 3
-                    )
 
         except Exception:
             error_msg = traceback.format_exc()
@@ -1397,3 +1371,32 @@ class Rewards:
 
         self.__print_stats(driver, init_points)
         driver.quit()
+
+
+class RewardStats:
+    def __init__(
+        self, earned_now, earned_today, streak_count, available_points,
+        lifetime_points, days_to_bonus_str
+    ):
+        self.earned_now = earned_now
+        self.earned_today = earned_today
+        self.streak_count = streak_count
+        self.available_points = available_points
+        self.lifetime_points = lifetime_points
+        self.days_to_bonus_str = days_to_bonus_str
+        self.build_str()
+
+    def build_str(self):
+        # build strings for sys_out & Telegram
+        self.earned_now_str = f"Points earned this run: {self.earned_now}"
+        self.earned_today_str = f'Microsoft "Points earned" today: {self.earned_today}'
+        self.streak_count_str = f"Streak count: {self.streak_count}"
+        self.available_points_str = f"Available points: {self.available_points:,}"
+        self.lifetime_points_str = f"Lifetime points: {self.lifetime_points:,}"
+
+        self.stats_str = [
+            self.earned_now_str, self.earned_today_str, self.streak_count_str,
+            self.days_to_bonus_str, self.available_points_str,
+            self.lifetime_points_str
+        ]
+
