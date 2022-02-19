@@ -1199,7 +1199,7 @@ class Rewards:
 
             # build strings for sys_out & Telegram
             earned_now_str = f"Points earned this run: {earned_now}"
-            earned_today_str = f"Microsoft \"Points earned\" today: {earned_today}"
+            earned_today_str = f'Microsoft "Points earned" today: {earned_today}'
             streak_count_str = f"Streak count: {streak_count}"
             available_points_str = f"Available points: {available_points:,}"
             lifetime_points_str = f"Lifetime points: {lifetime_points:,}"
@@ -1241,7 +1241,7 @@ class Rewards:
                         f"Boo! Telegram notification NOT sent, response is: {resp}", 3
                     )
 
-        except Exception as e:
+        except Exception:
             error_msg = traceback.format_exc()
             self.__sys_out(f'Error checking rewards status -\n {error_msg}', 1)
 
@@ -1262,12 +1262,13 @@ class Rewards:
     def __get_available_points(self, driver, device_type):
         if driver is None:
             driver = self.__get_driver(device_type)
+
         try:
             dashboard = self.get_dashboard_data(driver)
             user_d = dashboard['userStatus']
             available_points = user_d['availablePoints']
 
-        except Exception as e:
+        except Exception:
             error_msg = traceback.format_exc()
             self.__sys_out(f'Error checking rewards status -\n {error_msg}', 1)
 
@@ -1346,57 +1347,53 @@ class Rewards:
         self.completion.punchcard = completion
         return driver
 
-    def complete_both_searches(self):
+    def complete_both_searches(self, driver=None):
         driver = self.__complete_edge_search()
         self.__complete_web_search(driver, close=True)
-        self.__complete_mobile_search(close=True)
+        driver = self.__complete_mobile_search()
+        return driver
 
-    def complete_remaining_searches(self, search_type, prev_completion):
-        driver = None
+    def complete_remaining_searches(self, driver, search_type, prev_completion):
         is_search_all = search_type == 'all'
 
         if not prev_completion.is_edge_search_completed() or is_search_all:
-            driver = self.__complete_edge_search(driver)
+            self.__complete_edge_search(driver)
         if not prev_completion.is_web_search_completed() or is_search_all:
-            driver = self.__complete_web_search(driver)
+            self.__complete_web_search(driver)
         if not prev_completion.is_offers_completed() or is_search_all:
-            driver = self.__complete_offers(driver)
+            self.__complete_offers(driver)
         if not prev_completion.is_mobile_search_completed() or is_search_all:
             if driver:
                 driver.quit()
             driver = self.__complete_mobile_search(driver=None)
         if not prev_completion.is_punchcard_completed() or is_search_all:
-            driver = self.__complete_punchcard(driver)
-
-        if driver:
-            driver.quit()
+            self.__complete_punchcard(driver)
+        return driver
 
     def complete_search_type(self, search_type, prev_completion, search_hist):
-        self.__sys_out(f"Getting Initial Available Points", 1)
-        init_points, driver = self.__get_available_points(None, self.driver.WEB_DEVICE)
+        #self.__sys_out("Getting Initial Available Points", 1)
+        init_points, driver = self.__get_available_points(driver=None, device_type=self.driver.WEB_DEVICE)
 
         self.search_hist = search_hist
 
         if search_type in ('remaining', 'all'):
-            self.complete_remaining_searches(search_type, prev_completion)
+            driver = self.complete_remaining_searches(driver, search_type, prev_completion)
         # if either web/mobile, check if edge is complete
         elif search_type in ('web', 'mobile'):
-            driver = None
             if not prev_completion.is_edge_search_completed():
-                if search_type == 'mobile':
-                    device_type = self.driver.MOBILE_DEVICE
-                else:
-                    device_type = self.driver.WEB_DEVICE
-                driver = self.__complete_edge_search(device_type=device_type)
+                self.__complete_edge_search(driver)
             if search_type == 'web':
-                self.__complete_web_search(driver, close=True)
-            elif search_type == 'mobile':
-                driver = self.__complete_mobile_search(driver, close=True)
+                self.__complete_web_search(driver)
+            else:
+                if driver:
+                    driver.quit()
+                driver = self.__complete_mobile_search(driver=None)
         elif search_type == 'offers':
-            self.__complete_offers(close=True)
+            self.__complete_offers(driver)
         elif search_type == 'punch card':
-            self.__complete_punchcard(close=True)
+            self.__complete_punchcard(driver)
         elif search_type == 'both':
-            self.complete_both_searches()
+            driver = self.complete_both_searches(driver)
 
         self.__print_stats(driver, init_points)
+        driver.quit()
