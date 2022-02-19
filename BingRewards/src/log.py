@@ -197,3 +197,20 @@ class Completion:
             return self.is_punchcard_completed()
         elif search_type in ('all', 'remaining'):
             return self.is_all_completed()
+
+class StatsLog:
+    __DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
+    __LOCAL_TIMEZONE = tz.tzlocal()
+    
+    def __init__(self, stats_path, run_datetime=datetime.now()):
+        self.stats_path = stats_path
+        self.__run_datetime = run_datetime.replace(tzinfo=self.__LOCAL_TIMEZONE)
+
+    def write(self, stats):
+        self.stats = stats
+        
+        log_time = self.__run_datetime.strftime(self.__DATETIME_FORMAT)
+        to_log = log_time + "; " + "; ".join(self.stats) + "\n"
+
+        with open(self.stats_path, "a") as log:
+                log.write(to_log)
