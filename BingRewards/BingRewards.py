@@ -1,8 +1,7 @@
 import sys
 import os
-from src.driver import Driver
 from src.rewards import Rewards
-from src.log import HistLog
+from src.log import HistLog, StatsJsonLog
 from src.telegram import TelegramMessenger
 import logging
 import base64
@@ -13,6 +12,7 @@ LOG_DIR = "logs"
 ERROR_LOG = "error.log"
 RUN_LOG = "run.log"
 SEARCH_LOG = "search.log"
+STATS_LOG = "stats.json"
 
 DEBUG = True
 
@@ -52,6 +52,7 @@ def __main():
     hist_log = HistLog(
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
     )
+    stats_log = StatsJsonLog(os.path.join(LOG_DIR, STATS_LOG))
 
     try:
         from src import config
@@ -83,8 +84,12 @@ def __main():
 
     try:
         complete_search(rewards, completion, search_type, search_hist)
-        if telegram_messenger and hasattr(rewards, 'stats'):
-            telegram_messenger.send_reward_message(rewards.stats, email)
+
+        if hasattr(rewards, 'stats'):
+            stats_log.write(rewards.stats, email)
+            if telegram_messenger:
+                telegram_messenger.send_reward_message(rewards.stats, email)
+
         hist_log.write(rewards.completion, rewards.search_hist)
         completion = hist_log.get_completion()
 

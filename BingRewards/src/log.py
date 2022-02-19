@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from dateutil import tz
+import json
 
 
 class HistLog:
@@ -198,19 +199,39 @@ class Completion:
         elif search_type in ('all', 'remaining'):
             return self.is_all_completed()
 
-class StatsLog:
-    __DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
-    __LOCAL_TIMEZONE = tz.tzlocal()
-    
-    def __init__(self, stats_path, run_datetime=datetime.now()):
-        self.stats_path = stats_path
-        self.__run_datetime = run_datetime.replace(tzinfo=self.__LOCAL_TIMEZONE)
 
-    def write(self, stats):
-        self.stats = stats
-        
-        log_time = self.__run_datetime.strftime(self.__DATETIME_FORMAT)
-        to_log = log_time + "; " + "; ".join(self.stats) + "\n"
+class BaseJsonLog:
+    DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
+    LOCAL_TIMEZONE = tz.tzlocal()
 
-        with open(self.stats_path, "a") as log:
-                log.write(to_log)
+    def __init__(self, log_path, run_datetime=datetime.now()):
+        self.log_path = log_path
+        self.run_datetime = run_datetime.replace(tzinfo=self.LOCAL_TIMEZONE)
+        self.__read()
+
+    def __read(self):
+        if not os.path.exists(self.log_path):
+            self.data = {}
+        else:
+            with open(self.log_path, ) as f:
+                self.data = json.load(f)
+
+
+class StatsJsonLog(BaseJsonLog):
+    MAX_SIZE = 300
+
+    def __init__(self, log_path):
+        super().__init__(log_path)
+
+    def write(self, stats_obj, email):
+        stats_str = stats_obj.stats_str
+        log_time = self.run_datetime.strftime(self.DATETIME_FORMAT)
+        latest_log_entry = f'{log_time}: {"; ".join(stats_str)}'
+        if self.data.get(email):
+            self.data[email].append(latest_log_entry)
+            self.data[email] = self.data[email][-self.MAX_SIZE:]
+        else:
+            self.data[email] = [latest_log_entry]
+
+        with open(self.log_path, "w") as f:
+            json.dump(self.data, f, indent=4, sort_keys=True)

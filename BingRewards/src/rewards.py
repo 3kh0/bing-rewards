@@ -1388,15 +1388,14 @@ class RewardStats:
 
     def build_str(self):
         # build strings for sys_out & Telegram
-        self.earned_now_str = f"Points earned this run: {self.earned_now}"
-        self.earned_today_str = f'Microsoft "Points earned" today: {self.earned_today}'
-        self.streak_count_str = f"Streak count: {self.streak_count}"
-        self.available_points_str = f"Available points: {self.available_points:,}"
-        self.lifetime_points_str = f"Lifetime points: {self.lifetime_points:,}"
+        self.earned_now_str = f'Points earned this run: {self.earned_now}'
+        self.earned_today_str = f"Microsoft 'Points earned' today: {self.earned_today}"
+        self.streak_count_str = f'Streak count: {self.streak_count}'
+        self.available_points_str = f'Available points: {self.available_points:,}'
+        self.lifetime_points_str = f'Lifetime points: {self.lifetime_points:,}'
 
         self.stats_str = [
             self.earned_now_str, self.earned_today_str, self.streak_count_str,
             self.days_to_bonus_str, self.available_points_str,
             self.lifetime_points_str
         ]
-
