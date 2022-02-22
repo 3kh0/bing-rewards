@@ -1,5 +1,39 @@
 # Changelog
 
+## [Unreleased](https://github.com/jjjchens235/bing-rewards/tree/HEAD)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.6...HEAD)
+
+**Implemented enhancements:**
+
+- expose stats object at the BingRewards.py level [\#176](https://github.com/jjjchens235/bing-rewards/issues/176)
+- \[Feature request\] Please add \# of collected points to the log [\#136](https://github.com/jjjchens235/bing-rewards/issues/136)
+
+**Closed issues:**
+
+- REFACTOR: after\_click\_on is not an AbstractEventListener element. [\#174](https://github.com/jjjchens235/bing-rewards/issues/174)
+- Selenium error: Cannot construct KeyEvent from non-typeable key \[fix is in dev now\] [\#171](https://github.com/jjjchens235/bing-rewards/issues/171)
+- Add Cookie Check in every tiles [\#160](https://github.com/jjjchens235/bing-rewards/issues/160)
+
+## [v1.6](https://github.com/jjjchens235/bing-rewards/tree/v1.6) (2022-02-19)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.5...v1.6)
+
+**Closed issues:**
+
+- \[Bug or Help\] python setup.py giving me an error on line 23 [\#172](https://github.com/jjjchens235/bing-rewards/issues/172)
+- pcSearch issue occurring - Brazil [\#170](https://github.com/jjjchens235/bing-rewards/issues/170)
+- Punch Card Logic [\#169](https://github.com/jjjchens235/bing-rewards/issues/169)
+- Search Query Updating  [\#162](https://github.com/jjjchens235/bing-rewards/issues/162)
+- check\_login\_url\(\) - timeoutexception [\#151](https://github.com/jjjchens235/bing-rewards/issues/151)
+- Add changelog with release versions [\#149](https://github.com/jjjchens235/bing-rewards/issues/149)
+
+**Merged pull requests:**
+
+- FIX: after\_click\_on is not an AbstractEvent [\#177](https://github.com/jjjchens235/bing-rewards/pull/177) ([ShoGinn](https://github.com/ShoGinn))
+- get points at the start and report points earned with each run of the script [\#175](https://github.com/jjjchens235/bing-rewards/pull/175) ([conlon](https://github.com/conlon))
+- Add Stats.log [\#165](https://github.com/jjjchens235/bing-rewards/pull/165) ([InTheDaylight14](https://github.com/InTheDaylight14))
+
 ## [v1.5](https://github.com/jjjchens235/bing-rewards/tree/v1.5) (2022-02-13)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.4...v1.5)
