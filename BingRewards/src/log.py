@@ -227,7 +227,7 @@ class StatsJsonLog(BaseJsonLog):
         stats_str = stats_obj.stats_str
         log_time = self.run_datetime.strftime(self.DATETIME_FORMAT)
         latest_log_entry = f'{log_time}: {"; ".join(stats_str)}'
-        if self.data.get(email):
+        if email in self.data:
             self.data[email].append(latest_log_entry)
             self.data[email] = self.data[email][-self.MAX_SIZE:]
         else:
