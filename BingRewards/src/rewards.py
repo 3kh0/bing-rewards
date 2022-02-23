@@ -91,13 +91,18 @@ class Rewards:
         if "https://account.microsoft.com/" in url:
             return True
 
-        #'stay signed in' page
         elif "https://login.live.com/ppsecure" in url:
-            WebDriverWait(driver, 2).until(
-                EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
-            ).click()
-            #yes, stay signed in
-            driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
+            # approve sign in page
+            try:
+                driver.find_element(By.ID, "idChkBx_SAOTCAS_TD").click()
+                self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please click approve.", 2)
+            #'stay signed in' page
+            finally:
+                WebDriverWait(driver, 30).until(
+                    EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
+                ).click()
+                #yes, stay signed in
+                driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
         #'agree to terms and conditions' page
         elif "https://account.live.com/tou" in url:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
@@ -123,12 +128,7 @@ class Rewards:
                     EC.url_contains("https://login.live.com/ppsecure")
                     )
             except NoSuchElementException:
-                # approve sign in request page
-                try:
-                    driver.find_element(By.ID, "idChkBx_SAOTCAS_TD").click()
-                    self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please click approve.", 2)
-                except NoSuchElementException:
-                    raise RuntimeError(f"Unable to handle {url}")
+                raise RuntimeError(f"Unable to handle {url}")
             except TimeoutException:
                 raise TimeoutException("You did not select code within Microsoft Authenticator in time.")
 
