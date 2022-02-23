@@ -1,6 +1,6 @@
 pip>=9.0.1
 python-dateutil>=2.6.1
-selenium>=3.8.0
+selenium>=4.0.0
 setuptools>=28.8.0
 six>=1.11.0
 requests>=2.25.1
