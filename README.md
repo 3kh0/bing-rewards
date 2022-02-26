@@ -83,6 +83,8 @@ Each time you log-in, a code will be printed out in the console, and you will ne
 ## Multiple accounts
 Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
 
+## Updating the script
+Run `./update.sh`
 ## Acknowledgement
 - Original author took down the code from their GitHub back in July 2018. Author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
 - UK quiz updates by `chris987789`
