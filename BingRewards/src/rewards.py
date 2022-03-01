@@ -1198,7 +1198,7 @@ class Rewards:
 
             #use xpath to get days till streak bonus
             user_level = user_d['levelInfo']['activeLevel']
-            days_to_bonus_index = 3 if user_level == 'Level2' else 4
+            days_to_bonus_index = 4 if user_level == 'Level2' else 5
             days_to_bonus_str = driver.find_elements(
                 By.XPATH, '//mee-rewards-counter-animation//span'
             )[days_to_bonus_index].text
