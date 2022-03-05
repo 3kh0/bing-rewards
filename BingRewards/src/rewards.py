@@ -94,8 +94,14 @@ class Rewards:
         elif "https://login.live.com/ppsecure" in url:
             # approve sign in page
             try:
-                driver.find_element(By.ID, "idChkBx_SAOTCAS_TD").click()
-                self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please click approve.", 2)
+                WebDriverWait(driver, .5).until(
+                    EC.element_to_be_clickable((By.ID, 'idChkBx_SAOTCAS_TD'))
+                ).click()
+                self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please select approve.", 2)
+
+            except TimeoutException:
+                pass
+
             #'stay signed in' page
             finally:
                 WebDriverWait(driver, 30).until(
@@ -103,6 +109,7 @@ class Rewards:
                 ).click()
                 #yes, stay signed in
                 driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
+        
         #'agree to terms and conditions' page
         elif "https://account.live.com/tou" in url:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
