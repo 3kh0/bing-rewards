@@ -109,7 +109,7 @@ class Rewards:
                 ).click()
                 #yes, stay signed in
                 driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
-        
+
         #'agree to terms and conditions' page
         elif "https://account.live.com/tou" in url:
             WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
@@ -1251,7 +1251,7 @@ class Rewards:
 
         except Exception:
             error_msg = traceback.format_exc()
-            self.__sys_out(f'Error checking rewards status -\n {error_msg}', 1)
+            raise(f'Error checking rewards status:\n{error_msg}')
 
         return available_points, driver
 
