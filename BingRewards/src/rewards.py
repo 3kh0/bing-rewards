@@ -1069,23 +1069,42 @@ class Rewards:
                 pass
         return title_to_offer
 
+    def close_other_tabs(self, driver):
+        #TODO: this should live inside the driver class
+        '''
+        This method isn't striclty necessary but it cleans up the the drivers tabs
+        '''
+
+        curr=driver.current_window_handle
+        for handle in driver.window_handles:
+            driver.switch_to.window(handle)
+            if handle != curr:
+                driver.close()
+        driver.switch_to.window(curr)
+
     def __perform_action_on_offers(self, action, driver, offer_xpath, completed, offer_count):
-        #try statement in case we try to find an offer that exceeded the range index
-        try:
-            for i in range(offer_count):
-                c = -1
-                try_count = 0
-                while c == -1 and try_count <= 2:
+        for i in range(offer_count):
+            #always start on first tab in case prev offer errored ou
+            driver.switch_to.window(driver.window_handles[0])
+            self.close_other_tabs(driver)
+            offer = driver.find_element(By.XPATH,
+                offer_xpath.format(offer_index=i + 1)
+            )
+
+            # don't crash program if an offer fails
+            try:
+                c = action(driver, offer)
+                # sign in bug- try one more time
+                if c == -1:
+                    #need to reobtain element, else stale
                     offer = driver.find_element(By.XPATH,
                         offer_xpath.format(offer_index=i + 1)
                     )
                     c = action(driver, offer)
-                    try_count += 1
-                #first quiz never started (MS bug) but pts still awarded
                 completed.append(c)
-        except NoSuchElementException:
-            completed.append(-1)
-
+            except (NoSuchElementException, TimeoutException):
+                error_msg = traceback.format_exc()
+                self.__sys_out(f'Exception for this offer, proceeding to next one:\n{error_msg}', 1)
 
     def __offers(self, driver):
         # showcase offer
