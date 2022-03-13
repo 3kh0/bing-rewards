@@ -159,6 +159,10 @@ class Completion:
     def is_punchcard_completed(self):
         return self.punchcard
 
+    def is_web_device_completed(self):
+        """ These searches require web driver """
+        return self.web_search and self.offers and self.punchcard
+
     def is_all_completed(self):
         return self.is_edge_and_web_search_completed(
         ) and self.mobile_search and self.offers and self.punchcard
