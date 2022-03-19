@@ -45,7 +45,7 @@ class HistLog:
     def get_completion(self):
         # check if already ran today
         if len(self.__run_hist) > 0:
-            print(self.__run_hist[-1].split(": "))
+            print(f'\n{self.__run_hist[-1].split(": ")}')
             last_ran, completed = self.__run_hist[-1].split(": ")
 
             last_ran_pst = datetime.strptime(last_ran, self.__DATETIME_FORMAT).replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
@@ -85,6 +85,9 @@ class HistLog:
                 self.__run_hist = self.__run_hist[1:]
 
         return self.__completion
+
+    def get_run_hist(self):
+        return self.__run_hist
 
     def get_search_hist(self):
         return self.__search_hist

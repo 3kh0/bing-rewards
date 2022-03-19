@@ -85,13 +85,14 @@ def __main():
     try:
         complete_search(rewards, completion, search_type, search_hist)
 
+        hist_log.write(rewards.completion, rewards.search_hist)
+        completion = hist_log.get_completion()
+
         if hasattr(rewards, 'stats'):
             stats_log.write(rewards.stats, email)
             if telegram_messenger:
-                telegram_messenger.send_reward_message(rewards.stats, email)
-
-        hist_log.write(rewards.completion, rewards.search_hist)
-        completion = hist_log.get_completion()
+                run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
+                telegram_messenger.send_reward_message(rewards.stats, run_hist_str, email)
 
         # check again, log if any failed
         if not completion.is_search_type_completed(search_type):
