@@ -1,7 +1,7 @@
 An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
 
 Please note: 
-- only US website guaranteed to be supported
+- only `USA` website guaranteed to be supported
 - multiple accounts NOT supported
 
 ## Getting Started
@@ -27,15 +27,15 @@ Please note:
 #### Additional Optional Arguments
 * Email/Password
 	* `-e` or `--email`: Email to use, supersedes the config email
-	* `-p` or `--password`: The email password to use. Use -p with no argument to trigger a secure pw prompt
+	* `-p` or `--password`: The email password to use. Use -p with no argument to trigger a secure password prompt
 * Driver
-	* `-d` or `--driver`: Driver to use, choose either `chrome` or `msedge`. Chrome is the *default*.
+	* `-d` or `--driver`: Driver to use, choose either `Chrome` or Microsoft Edge`. Chrome is the *default*.
 * Headless
 	* `-hl` or `--headless`: Run in [headless](https://developers.google.com/web/updates/2017/06/headless-karma-mocha-chai) mode- this is the *default*
 	* `-nhl` or `--no-headless`: Don't run in headless mode
 * Cookies
 	* `-nc` or `--no-cookies`: Browser does not save cookies- this has been updated to be the *default* due to a few people reporting issues with the cookies option.
-	* `-c` or `--cookies`: Run browser with cookies to preserve username and pw each session.
+	* `-c` or `--cookies`: Run browser with cookies to preserve username and password each session.
 * Telegram
 	* `-t` or `--telegram`: Send notifications to telegram (more instructions below). This is the *default*, but will only work if telegram credentials were entered during setup
 	* `-nt` or `--no-telegram`: Do not send notifications to telegram.
@@ -45,7 +45,7 @@ The following `python BingRewards.py`
 actually translates to `python BingRewards.py -r -hl -d chrome`, i.e run the remaining searches in chrome headless mode.
 
 Here's an example of running non-default arguments
-`python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, password will be prompted for separately.
+`python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, the password will be prompted for separately.
 
 ## Scheduling (Optional)
 You may want to use your operating system's scheduler to run this program automatically. The script will run completely in the background and should NOT interfere with your daily routine.
@@ -68,23 +68,32 @@ You may want to use your operating system's scheduler to run this program automa
 5. Note that cronjobs are not run if your computer is sleeping. To wake your computer at a scheduled time follow the instructions in this [link](https://alvinalexander.com/mac-os-x/mac-wake-up-schedule-automatic-time-sleep).
 
 ## Telegram Notification
-if you want to setup telegram notification system please follow these steps:
-1. Create bot in telegram from [@BotFather](https://t.me/BotFather). Note the API token generated in the BotFather chat- you'll need it later.
-2. Get your telegram userid from [@userinfobot](https://t.me/userinfobot) or alternatively [@MissRose_bot](https://t.me/MissRose_bot)
+if you want to setup a Telegram notification system please follow these steps:
+1. Create Telegram bot using [@BotFather](https://t.me/BotFather). Note the API token generated in the BotFather chat- you'll need it later.
+2. Get your Telegram userid from [@userinfobot](https://t.me/userinfobot) or alternatively [@MissRose_bot](https://t.me/MissRose_bot)
 3. Run setup `python setup.py` and enter 
 	- your token generated from step 1
 	- your userid from step 2
 
-## Two-factor Authentication
-2FA is supported, but only through `Microsoft Authenticator`.
+## Additional Login Security Options
+Microsoft offers these additional security options:
+- Passwordless account: No password, tap the correct number from your authenticator app
+- Two-step verification: You'll have to enter a security code that is sent to you via email or authenticator app
 
-Each time you log-in, a code will be printed out in the console, and you will need to select it in Authenticator. You will have to do this an additional time when you do the mobile search.
+Currently `only passwordless is supported` and it must be done through the `Microsoft Authenticator` app.
+
+Each time you log-in, a code will be printed out in the `command line console`, and you will need to select it in Authenticator. You will have to do this an additional time when you do the mobile search.
 
 ## Multiple accounts
-Multiple accounts is not supported currently, and there is no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
+Multiple accounts are not supported currently, and there are no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
 
-## Acknowledgement
-- Original author took down the code from their GitHub back in July 2018. Author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
+## Pull in new code changes
+Run `./bing-rewards-master/update.sh` which will
+- pull in the latest changes to your master branch 
+- install/update any python library dependencies
+
+## Acknowledgment
+- The original author took down the code from their GitHub back in July 2018. The author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
 - UK quiz updates by `chris987789`
 - 2FA code by `revolutionisme`
 - Telegram notifications by `hosein-hub`

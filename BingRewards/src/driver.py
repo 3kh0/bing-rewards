@@ -15,21 +15,43 @@ import re
 
 class EventListener(AbstractEventListener):
     """Attempt to disable animations"""
-
     def after_click(self, url, driver):
         animation = r"try { jQuery.fx.off = true; } catch(e) {}"
         driver.execute_script(animation)
 
 
-class Driver(ABC):
-    WEB_DEVICE = 0
-    MOBILE_DEVICE = 1
+class Driver(EventFiringWebDriver):
+    def __init__(self, driver, EventListener, device):
+        super().__init__(driver, EventListener)
+        self.device = device
+
+    def close_other_tabs(self):
+        """ Closes all but current tab """
+        curr = self.current_window_handle
+        for handle in self.window_handles:
+            self.switch_to.window(handle)
+            if handle != curr:
+                self.close()
+        self.switch_to.window(curr)
+
+    def switch_to_n_tab(self, n):
+        self.switch_to.window(self.window_handles[n])
+
+    def switch_to_first_tab(self):
+        self.switch_to_n_tab(0)
+
+    def switch_to_last_tab(self):
+        self.switch_to_n_tab(-1)
+
+class DriverFactory(ABC):
+    WEB_DEVICE = 'web'
+    MOBILE_DEVICE = 'mobile'
     DRIVERS_DIR = "drivers"
 
     # Microsoft Edge user agents for additional points
     # agent src: https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
-    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.81 Safari/537.36 Edg/97.0.1072.69"
-    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.87 Mobile Safari/537.36 EdgA/97.0.1072.69"
+    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.36"
+    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.78 Mobile Safari/537.36 EdgA/97.0.1072.69"
 
     @property
     @staticmethod
@@ -128,7 +150,7 @@ class Driver(ABC):
         return options
 
     @classmethod
-    def get_driver(cls, device, headless, cookies) -> EventFiringWebDriver:
+    def get_driver(cls, device, headless, cookies) -> Driver:
 
         # raspberry pi: assumes driver already installed via `sudo apt-get install chromium-chromedriver`
         if platform.machine() in ["armv7l","aarch64"]:
@@ -172,17 +194,13 @@ class Driver(ABC):
                     #print('Driver error using cookies option. Trying without cookies.')
                     options = cls.add_driver_options(device, headless, cookies=False)
 
-                # elif 'x' in error_msg:
-
                 else:
                     raise WebDriverException(error_msg)
 
-        # if not headless:
-        #    driver.set_window_position(-2000, 0)
-        return EventFiringWebDriver(driver, EventListener())
+        return Driver(driver, EventListener(), device)
 
 
-class ChromeDriver(Driver):
+class ChromeDriverFactory(DriverFactory):
     WebDriverCls = webdriver.Chrome
     WebDriverOptions = webdriver.ChromeOptions
     VERSION_MISMATCH_STR = 'this version of chromedriver only supports chrome version'
@@ -221,39 +239,34 @@ class ChromeDriver(Driver):
         return url
 
 
-# Selenium only support Edge after Selenium 4
-if int(selenium.__version__.split('.')[0]) < 4:
-    class MsEdgeDriver(Driver):
-        pass
-else:
-    class MsEdgeDriver(Driver):
-        WebDriverCls = webdriver.Edge
-        WebDriverOptions = webdriver.EdgeOptions
-        VERSION_MISMATCH_STR = 'this version of msedgedriver only supports msedge version'
-        driver_name = "msedgedriver.exe" if platform.system() == "Windows" else "msedgedriver"
+class MsEdgeDriverFactory(DriverFactory):
+    WebDriverCls = webdriver.Edge
+    WebDriverOptions = webdriver.EdgeOptions
+    VERSION_MISMATCH_STR = 'this version of msedgedriver only supports msedge version'
+    driver_name = "msedgedriver.exe" if platform.system() == "Windows" else "msedgedriver"
 
-        def _get_latest_driver_url(dl_try_count):
-            EDGE_RELEASE_URL = "https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
-            try:
-                response = urlopen(
-                    EDGE_RELEASE_URL,
-                    context=ssl.SSLContext(ssl.PROTOCOL_TLS)
-                ).read()
-            except ssl.SSLError:
-                response = urlopen(
-                    EDGE_RELEASE_URL
-                ).read()
+    def _get_latest_driver_url(dl_try_count):
+        EDGE_RELEASE_URL = "https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
+        try:
+            response = urlopen(
+                EDGE_RELEASE_URL,
+                context=ssl.SSLContext(ssl.PROTOCOL_TLS)
+            ).read()
+        except ssl.SSLError:
+            response = urlopen(
+                EDGE_RELEASE_URL
+            ).read()
 
-            latest_version = re.findall(
-                b"Version: \d{2,3}\.0\.\d{4}\.\d+", response
-            )[dl_try_count].decode().split()[1]
-            print(f'Downloading {platform.system()} msedgedriver version: {latest_version}')
+        latest_version = re.findall(
+            b"Version: \d{2,3}\.0\.\d{4}\.\d+", response
+        )[dl_try_count].decode().split()[1]
+        print(f'Downloading {platform.system()} msedgedriver version: {latest_version}')
 
-            system = platform.system()
-            if system == "Windows":
-                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_win64.zip"
-            elif system == "Darwin":
-                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_mac64.zip"
-            elif system == "Linux":
-                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_linux64.zip"
-            return url
+        system = platform.system()
+        if system == "Windows":
+            url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_win64.zip"
+        elif system == "Darwin":
+            url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_mac64.zip"
+        elif system == "Linux":
+            url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_linux64.zip"
+        return url
