@@ -10,8 +10,8 @@ from options import parse_arguments
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
-RUN_LOG = "run.log"
-SEARCH_LOG = "search.log"
+RUN_LOG = "run.json"
+SEARCH_LOG = "search.json"
 STATS_LOG = "stats.json"
 
 DEBUG = True
@@ -47,13 +47,6 @@ def __main():
     if top_dir and top_dir != dir_run_from:
         os.chdir(top_dir)
 
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
-    hist_log = HistLog(
-        os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
-    )
-    stats_log = StatsJsonLog(os.path.join(LOG_DIR, STATS_LOG))
-
     try:
         from src import config
     except ImportError:
@@ -74,6 +67,14 @@ def __main():
         email = __decode(config.credentials['email'])
         password = __decode(config.credentials['password'])
 
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+
+    hist_log = HistLog(email,
+        os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
+    )
+    stats_log = StatsJsonLog(os.path.join(LOG_DIR, STATS_LOG), email)
+
     # telegram credentials
     telegram_messenger = get_telegram_messenger(config, args)
 
@@ -85,14 +86,15 @@ def __main():
     try:
         complete_search(rewards, completion, search_type, search_hist)
 
-        hist_log.write(rewards.completion, rewards.search_hist)
+        hist_log.write(rewards.completion)
         completion = hist_log.get_completion()
 
         if hasattr(rewards, 'stats'):
-            stats_log.write(rewards.stats, email)
+            formatted_stat_str = "; ".join(rewards.stats.stats_str)
+            stats_log.add_entry_and_write(formatted_stat_str, email)
             if telegram_messenger:
                 run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
-                telegram_messenger.send_reward_message(rewards.stats, run_hist_str, email)
+                telegram_messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
 
         # check again, log if any failed
         if not completion.is_search_type_completed(search_type):

@@ -103,9 +103,13 @@ class Rewards:
 
             #'stay signed in' page
             finally:
-                WebDriverWait(self.driver, 30).until(
-                    EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
-                ).click()
+                try:
+                    WebDriverWait(self.driver, 30).until(
+                        EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
+                    ).click()
+                except TimeoutException:
+                    print('\nIssue logging in, please run in -nhl mode to see the problem\n')
+                    raise
                 #yes, stay signed in
                 self.driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
 
@@ -299,6 +303,14 @@ class Rewards:
         return last_request_time
 
     def __search(self, search_type):
+
+        def clean_query(query):
+            #chromedriver 98+, special characters fail
+            query = re.sub(r"[^a-zA-Z0-9\s]", "", query)
+            #avoid UnicodeEncodeError when later writing to log
+            query = query.encode('ascii', 'ignore').decode('ascii')
+            return query
+
         self.__sys_out("Starting search", 2)
         self.driver.get(self.__BING_URL)
 
@@ -351,8 +363,7 @@ class Rewards:
                 if query not in self.search_hist:
                     break
 
-            #chromedriver 98+, special characters fail
-            query = re.sub(r"[^a-zA-Z0-9\s]", "", query)
+            query = clean_query(query)
             search_box.send_keys(query, Keys.RETURN)  # unique search term
             self.search_hist.append(query)
             time.sleep(random.uniform(2, 4.5))

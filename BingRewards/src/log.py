@@ -1,3 +1,12 @@
+"""
+Previous run completion status is saved in a log file run.json.
+log.py's primary responsibility is reading in this log file
+and converting it into a completion object within get_completion()
+
+The completion object is passed into rewards.py to ascertain what remaining tasks to run
+
+rewards.py returns an updated completion object which is finally converted back into a new log entry and then written to the log file within write()
+"""
 import os
 from datetime import datetime
 from dateutil import tz
@@ -5,6 +14,10 @@ import json
 
 
 class HistLog:
+    """
+    The 'controller' for the
+    search history, run history, and completion objects
+    """
     __DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
 
     __LOCAL_TIMEZONE = tz.tzlocal()
@@ -24,29 +37,22 @@ class HistLog:
     __OFFERS_OPTION = "Offers"
     __PUNCHCARD_OPTION = "Latest Punch Card Activity"
 
-    def __init__(self, run_path, search_path, run_datetime=datetime.now()):
-        self.run_path = run_path
-        self.search_path = search_path
+    def __init__(self, email, run_path, search_path, run_datetime=datetime.now()):
+        self.email = email
         self.__run_datetime = run_datetime.replace(tzinfo=self.__LOCAL_TIMEZONE)
-        self.__run_hist = self.__read(run_path)
-        self.__search_hist = self.__read(search_path)
-        self.__completion = Completion()
 
-    def __read(self, path):
-        if not os.path.exists(path):
-            return []
-        else:
-            with open(path, "r") as log:
-                return [line.strip("\n") for line in log.readlines()]
+        self.__run_log = RunHistoryJsonLog(run_path, email)
+        self.__search_log = SearchHistoryJsonLog(search_path, email)
+        self.__completion = Completion()
 
     def get_timestamp(self):
         return self.__run_datetime.strftime(self.__DATETIME_FORMAT)
 
     def get_completion(self):
         # check if already ran today
-        if len(self.__run_hist) > 0:
-            print(f'\n{self.__run_hist[-1].split(": ")}')
-            last_ran, completed = self.__run_hist[-1].split(": ")
+        if self.__run_log.user_entries:
+            print(f'\n{self.__run_log.user_entries[-1].split(": ")}')
+            last_ran, completed = self.__run_log.user_entries[-1].split(": ")
 
             last_ran_pst = datetime.strptime(last_ran, self.__DATETIME_FORMAT).replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
             run_datetime_pst = self.__run_datetime.astimezone(
@@ -76,24 +82,20 @@ class HistLog:
                     if self.__PUNCHCARD_OPTION not in completed:
                         self.__completion.punchcard = True
             else:
-                self.__search_hist = []
-
-        if not self.__completion.is_all_completed():
-            # update hist with todays time stamp
-            self.__run_hist.append(self.get_timestamp())
-            if len(self.__run_hist) == self.__MAX_HIST_LEN:
-                self.__run_hist = self.__run_hist[1:]
+                #clear search history if account's first run of the day
+                self.__search_log.user_entries = []
 
         return self.__completion
 
     def get_run_hist(self):
-        return self.__run_hist
+        return self.__run_log.user_entries
 
     def get_search_hist(self):
-        return self.__search_hist
+        return self.__search_log.user_entries
 
-    def write(self, completion, search_hist):
+    def write(self, completion):
         self.__completion.update(completion)
+        #create run.log entry based on updated Completion obj
         if not self.__completion.is_all_completed():
             failed = []
             if not self.__completion.is_edge_search_completed():
@@ -107,27 +109,19 @@ class HistLog:
             if not self.__completion.is_punchcard_completed():
                 failed.append(self.__PUNCHCARD_OPTION)
             failed = ', '.join(failed)
-            msg = self.__COMPLETED_FALSE.format(failed)
+            completion_msg = self.__COMPLETED_FALSE.format(failed)
         else:
-            msg = self.__COMPLETED_TRUE
+            completion_msg = self.__COMPLETED_TRUE
 
-        if self.__COMPLETED_TRUE not in self.__run_hist[-1]:
-            self.__run_hist[-1] = "{}: {}".format(self.__run_hist[-1], msg)
+        #if first time running account, or not all complete
+        if (not self.__run_log.user_entries
+           ) or (self.__COMPLETED_TRUE not in self.__run_log.user_entries[-1]):
+            self.__run_log.add_entry_and_write(completion_msg, self.email)
 
-        with open(self.run_path, "w") as log:
-            log.write("\n".join(self.__run_hist) + "\n")
-
-        if search_hist:
-            for query in search_hist:
-                if query not in self.__search_hist:
-                    self.__search_hist.append(query)
-            #to avoid UnicodeEncodeErrors
-            self.__search_hist = [
-                hist.encode('ascii', 'ignore').decode('ascii')
-                for hist in self.__search_hist
-            ]
-            with open(self.search_path, "w") as log:
-                log.write("\n".join(self.__search_hist) + "\n")
+        # search_log.user_entries obj is populated in rewards.py, search_hist is the reference variable
+        if self.__search_log.user_entries:
+            self.__search_log.reattach_to_json(self.email)
+            self.__search_log.write()
 
 
 class Completion:
@@ -208,37 +202,71 @@ class Completion:
 
 
 class BaseJsonLog:
+    """
+    Base class to read and write .json logs.
+    For each json log file, the keys are the username/emails
+    and the values are the log entries for that user
+
+    The flow for each log is to
+    1. read in the json for all the users
+    2. Obtain the log entries as a list for just the current user, i.e self.user_entries
+    3. Expose just self.user_entries to HistLog, append any new entries
+    4. Re-attach the updated user_entries back to the original json object
+    5. Write (overwrite!) the json back to the log file
+    """
     DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
     LOCAL_TIMEZONE = tz.tzlocal()
 
-    def __init__(self, log_path, run_datetime=datetime.now()):
+    def __init__(self, log_path, email, run_datetime=datetime.now()):
         self.log_path = log_path
         self.run_datetime = run_datetime.replace(tzinfo=self.LOCAL_TIMEZONE)
-        self.__read()
+        self.read()
+        self.user_entries = self.data.get(email, [])
 
-    def __read(self):
+    def read(self):
         if not os.path.exists(self.log_path):
             self.data = {}
         else:
             with open(self.log_path, ) as f:
                 self.data = json.load(f)
 
+    def add_user_entry(self, entry, include_log_dt):
+        if include_log_dt:
+            log_time = self.run_datetime.strftime(self.DATETIME_FORMAT)
+            entry = f'{log_time}: {entry}'
+        self.user_entries.append(entry)
+        self.user_entries = self.user_entries[-self.MAX_SIZE:]
+
+    def reattach_to_json(self, email):
+        """attach user log entries to json dict"""
+        self.data[email] = self.user_entries
+
+    def write(self):
+        with open(self.log_path, "w") as f:
+            json.dump(self.data, f, indent=4, sort_keys=True)
+
+    def add_entry_and_write(self, entry, email, include_log_dt=True):
+        self.add_user_entry(entry, include_log_dt)
+        self.reattach_to_json(email)
+        self.write()
+
 
 class StatsJsonLog(BaseJsonLog):
     MAX_SIZE = 300
 
-    def __init__(self, log_path):
-        super().__init__(log_path)
+    def __init__(self, log_path, email):
+        super().__init__(log_path, email)
 
-    def write(self, stats_obj, email):
-        stats_str = stats_obj.stats_str
-        log_time = self.run_datetime.strftime(self.DATETIME_FORMAT)
-        latest_log_entry = f'{log_time}: {"; ".join(stats_str)}'
-        if email in self.data:
-            self.data[email].append(latest_log_entry)
-            self.data[email] = self.data[email][-self.MAX_SIZE:]
-        else:
-            self.data[email] = [latest_log_entry]
 
-        with open(self.log_path, "w") as f:
-            json.dump(self.data, f, indent=4, sort_keys=True)
+class RunHistoryJsonLog(BaseJsonLog):
+    MAX_SIZE = 365
+
+    def __init__(self, log_path, email):
+        super().__init__(log_path, email)
+
+
+class SearchHistoryJsonLog(BaseJsonLog):
+    MAX_SIZE = 1
+
+    def __init__(self, log_path, email):
+        super().__init__(log_path, email)
