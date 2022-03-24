@@ -48,12 +48,9 @@ class HistLog:
     def get_timestamp(self):
         return self.__run_datetime.strftime(self.__DATETIME_FORMAT)
 
-    def get_completion(self):
-        # check if already ran today
-        if self.__run_log.user_entries:
-            print(f'\n{self.__run_log.user_entries[-1].split(": ")}')
-            last_ran, completed = self.__run_log.user_entries[-1].split(": ")
-
+    def is_already_ran_today(self):
+        try:
+            last_ran = self.__run_log.user_entries[-1].split(": ")[0]
             last_ran_pst = datetime.strptime(last_ran, self.__DATETIME_FORMAT).replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
             run_datetime_pst = self.__run_datetime.astimezone(
                 self.__PST_TIMEZONE
@@ -63,27 +60,35 @@ class HistLog:
                 (delta_days == 0 and last_ran_pst.hour >= self.__RESET_HOUR) or
                 (delta_days == 1 and run_datetime_pst.hour < self.__RESET_HOUR)
             )
-            if is_already_ran_today:
-                if completed == self.__COMPLETED_TRUE:
-                    self.__completion.edge_search = True
-                    self.__completion.web_search = True
-                    self.__completion.mobile_search = True
-                    self.__completion.offers = True
-                    self.__completion.punchcard = True
-                else:
-                    if self.__EDGE_SEARCH_OPTION not in completed:
-                        self.__completion.edge_search = True
-                    if self.__WEB_SEARCH_OPTION not in completed:
-                        self.__completion.web_search = True
-                    if self.__MOBILE_SEARCH_OPTION not in completed:
-                        self.__completion.mobile_search = True
-                    if self.__OFFERS_OPTION not in completed:
-                        self.__completion.offers = True
-                    if self.__PUNCHCARD_OPTION not in completed:
-                        self.__completion.punchcard = True
+        except IndexError:
+            is_already_ran_today = False
+        return is_already_ran_today
+
+    def get_completion(self):
+        # check if already ran today
+        if self.is_already_ran_today():
+            print(f'\n{self.__run_log.user_entries[-1].split(": ")}')
+            completed = self.__run_log.user_entries[-1].split(": ")[1]
+            if completed == self.__COMPLETED_TRUE:
+                self.__completion.edge_search = True
+                self.__completion.web_search = True
+                self.__completion.mobile_search = True
+                self.__completion.offers = True
+                self.__completion.punchcard = True
             else:
-                #clear search history if account's first run of the day
-                self.__search_log.user_entries = []
+                if self.__EDGE_SEARCH_OPTION not in completed:
+                    self.__completion.edge_search = True
+                if self.__WEB_SEARCH_OPTION not in completed:
+                    self.__completion.web_search = True
+                if self.__MOBILE_SEARCH_OPTION not in completed:
+                    self.__completion.mobile_search = True
+                if self.__OFFERS_OPTION not in completed:
+                    self.__completion.offers = True
+                if self.__PUNCHCARD_OPTION not in completed:
+                    self.__completion.punchcard = True
+        else:
+            #clear search history if account's first run of the day
+            self.__search_log.user_entries = []
 
         return self.__completion
 
@@ -113,12 +118,11 @@ class HistLog:
         else:
             completion_msg = self.__COMPLETED_TRUE
 
-        #if first time running account, or not all complete
-        if (not self.__run_log.user_entries
-           ) or (self.__COMPLETED_TRUE not in self.__run_log.user_entries[-1]):
+        # write run log if first time running today or last log entry not success
+        if not self.is_already_ran_today() or self.__COMPLETED_TRUE not in self.__run_log.user_entries[-1]:
             self.__run_log.add_entry_and_write(completion_msg, self.email)
 
-        # search_log.user_entries obj is populated in rewards.py, search_hist is the reference variable
+        #write to search log. note that `search_log.user_entries` list adds searches when passed into Rewards()
         if self.__search_log.user_entries:
             self.__search_log.reattach_to_json(self.email)
             self.__search_log.write()
