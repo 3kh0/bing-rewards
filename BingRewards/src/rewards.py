@@ -1255,6 +1255,7 @@ class Rewards:
 
     def __complete_action(self, action, description, mandatory_device_type=None, **action_kwargs):
         self.__sys_out(f"Starting {description}", 1)
+
         try:
             if mandatory_device_type and mandatory_device_type != self.driver.device:
                 self.driver.quit()
@@ -1264,6 +1265,12 @@ class Rewards:
                 self.__sys_out(f"Successfully completed {description}", 1, True)
             else:
                 self.__sys_out(f"Failed to complete {description}", 1, True)
+
+        except (TimeoutException, NoSuchElementException):
+            error_msg = traceback.format_exc()
+            self.__sys_out(f'Error during {description}:\n {error_msg}', 1)
+            return False
+
         except:
             try:
                 self.driver.quit()
