@@ -1,5 +1,23 @@
 # Changelog
 
+## [v1.8](https://github.com/jjjchens235/bing-rewards/tree/v1.8) (2022-03-25)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.7...v1.8)
+
+**Implemented enhancements:**
+
+- Update log files to .json format to support different accounts [\#188](https://github.com/jjjchens235/bing-rewards/issues/188)
+- Add completion status to the telegram message [\#178](https://github.com/jjjchens235/bing-rewards/issues/178)
+- Rework remaining mode completion tracking & Log file generation [\#166](https://github.com/jjjchens235/bing-rewards/issues/166)
+
+**Closed issues:**
+
+- The Halo series punch card [\#191](https://github.com/jjjchens235/bing-rewards/issues/191)
+
+**Merged pull requests:**
+
+- Release v1.8 [\#195](https://github.com/jjjchens235/bing-rewards/pull/195) ([jjjchens235](https://github.com/jjjchens235))
+
 ## [v1.7](https://github.com/jjjchens235/bing-rewards/tree/v1.7) (2022-03-19)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.6...v1.7)
@@ -107,7 +125,7 @@
 
 **Merged pull requests:**
 
-- added telegram bot notifications [\#135](https://github.com/jjjchens235/bing-rewards/pull/135) ([hosein-hub](https://github.com/hosein-hub))
+- added telegram bot notifications [\#135](https://github.com/jjjchens235/bing-rewards/pull/135) ([hoseininjast](https://github.com/hoseininjast))
 - add german market [\#133](https://github.com/jjjchens235/bing-rewards/pull/133) ([merschie](https://github.com/merschie))
 
 ## [v1.2](https://github.com/jjjchens235/bing-rewards/tree/v1.2) (2021-12-14)
@@ -128,7 +146,7 @@
 **Merged pull requests:**
 
 - Adds smaller integration for 2FA login - partially fixes \#58 [\#131](https://github.com/jjjchens235/bing-rewards/pull/131) ([revolutionisme](https://github.com/revolutionisme))
-- Update README.md [\#129](https://github.com/jjjchens235/bing-rewards/pull/129) ([hosein-hub](https://github.com/hosein-hub))
+- Update README.md [\#129](https://github.com/jjjchens235/bing-rewards/pull/129) ([hoseininjast](https://github.com/hoseininjast))
 
 ## [v1.1](https://github.com/jjjchens235/bing-rewards/tree/v1.1) (2021-11-26)
 
