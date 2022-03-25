@@ -30,7 +30,7 @@ def print_args(args):
         str(key) + '=' + str(value) for key, value in d_args.items()
     )
 
-    print(f'\nCommand line options selected:\n{result}\n')
+    print(f'\nCommand line options selected:\n{result}')
 
 
 def parse_arguments():

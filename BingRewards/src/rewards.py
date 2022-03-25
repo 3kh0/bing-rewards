@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, UnexpectedAlertPresentException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, UnexpectedAlertPresentException, JavascriptException
 import time
 import sys
 import re
@@ -103,9 +103,13 @@ class Rewards:
 
             #'stay signed in' page
             finally:
-                WebDriverWait(self.driver, 30).until(
-                    EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
-                ).click()
+                try:
+                    WebDriverWait(self.driver, 30).until(
+                        EC.element_to_be_clickable((By.ID, 'KmsiCheckboxField'))
+                    ).click()
+                except TimeoutException:
+                    print('\nIssue logging in, please run in -nhl mode to see the problem\n')
+                    raise
                 #yes, stay signed in
                 self.driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
 
@@ -299,6 +303,14 @@ class Rewards:
         return last_request_time
 
     def __search(self, search_type):
+
+        def clean_query(query):
+            #chromedriver 98+, special characters fail
+            query = re.sub(r"[^a-zA-Z0-9\s]", "", query)
+            #avoid UnicodeEncodeError when later writing to log
+            query = query.encode('ascii', 'ignore').decode('ascii')
+            return query
+
         self.__sys_out("Starting search", 2)
         self.driver.get(self.__BING_URL)
 
@@ -351,8 +363,7 @@ class Rewards:
                 if query not in self.search_hist:
                     break
 
-            #chromedriver 98+, special characters fail
-            query = re.sub(r"[^a-zA-Z0-9\s]", "", query)
+            query = clean_query(query)
             search_box.send_keys(query, Keys.RETURN)  # unique search term
             self.search_hist.append(query)
             time.sleep(random.uniform(2, 4.5))
@@ -1139,8 +1150,12 @@ class Rewards:
                         self.__sys_out('Reached error page', 3, end=True)
                         return activity_index
 
-                    #will only get points if you click the redirect link, can't go to the page directly
-                    self.driver.execute_script("document.getElementsByClassName('offer-cta')[0].click()")
+                    try:
+                        #will only get points if you click the redirect link, can't go to the page directly
+                        self.driver.execute_script("document.getElementsByClassName('offer-cta')[0].click()")
+                    #most likely target page was not opened, except clause so program can continue to mobile
+                    except JavascriptException:
+                        return activity_index
                     time.sleep(2)
                     self.driver.close()
                     self.driver.switch_to_first_tab()
@@ -1157,9 +1172,12 @@ class Rewards:
 
         # find valid punchcard
         for punchcard_index, punchcard in enumerate(punchcards):
+            valid_offers = ('quiz', 'urlreward')
+            offer_types = punchcard['parentPromotion']['attributes']['type'].split(',')
+
             # Check if valid punchcard
             if punchcard['parentPromotion'] \
-            and 'appstore' not in punchcard['parentPromotion']['attributes']['type'] \
+            and all(offer_type in valid_offers for offer_type in offer_types) \
             and punchcard['parentPromotion']['pointProgressMax'] != 0 \
             and punchcard['childPromotions']:
                 has_valid_punch = True
@@ -1244,6 +1262,7 @@ class Rewards:
 
     def __complete_action(self, action, description, mandatory_device_type=None, **action_kwargs):
         self.__sys_out(f"Starting {description}", 1)
+
         try:
             if mandatory_device_type and mandatory_device_type != self.driver.device:
                 self.driver.quit()
@@ -1253,6 +1272,12 @@ class Rewards:
                 self.__sys_out(f"Successfully completed {description}", 1, True)
             else:
                 self.__sys_out(f"Failed to complete {description}", 1, True)
+
+        except (TimeoutException, NoSuchElementException):
+            error_msg = traceback.format_exc()
+            self.__sys_out(f'Error during {description}:\n {error_msg}', 1)
+            return False
+
         except:
             try:
                 self.driver.quit()
