@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, UnexpectedAlertPresentException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException, UnexpectedAlertPresentException, JavascriptException
 import time
 import sys
 import re
@@ -1150,8 +1150,12 @@ class Rewards:
                         self.__sys_out('Reached error page', 3, end=True)
                         return activity_index
 
-                    #will only get points if you click the redirect link, can't go to the page directly
-                    self.driver.execute_script("document.getElementsByClassName('offer-cta')[0].click()")
+                    try:
+                        #will only get points if you click the redirect link, can't go to the page directly
+                        self.driver.execute_script("document.getElementsByClassName('offer-cta')[0].click()")
+                    #most likely target page was not opened, except clause so program can continue to mobile
+                    except JavascriptException:
+                        return activity_index
                     time.sleep(2)
                     self.driver.close()
                     self.driver.switch_to_first_tab()
@@ -1168,9 +1172,12 @@ class Rewards:
 
         # find valid punchcard
         for punchcard_index, punchcard in enumerate(punchcards):
+            valid_offers = ('quiz', 'urlreward')
+            offer_types = punchcard['parentPromotion']['attributes']['type'].split(',')
+
             # Check if valid punchcard
             if punchcard['parentPromotion'] \
-            and 'appstore' not in punchcard['parentPromotion']['attributes']['type'] \
+            and all(offer_type in valid_offers for offer_type in offer_types) \
             and punchcard['parentPromotion']['pointProgressMax'] != 0 \
             and punchcard['childPromotions']:
                 has_valid_punch = True
