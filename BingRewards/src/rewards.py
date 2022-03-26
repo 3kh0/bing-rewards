@@ -1170,16 +1170,19 @@ class Rewards:
         has_valid_punch = False
         punchcards = self.get_dashboard_data()['punchCards']
 
-        # find valid punchcard
         for punchcard_index, punchcard in enumerate(punchcards):
-            valid_offers = ('quiz', 'urlreward')
-            offer_types = punchcard['parentPromotion']['attributes']['type'].split(',')
+            valid_offer_types = ('quiz', 'urlreward')
+            try:
+                #get punch card offer types
+                punchcard_offer_types = punchcard['parentPromotion']['attributes']['type'].split(',')
+            except (KeyError, TypeError):
+                punchcard_offer_types = [None]
 
             # Check if valid punchcard
-            if punchcard['parentPromotion'] \
-            and all(offer_type in valid_offers for offer_type in offer_types) \
-            and punchcard['parentPromotion']['pointProgressMax'] != 0 \
-            and punchcard['childPromotions']:
+            if punchcard.get('parentPromotion') \
+            and all(punchcard_offer_type in valid_offer_types for punchcard_offer_type in punchcard_offer_types) \
+            and punchcard['parentPromotion'].get('pointProgressMax', 0) != 0 \
+            and punchcard.get('childPromotions'):
                 has_valid_punch = True
                 parent_url = punchcard['parentPromotion']['attributes']['destination']
                 title = punchcard['parentPromotion']['attributes']['title']
