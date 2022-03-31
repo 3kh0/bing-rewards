@@ -1,17 +1,19 @@
 import sys
 import os
+import logging
+import base64
+import json
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
 from src.telegram import TelegramMessenger
-import logging
-import base64
-from options import parse_arguments
+from options import parse_search_args
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
 RUN_LOG = "run.json"
 SEARCH_LOG = "search.json"
 STATS_LOG = "stats.json"
+CONFIG_FILE_PATH = "src/config.json"
 DEBUG = True
 
 
@@ -30,9 +32,22 @@ def __decode(encoded):
         return base64.b64decode(encoded).decode()
 
 
+def get_config():
+    if os.path.isfile(CONFIG_FILE_PATH):
+        try:
+            with open(CONFIG_FILE_PATH) as f:
+                config = json.load(f)
+        except ValueError:
+            print("There was an error decoding the 'config.json' file")
+            raise
+    else:
+        raise ImportError("'config.json' file does not exist. Please run `python setup.py`.\nIf you are a previous user, existing credentials will be automatically ported over.")
+    return config
+
+
 def get_telegram_messenger(config, args):
-    telegram_api_token = __decode(config.credentials.get('telegram_api_token'))
-    telegram_userid = __decode(config.credentials.get('telegram_userid'))
+    telegram_api_token = __decode(config.get('telegram_api_token'))
+    telegram_userid = __decode(config.get('telegram_userid'))
     if not args.telegram or not telegram_api_token or not telegram_userid:
         telegram_messenger = None
     else:
@@ -55,20 +70,16 @@ def main():
     if top_dir and top_dir != dir_run_from:
         os.chdir(top_dir)
 
-    try:
-        from src import config
-    except ImportError:
-        print("\nFailed to import configuration file")
-        raise
+    config = get_config()
 
-    args = parse_arguments()
+    args = parse_search_args()
     if args.email and args.password:
         email = args.email
         password = args.password
         args.cookies = False
     else:
-        email = __decode(config.credentials['email'])
-        password = __decode(config.credentials['password'])
+        email = __decode(config['email'])
+        password = __decode(config['password'])
 
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)

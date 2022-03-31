@@ -8,9 +8,10 @@ Please note:
 1. Download [Chrome](https://www.google.com/chrome/) or [Edge](https://www.microsoft.com/edge)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install `requirements.txt` file included in the repo: `pip install -r BingRewards/requirements.txt`.
-4. If you want notifications via Telegram, follow the steps [below](https://github.com/jjjchens235/bing-rewards#telegram-notification), else continue ahead
-5. Create config file by running `python setup.py`. If you need to update your email or password, re-run this. 
-	- Please note your email and password will be saved essentially as plain text (base64 encoded). If you prefer, leave the setup arguments blank and use the --email and --password command line arguments instead.
+3. Create/update *basic* config file by running `python setup.py` .
+	-  **Please note**: Your credentials will be stored as base64 encoded text.
+	-   Additional credential values, i.e Telegram can be passed in via the command line. For more config options use the `python setup.py -h` flag.
+5. If you want notifications via Telegram, follow the steps [below](https://github.com/jjjchens235/bing-rewards#telegram-notification), else continue ahead
 6. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
 7. And you're all set! Run `python BingRewards/BingRewards.py` to start earning points.
 
@@ -71,9 +72,9 @@ You may want to use your operating system's scheduler to run this program automa
 if you want to setup a Telegram notification system please follow these steps:
 1. Create Telegram bot using [@BotFather](https://t.me/BotFather). Note the API token generated in the BotFather chat- you'll need it later.
 2. Get your Telegram userid from [@userinfobot](https://t.me/userinfobot) or alternatively [@MissRose_bot](https://t.me/MissRose_bot)
-3. Run setup `python setup.py` and enter 
-	- your token generated from step 1
-	- your userid from step 2
+3. Re-run `setup.py` with two new arguments, like so: `python setup.py --telegram_api_token --telegram_userid <userid>`
+	- `telegram_api_token` is the token generated from step 1. You can enter the token value separately in a secure prompt.
+	- `telegram_userid` is your userid from step 2
 
 ## Additional Login Security Options
 Microsoft offers these additional security options:
@@ -96,6 +97,6 @@ Run `./bing-rewards-master/update.sh` which will
 - The original author took down the code from their GitHub back in July 2018. The author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
 - UK quiz updates by `chris987789`
 - 2FA code by `revolutionisme`
-- Telegram notifications by `hosein-hub`
+- Telegram notifications by `hoseininjast`
 - Punch card, dashboard json, This or That perfect score, and more based on `Charles Bel's` wonderful [repo](https://github.com/charlesbel/Microsoft-Rewards-Farmer).
 - Microsoft Edge support by `Summon528`
