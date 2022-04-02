@@ -17,7 +17,9 @@ if top_dir and top_dir != dir_run_from:
 sys.path.append('BingRewards')
 from options import parse_setup_args
 
-CONFIG_FILE_PATH = "BingRewards/src/config.json"
+CONFIG_DIR = 'BingRewards/config/'
+CONFIG_FILE = "config.json"
+CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, CONFIG_FILE)
 DEPRECATED_CONFIG_FILE_PATH = "BingRewards/src/config.py"
 
 
@@ -47,7 +49,7 @@ def __prompt_simple_input(existing_credentials):
 def write(credentials):
     with open(CONFIG_FILE_PATH, "w") as f:
         json.dump(credentials, f, indent=4, sort_keys=True)
-        print(f"\n{CONFIG_FILE_PATH} created/updated successfully")
+        print(f"\n{CONFIG_FILE} created/updated successfully")
 
 
 def main():
@@ -73,6 +75,9 @@ def main():
                 existing_credentials = {}
 
     else:
+        if not os.path.exists(CONFIG_DIR):
+            os.makedirs(CONFIG_DIR)
+
         #port code over if `config.py` exists
         if os.path.isfile(DEPRECATED_CONFIG_FILE_PATH):
             from src.config import credentials

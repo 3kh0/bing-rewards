@@ -13,7 +13,7 @@ ERROR_LOG = "error.log"
 RUN_LOG = "run.json"
 SEARCH_LOG = "search.json"
 STATS_LOG = "stats.json"
-CONFIG_FILE_PATH = "src/config.json"
+CONFIG_FILE_PATH = "config/config.json"
 DEBUG = True
 
 
