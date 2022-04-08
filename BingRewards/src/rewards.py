@@ -20,7 +20,7 @@ import locale
 class Rewards:
     __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
-    __DASHBOARD_URL = "https://account.microsoft.com/rewards/"
+    __DASHBOARD_URL = "https://rewards.microsoft.com/"
 
     __WEB_DRIVER_WAIT_LONG = 30
     __WEB_DRIVER_WAIT_SHORT = 5
@@ -192,7 +192,7 @@ class Rewards:
                 # 'any_of' checks for either condition
                 EC.any_of(
                     EC.url_contains("https://rewards.microsoft.com/?redref"),
-                    EC.url_contains("https://rewards.microsoft.com/welcome")
+                    EC.url_contains("https://rewards.microsoft.com/")
                 )
             )
             # need to sign in via welcome page first
