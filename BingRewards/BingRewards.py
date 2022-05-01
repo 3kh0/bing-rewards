@@ -3,10 +3,11 @@ import os
 import logging
 import base64
 import json
+from options import parse_search_args
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
 from src.telegram import TelegramMessenger
-from options import parse_search_args
+from src.googlespreadsheet import GoogleSpreadSheetReporting
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
@@ -87,6 +88,22 @@ def main():
     stats_log = StatsJsonLog(os.path.join(LOG_DIR, STATS_LOG), email)
     hist_log = HistLog(email,
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG))
+
+    # googlespreadsheet credentials and values
+    googlespreadsheet_id = __decode(config.credentials.get('googlespreadsheet_id'))
+    googlespreadsheet_credentials = __decode(config.credentials.get('googlespreadsheet_credentials'))
+    with open('credentials.json', 'w') as f:
+        f.write(googlespreadsheet_credentials)
+    googlespreadsheet_token = __decode(config.credentials.get('googlespreadsheet_token'))
+    with open('token.json', 'w') as f:
+        f.write(googlespreadsheet_token)
+    googlespreadsheet_sheetname = config.credentials.get('googlespreadsheet_sheetname')
+
+    if not args.googlespreadsheet or not googlespreadsheet_id or not googlespreadsheet_credentials:
+        googlespreadsheet_reporting = None
+    else:
+        googlespreadsheet_reporting = GoogleSpreadSheetReporting(googlespreadsheet_id, googlespreadsheet_sheetname)
+
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
 
