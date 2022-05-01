@@ -7,7 +7,7 @@ from options import parse_search_args
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
 from src.telegram import TelegramMessenger
-from src.googlespreadsheet import GoogleSpreadSheetReporting
+from src.google_sheets_reporting import GoogleSheetsReporting
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
@@ -50,10 +50,25 @@ def get_telegram_messenger(config, args):
     telegram_api_token = __decode(config.get('telegram_api_token'))
     telegram_userid = __decode(config.get('telegram_userid'))
     if not args.telegram or not telegram_api_token or not telegram_userid:
+        if args.telegram:
+            print('You have selected Telegram, but config file is missing `api token` or `userid`. Please re-run setup.py with additional arguments if you want Telegram notifications.')
         telegram_messenger = None
     else:
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
     return telegram_messenger
+
+
+def get_google_sheets_reporting(config, args):
+    sheet_id = __decode(config.get('google_sheets_sheet_id'))
+    tab_name = __decode(config.get('google_sheets_tab_name'))
+
+    if args.google_sheets and sheet_id and tab_name:
+        google_sheets_reporting = GoogleSheetsReporting(sheet_id, tab_name)
+    else:
+        if args.google_sheets:
+            print('You have selected Google Sheets reporting, but main config file is missing sheet_id or tab_name. Please re-run setup.py with additional arguments if you want Google Sheets reporting.')
+        google_sheets_reporting = None
+    return google_sheets_reporting
 
 
 def complete_search(rewards, completion, search_type, search_hist):
@@ -89,26 +104,12 @@ def main():
     hist_log = HistLog(email,
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG))
 
-    # googlespreadsheet credentials and values
-    googlespreadsheet_id = __decode(config.credentials.get('googlespreadsheet_id'))
-    googlespreadsheet_credentials = __decode(config.credentials.get('googlespreadsheet_credentials'))
-    with open('credentials.json', 'w') as f:
-        f.write(googlespreadsheet_credentials)
-    googlespreadsheet_token = __decode(config.credentials.get('googlespreadsheet_token'))
-    with open('token.json', 'w') as f:
-        f.write(googlespreadsheet_token)
-    googlespreadsheet_sheetname = config.credentials.get('googlespreadsheet_sheetname')
-
-    if not args.googlespreadsheet or not googlespreadsheet_id or not googlespreadsheet_credentials:
-        googlespreadsheet_reporting = None
-    else:
-        googlespreadsheet_reporting = GoogleSpreadSheetReporting(googlespreadsheet_id, googlespreadsheet_sheetname)
-
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
 
     # telegram credentials
     telegram_messenger = get_telegram_messenger(config, args)
+    google_sheets_reporting = get_google_sheets_reporting(config, args)
     rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver)
 
     try:
@@ -122,6 +123,9 @@ def main():
             if telegram_messenger:
                 run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
                 telegram_messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
+
+            if google_sheets_reporting:
+                google_sheets_reporting.add_row(rewards.stats, email)
 
         # check again, log if any failed
         if not completion.is_search_type_completed(args.search_type):

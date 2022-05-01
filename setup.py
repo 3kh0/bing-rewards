@@ -20,7 +20,7 @@ from options import parse_setup_args
 CONFIG_DIR = 'BingRewards/config/'
 CONFIG_FILE = "config.json"
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, CONFIG_FILE)
-DEPRECATED_CONFIG_FILE_PATH = "BingRewards/src/config.py"
+DEPRECATED_CONFIG_FILE_PATH = os.path.join("BingRewards/src/config.py")
 
 
 def __encode(s):

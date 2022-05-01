@@ -79,12 +79,23 @@ def parse_setup_args():
         '--telegram_api_token',
         action=PasswordAction,
         nargs='?',
-        help=
-        "telegram api token to store in config, use with no argument to trigger a secure prompt",
+        help="telegram api token to store in config, use with no argument to trigger a secure prompt",
     )
+
+    # google sheets config
+    setup_parser.add_argument(
+        '-gssi',
+        '--google_sheets_sheet_id',
+        help='The sheetId that you want to write to. More info here: https://stackoverflow.com/a/36062068'
+    )
+    setup_parser.add_argument(
+        '-gstn',
+        '--google_sheets_tab_name',
+        help="Name of the google sheet tab to write to",
+    )
+
     args = setup_parser.parse_args()
     check_is_valid_email_pw_combo(args)
-    print_args(args)
     return args
 
 
@@ -198,7 +209,8 @@ def parse_search_args():
         '--telegram',
         dest='telegram',
         action='store_true',
-        help='send notification to telegram using setup.py credentials, this is the default'
+        help=
+        'send notification to telegram using setup.py credentials, this is the default'
     )
     telegram_group.add_argument(
         '-nt',
@@ -208,20 +220,20 @@ def parse_search_args():
         help='do not send notifications to telegram'
     )
 
-    google_spreadsheet_group = search_parser.add_mutually_exclusive_group()
-    google_spreadsheet_group.add_argument(
+    google_sheets_group = search_parser.add_mutually_exclusive_group()
+    google_sheets_group.add_argument(
         '-gs',
-        '--googlespreadsheet',
-        dest='googlespreadsheet',
+        '--google-sheets',
+        dest='google_sheets',
         action='store_true',
-        help='add row to existing Google Spreadsheet using setup.py credentials'
+        help='add row to Google Sheets'
     )
-    google_spreadsheet_group.add_argument(
+    google_sheets_group.add_argument(
         '-ngs',
-        '--no-googlespreadsheet',
-        dest='googlespreadsheet',
+        '--no-google-sheets',
+        dest='google_sheets',
         action='store_false',
-        help='do not add row to existing Google Spreadsheet, this is the default'
+        help='do not add row to Google Sheets'
     )
 
     search_parser.add_argument(
@@ -237,8 +249,8 @@ def parse_search_args():
         search_type='remaining',
         headless=True,
         cookies=False,
-        telegram=True,
-        google_spreadsheet=False,
+        telegram=False,
+        google_sheets=False,
         driver=ChromeDriverFactory
     )
 
