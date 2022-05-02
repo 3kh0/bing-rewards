@@ -39,6 +39,9 @@ Please note:
 * Telegram
 	* `-t` or `--telegram`: Send notifications to telegram (more instructions below). This is the *default*, but will only work if telegram credentials were entered during setup
 	* `-nt` or `--no-telegram`: Do not send notifications to telegram.
+* NoSandbox
+	* `-sb` or `--sandbox`: Run in browser sandbox mode, this is the *default*
+	* `-nsb` or `--no-sandbox`: Don't run in browser sandbox mode
 
 #### Examples
 The following `python BingRewards.py` 

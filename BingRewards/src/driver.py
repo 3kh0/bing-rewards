@@ -117,7 +117,7 @@ class DriverFactory(ABC):
         os.chmod(driver_path, 0o755)
 
     @classmethod
-    def add_driver_options(cls, device, headless, cookies):
+    def add_driver_options(cls, device, headless, cookies, nosandbox):
         options = cls.WebDriverOptions()
 
         options.add_argument("--disable-extensions")
@@ -147,10 +147,13 @@ class DriverFactory(ABC):
             cookies_path = os.path.join(os.getcwd(), 'stored_browser_data/')
             options.add_argument("user-data-dir=" + cookies_path)
 
+        if nosandbox:
+            options.add_argument("--no-sandbox")
+
         return options
 
     @classmethod
-    def get_driver(cls, device, headless, cookies) -> Driver:
+    def get_driver(cls, device, headless, cookies, nosandbox) -> Driver:
 
         # raspberry pi: assumes driver already installed via `sudo apt-get install chromium-chromedriver`
         if platform.machine() in ["armv7l","aarch64"]:
@@ -167,7 +170,7 @@ class DriverFactory(ABC):
         dl_try_count = 1
         MAX_TRIES = 3
         is_dl_success = False
-        options = cls.add_driver_options(device, headless, cookies)
+        options = cls.add_driver_options(device, headless, cookies, nosandbox)
 
         while not is_dl_success:
             try:
@@ -192,7 +195,7 @@ class DriverFactory(ABC):
                 # handle cookie error
                 if "DevToolsActivePort file doesn't exist" in error_msg:
                     #print('Driver error using cookies option. Trying without cookies.')
-                    options = cls.add_driver_options(device, headless, cookies=False)
+                    options = cls.add_driver_options(device, headless, cookies=False, nosandbox=nosandbox)
 
                 else:
                     raise WebDriverException(error_msg)

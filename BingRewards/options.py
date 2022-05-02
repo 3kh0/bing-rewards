@@ -171,8 +171,25 @@ def parse_arguments():
         action=DriverAction
     )
 
+    nosandbox_group = parser.add_mutually_exclusive_group()
+    nosandbox_group.add_argument(
+        '-sb',
+        '--sandbox',
+        dest='nosandbox',
+        action='store_false',
+        help='run browser in sandbox mode, this is the default'
+    )
+    nosandbox_group.add_argument(
+        '-nsb',
+        '--no-sandbox',
+        dest='nosandbox',
+        action='store_true',
+        help='run browser in no-sandbox mode'
+    )
+
     parser.set_defaults(search_type='remaining', headless=True,
-                        cookies=False, telegram=True, driver=ChromeDriverFactory)
+                        cookies=False, telegram=True, driver=ChromeDriverFactory,
+                        nosandbox=False)
 
     args = parser.parse_args()
 

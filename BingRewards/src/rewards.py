@@ -30,12 +30,13 @@ class Rewards:
     cookieclearquiz = 0
     _ON_POSIX = 'posix' in sys.builtin_module_names
 
-    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory):
+    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory, nosandbox=False):
         self.email = email
         self.password = password
         self.debug = debug
         self.headless = headless
         self.cookies = cookies
+        self.nosandbox = nosandbox
         self.completion = Completion()
         self.stdout = []
         self.search_hist = []
@@ -1250,7 +1251,7 @@ class Rewards:
     def __get_driver(self, device_type):
         try:
             self.driver = self.driver_factory.get_driver(
-                device_type, self.headless, self.cookies
+                device_type, self.headless, self.cookies, self.nosandbox
             )
             self.__login()
         except:
