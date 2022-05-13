@@ -153,7 +153,7 @@ class DriverFactory(ABC):
         return options
 
     @classmethod
-    def get_driver(cls, device, headless, cookies) -> Driver:
+    def get_driver(cls, device, headless, cookies, nosandbox) -> Driver:
         dl_try_count = 0
         MAX_TRIES = 3
         is_dl_success = False

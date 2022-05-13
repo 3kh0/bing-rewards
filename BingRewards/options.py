@@ -171,20 +171,29 @@ def parse_search_args():
         help='run web, mobile, offers, and punch cards'
     )
 
+    search_parser.add_argument(
+        '-d',
+        '--driver',
+        dest='driver',
+        type=str.lower,
+        choices=['chrome', 'msedge'],
+        action=DriverAction
+    )
+
     headless_group = search_parser.add_mutually_exclusive_group()
     headless_group.add_argument(
         '-hl',
         '--headless',
         dest='headless',
         action='store_true',
-        help='run in headless mode, this is the default'
+        help='run browser in headless mode (in the background), this is the default'
     )
     headless_group.add_argument(
         '-nhl',
         '--no-headless',
         dest='headless',
         action='store_false',
-        help='run in non-headless mode'
+        help='run browser in non-headless mode'
     )
 
     cookies_group = search_parser.add_mutually_exclusive_group()
@@ -193,14 +202,31 @@ def parse_search_args():
         '--cookies',
         dest='cookies',
         action='store_true',
-        help='run browser with cookies, this is the default'
+        help='run browser with cookies'
     )
     cookies_group.add_argument(
         '-nc',
         '--no-cookies',
         dest='cookies',
         action='store_false',
-        help='run browser without cookies'
+        help='run browser without cookies, this is the default'
+    )
+
+    nosandbox_group = search_parser.add_mutually_exclusive_group()
+    nosandbox_group.add_argument(
+        '-sb',
+        '--sandbox',
+        dest='nosandbox',
+        action='store_false',
+        help='run browser in sandbox mode, this is the default'
+    )
+
+    nosandbox_group.add_argument(
+        '-nsb',
+        '--no-sandbox',
+        dest='nosandbox',
+        action='store_true',
+        help='run browser in no-sandbox mode'
     )
 
     telegram_group = search_parser.add_mutually_exclusive_group()
@@ -209,15 +235,14 @@ def parse_search_args():
         '--telegram',
         dest='telegram',
         action='store_true',
-        help=
-        'send notification to telegram using setup.py credentials, this is the default'
+        help='send notification to telegram using setup.py credentials'
     )
     telegram_group.add_argument(
         '-nt',
         '--no-telegram',
         dest='telegram',
         action='store_false',
-        help='do not send notifications to telegram'
+        help='do not send notifications to telegram, this is the default'
     )
 
     google_sheets_group = search_parser.add_mutually_exclusive_group()
@@ -233,42 +258,17 @@ def parse_search_args():
         '--no-google-sheets',
         dest='google_sheets',
         action='store_false',
-        help='do not add row to Google Sheets'
-    )
-
-    search_parser.add_argument(
-        '-d',
-        '--driver',
-        dest='driver',
-        type=str.lower,
-        choices=['chrome', 'msedge'],
-        action=DriverAction
-    )
-
-    nosandbox_group = search_parser.add_mutually_exclusive_group()
-    nosandbox_group.add_argument(
-        '-sb',
-        '--sandbox',
-        dest='nosandbox',
-        action='store_false',
-        help='run browser in sandbox mode, this is the default'
-    )
-    nosandbox_group.add_argument(
-        '-nsb',
-        '--no-sandbox',
-        dest='nosandbox',
-        action='store_true',
-        help='run browser in no-sandbox mode'
+        help='do not add row to Google Sheets, this is the default'
     )
 
     search_parser.set_defaults(
         search_type='remaining',
+        driver=ChromeDriverFactory,
         headless=True,
         cookies=False,
+        nosandbox=False,
         telegram=False,
-        google_sheets=False,
-        driver=ChromeDriverFactory,
-        nosandbox=False
+        google_sheets=False
     )
 
     args = search_parser.parse_args()

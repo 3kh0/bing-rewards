@@ -18,35 +18,14 @@ Please note:
 	- If you want notifications via Telegram, follow the steps  in the section `Telegram Notification (Optional)`
 	- If you want to save your stats history in Google Sheets, please follow the additional steps in the `Google Sheets API Instructions (Optional)` section below.
 ## Command Line Arguments
-#### Search Arguments
-* `-r` or `--remaining`: remaining tasks - this is the *default* option
-* `-w` or `--web`: web search
-* `-m` or `--mobile`: mobile search
-* `-b` or `--both`: both searches (web search and mobile search)
-* `-o` or `--offers`: daily offers
-* `-pc` or `--punchcard`: punch card
-* `-a` or `--all`: all tasks (web search, mobile search, daily offers, punch card)
+There are a growing number of command line argument options. Here are a few to note:
+- `-r` or `--remaining`: remaining tasks - this is the *default* option
+- `-nhl` or `--no-headless`: Don't run in headless mode. This is a non-default option.
 
-#### Additional Optional Arguments
-* Email/Password
-	* `-e` or `--email`: Email to use, supersedes the config email
-	* `-p` or `--password`: The email password to use. Use -p with no argument to trigger a secure password prompt
-* Driver
-	* `-d` or `--driver`: Driver to use, choose either `Chrome` or Microsoft Edge`. Chrome is the *default*.
-* Headless
-	* `-hl` or `--headless`: Run in [headless](https://developers.google.com/web/updates/2017/06/headless-karma-mocha-chai) mode- this is the *default*
-	* `-nhl` or `--no-headless`: Don't run in headless mode
-* Cookies
-	* `-nc` or `--no-cookies`: Browser does not save cookies- this has been updated to be the *default* due to a few people reporting issues with the cookies option.
-	* `-c` or `--cookies`: Run browser with cookies to preserve username and password each session.
-* Telegram
-	* `-t` or `--telegram`: Send notifications to telegram (more instructions below). 
-	* `-nt` or `--no-telegram`: Do not send notifications to telegram. This is the *default*.
-* Google Sheets
-	* `-gs` or `--google-sheets`: Save run info to google sheets. 
-	* `-ngs` or `--no-google-sheets`: Do not write to google sheets. This is the *default*.
-	* `-sb` or `--sandbox`: Run in browser sandbox mode, this is the *default*
-	* `-nsb` or `--no-sandbox`: Don't run in browser sandbox mode
+To see remaining argument options, please run:
+```sh
+python BingRewards.py -h
+```
 
 #### Examples
 The following `python BingRewards.py` 
