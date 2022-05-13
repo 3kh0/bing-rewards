@@ -110,7 +110,7 @@ def main():
     # telegram credentials
     telegram_messenger = get_telegram_messenger(config, args)
     google_sheets_reporting = get_google_sheets_reporting(config, args)
-    rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver)
+    rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver, args.nosandbox)
 
     try:
         complete_search(rewards, completion, args.search_type, search_hist)

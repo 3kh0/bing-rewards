@@ -45,6 +45,8 @@ Please note:
 * Google Sheets
 	* `-gs` or `--google-sheets`: Save run info to google sheets. 
 	* `-ngs` or `--no-google-sheets`: Do not write to google sheets. This is the *default*.
+	* `-sb` or `--sandbox`: Run in browser sandbox mode, this is the *default*
+	* `-nsb` or `--no-sandbox`: Don't run in browser sandbox mode
 
 #### Examples
 The following `python BingRewards.py` 

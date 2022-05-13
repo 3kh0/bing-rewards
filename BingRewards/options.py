@@ -245,13 +245,30 @@ def parse_search_args():
         action=DriverAction
     )
 
+    nosandbox_group = search_parser.add_mutually_exclusive_group()
+    nosandbox_group.add_argument(
+        '-sb',
+        '--sandbox',
+        dest='nosandbox',
+        action='store_false',
+        help='run browser in sandbox mode, this is the default'
+    )
+    nosandbox_group.add_argument(
+        '-nsb',
+        '--no-sandbox',
+        dest='nosandbox',
+        action='store_true',
+        help='run browser in no-sandbox mode'
+    )
+
     search_parser.set_defaults(
         search_type='remaining',
         headless=True,
         cookies=False,
         telegram=False,
         google_sheets=False,
-        driver=ChromeDriverFactory
+        driver=ChromeDriverFactory,
+        nosandbox=False
     )
 
     args = search_parser.parse_args()
