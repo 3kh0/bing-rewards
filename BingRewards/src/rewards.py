@@ -1346,19 +1346,19 @@ class Rewards:
 
         if not prev_completion.is_edge_search_completed() or is_search_all:
             self.__complete_edge_search()
+        if not prev_completion.is_mobile_search_completed() or is_search_all:
+            self.__complete_mobile_search()
         if not prev_completion.is_web_search_completed() or is_search_all:
             self.__complete_web_search()
         if not prev_completion.is_offers_completed() or is_search_all:
             self.__complete_offers()
         if not prev_completion.is_punchcard_completed() or is_search_all:
             self.__complete_punchcard()
-        if not prev_completion.is_mobile_search_completed() or is_search_all:
-            self.__complete_mobile_search()
 
     def complete_search_type(self, search_type, prev_completion, search_hist):
         self.search_hist = search_hist
 
-        if (search_type == 'mobile') or (prev_completion.is_web_device_completed()):
+        if (search_type in ('mobile', 'remaining', 'all')) and (not prev_completion.is_mobile_search_completed()):
             device_type = self.driver_factory.MOBILE_DEVICE
         else:
             device_type = self.driver_factory.WEB_DEVICE
