@@ -261,6 +261,15 @@ def parse_search_args():
         help='do not add row to Google Sheets, this is the default'
     )
 
+    search_parser.add_argument(
+        '-gtg',
+        '--google-trends-geo',
+        dest='google_trends_geo',
+        nargs='?',
+        default='US',
+        help="two-letter country code to use for Google Trends API 'geo' argument. Please note: not all country codes are supported by the API. Default is 'US'."
+    )
+
     search_parser.set_defaults(
         search_type='remaining',
         driver=ChromeDriverFactory,
