@@ -1207,7 +1207,12 @@ class Rewards:
             return True
 
         self.driver.get(parent_url)
-        punchcard_progress = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
+        try:
+            punchcard_progress = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
+        except TimeoutException:
+            self.__sys_out('Could not obtain overall punchcard progress, assuming punchcard failed to complete.', 2)
+            return False
+
         self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
         return is_complete_punchcard or is_complete_activity
 
