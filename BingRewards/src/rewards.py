@@ -30,12 +30,13 @@ class Rewards:
     cookieclearquiz = 0
     _ON_POSIX = 'posix' in sys.builtin_module_names
 
-    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory):
+    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory, nosandbox=False):
         self.email = email
         self.password = password
         self.debug = debug
         self.headless = headless
         self.cookies = cookies
+        self.nosandbox = nosandbox
         self.completion = Completion()
         self.stdout = []
         self.search_hist = []
@@ -1206,7 +1207,12 @@ class Rewards:
             return True
 
         self.driver.get(parent_url)
-        punchcard_progress = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
+        try:
+            punchcard_progress = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//div[@class='punchcard-completion-row']"))).text
+        except TimeoutException:
+            self.__sys_out('Could not obtain overall punchcard progress, assuming punchcard failed to complete.', 2)
+            return False
+
         self.__sys_out(f'Overall punch card progress: {punchcard_progress}', 2)
         return is_complete_punchcard or is_complete_activity
 
@@ -1250,7 +1256,7 @@ class Rewards:
     def __get_driver(self, device_type):
         try:
             self.driver = self.driver_factory.get_driver(
-                device_type, self.headless, self.cookies
+                device_type, self.headless, self.cookies, self.nosandbox
             )
             self.__login()
         except:
@@ -1345,19 +1351,19 @@ class Rewards:
 
         if not prev_completion.is_edge_search_completed() or is_search_all:
             self.__complete_edge_search()
+        if not prev_completion.is_mobile_search_completed() or is_search_all:
+            self.__complete_mobile_search()
         if not prev_completion.is_web_search_completed() or is_search_all:
             self.__complete_web_search()
         if not prev_completion.is_offers_completed() or is_search_all:
             self.__complete_offers()
         if not prev_completion.is_punchcard_completed() or is_search_all:
             self.__complete_punchcard()
-        if not prev_completion.is_mobile_search_completed() or is_search_all:
-            self.__complete_mobile_search()
 
     def complete_search_type(self, search_type, prev_completion, search_hist):
         self.search_hist = search_hist
 
-        if (search_type == 'mobile') or (prev_completion.is_web_device_completed()):
+        if (search_type in ('mobile', 'remaining', 'all')) and (not prev_completion.is_mobile_search_completed()):
             device_type = self.driver_factory.MOBILE_DEVICE
         else:
             device_type = self.driver_factory.WEB_DEVICE

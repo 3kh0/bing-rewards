@@ -117,7 +117,7 @@ class DriverFactory(ABC):
         os.chmod(driver_path, 0o755)
 
     @classmethod
-    def add_driver_options(cls, device, headless, cookies):
+    def add_driver_options(cls, device, headless, cookies, nosandbox):
         options = cls.WebDriverOptions()
 
         options.add_argument("--disable-extensions")
@@ -147,10 +147,17 @@ class DriverFactory(ABC):
             cookies_path = os.path.join(os.getcwd(), 'stored_browser_data/')
             options.add_argument("user-data-dir=" + cookies_path)
 
+        if nosandbox:
+            options.add_argument("--no-sandbox")
+
         return options
 
     @classmethod
-    def get_driver(cls, device, headless, cookies) -> Driver:
+    def get_driver(cls, device, headless, cookies, nosandbox) -> Driver:
+        dl_try_count = 0
+        MAX_TRIES = 3
+        is_dl_success = False
+        options = cls.add_driver_options(device, headless, cookies, nosandbox)
 
         # raspberry pi: assumes driver already installed via `sudo apt-get install chromium-chromedriver`
         if platform.machine() in ["armv7l","aarch64"]:
@@ -162,12 +169,7 @@ class DriverFactory(ABC):
             driver_path = os.path.join(cls.DRIVERS_DIR, cls.driver_name)
             if not os.path.exists(driver_path):
                 cls.__download_driver()
-
-        # we start at dl_try_count = 1 b/c we already downloaded the most recent version
-        dl_try_count = 1
-        MAX_TRIES = 3
-        is_dl_success = False
-        options = cls.add_driver_options(device, headless, cookies)
+                dl_try_count += 1
 
         while not is_dl_success:
             try:
@@ -178,12 +180,12 @@ class DriverFactory(ABC):
                 error_msg = str(se).lower()
                 if cls.VERSION_MISMATCH_STR not in error_msg:
                     raise SessionNotCreatedException(error_msg)
+                cls.__download_driver(dl_try_count)
                 # driver not up to date with Chrome browser, try different version
+                dl_try_count += 1
                 if dl_try_count == MAX_TRIES:
                     raise SessionNotCreatedException(
                         f'Tried downloading the {dl_try_count} most recent drivers. None match your browser version. Aborting now, please update your browser.')
-                cls.__download_driver(dl_try_count)
-                dl_try_count += 1
 
             # WebDriverException is Selenium generic exception
             except WebDriverException as wde:
@@ -192,7 +194,7 @@ class DriverFactory(ABC):
                 # handle cookie error
                 if "DevToolsActivePort file doesn't exist" in error_msg:
                     #print('Driver error using cookies option. Trying without cookies.')
-                    options = cls.add_driver_options(device, headless, cookies=False)
+                    options = cls.add_driver_options(device, headless, cookies=False, nosandbox=nosandbox)
 
                 else:
                     raise WebDriverException(error_msg)

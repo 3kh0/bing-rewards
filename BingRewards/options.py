@@ -1,7 +1,5 @@
 import argparse
 import getpass
-import selenium
-import sys
 from src.driver import ChromeDriverFactory, MsEdgeDriverFactory
 
 
@@ -9,23 +7,26 @@ class PasswordAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if values:
             print(
-                '\nWarning: User set the password in plain text. Use `-p` with no arguments next time for better security.\n'
+                '\nWarning: User set the password in plain text. Use `-p` with no arguments next time for better security.'
             )
             setattr(namespace, self.dest, values)
         else:
-            setattr(namespace, self.dest, getpass.getpass())
+            prompt = f'{option_string}:'
+            setattr(namespace, self.dest, getpass.getpass(prompt=prompt))
 
 
 class DriverAction(argparse.Action):
     def __call__(self, parser, namespace, value, option_string=None):
-        mapping = {"chrome": ChromeDriverFactory,
-                   "msedge": MsEdgeDriverFactory}
+        mapping = {"chrome": ChromeDriverFactory, "msedge": MsEdgeDriverFactory}
         setattr(namespace, self.dest, mapping[value])
 
 
 def print_args(args):
+    protected_fields = ('password', 'telegram_api_token')
     d_args = vars(args).copy()
-    del (d_args['password'])
+    for protected_field in protected_fields:
+        if protected_field in d_args:
+            del (d_args[protected_field])
     result = ", ".join(
         str(key) + '=' + str(value) for key, value in d_args.items()
     )
@@ -33,7 +34,72 @@ def print_args(args):
     print(f'\nCommand line options selected:\n{result}')
 
 
-def parse_arguments():
+def check_is_valid_email_pw_combo(args):
+    if (args.email and not args.password) or (not args.email and args.password):
+        if args.email:
+            included_arg = 'email'
+            missing_arg = 'password'
+        else:
+            included_arg = 'password'
+            missing_arg = 'email'
+        raise RuntimeError(
+            f'Missing {missing_arg} argument. You included {included_arg} argument, you must also include {missing_arg} argument.'
+        )
+
+
+def get_parent_parser():
+    ''' parent parser - store default args '''
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument(
+        '-e', '--email', help='email to use, supersedes the config email'
+    )
+    parent_parser.add_argument(
+        '-p',
+        '--password',
+        action=PasswordAction,
+        nargs='?',
+        help=
+        "the email password to use. Use -p with no argument to trigger a secure pw prompt"
+    )
+    return parent_parser
+
+
+def parse_setup_args():
+    ''' Responsible for parsing setup.py args '''
+    # main search arguments
+    parent_parser = get_parent_parser()
+    setup_parser = argparse.ArgumentParser(parents=[parent_parser])
+
+    # telegram config
+    setup_parser.add_argument(
+        '-tu', '--telegram_userid', help='telegram userid to store in config'
+    )
+    setup_parser.add_argument(
+        '-ta',
+        '--telegram_api_token',
+        action=PasswordAction,
+        nargs='?',
+        help="telegram api token to store in config, use with no argument to trigger a secure prompt",
+    )
+
+    # google sheets config
+    setup_parser.add_argument(
+        '-gssi',
+        '--google_sheets_sheet_id',
+        help='The sheetId that you want to write to. More info here: https://stackoverflow.com/a/36062068'
+    )
+    setup_parser.add_argument(
+        '-gstn',
+        '--google_sheets_tab_name',
+        help="Name of the google sheet tab to write to",
+    )
+
+    args = setup_parser.parse_args()
+    check_is_valid_email_pw_combo(args)
+    return args
+
+
+def parse_search_args():
     '''
     Search options satisfy this criteria:
     One- and only one- of the args in the search_group must be used
@@ -44,9 +110,10 @@ def parse_arguments():
     Headless, https://stackoverflow.com/a/15008806
     '''
     # main search arguments
-    parser = argparse.ArgumentParser()
+    parent_parser = get_parent_parser()
+    search_parser = argparse.ArgumentParser(parents=[parent_parser])
 
-    search_group = parser.add_mutually_exclusive_group()
+    search_group = search_parser.add_mutually_exclusive_group()
     search_group.add_argument(
         '-r',
         '--remaining',
@@ -104,65 +171,7 @@ def parse_arguments():
         help='run web, mobile, offers, and punch cards'
     )
 
-    headless_group = parser.add_mutually_exclusive_group()
-    headless_group.add_argument(
-        '-hl',
-        '--headless',
-        dest='headless',
-        action='store_true',
-        help='run in headless mode, this is the default'
-    )
-    headless_group.add_argument(
-        '-nhl',
-        '--no-headless',
-        dest='headless',
-        action='store_false',
-        help='run in non-headless mode'
-    )
-
-    parser.add_argument(
-        '-e', '--email', help='email to use, supersedes the config email'
-    )
-    parser.add_argument(
-        '-p',
-        '--password',
-        action=PasswordAction,
-        nargs='?',
-        help="the email password to use. Use -p with no argument to trigger a secure pw prompt"
-    )
-
-    cookies_group = parser.add_mutually_exclusive_group()
-    cookies_group.add_argument(
-        '-c',
-        '--cookies',
-        dest='cookies',
-        action='store_true',
-        help='run browser with cookies, this is the default'
-    )
-    cookies_group.add_argument(
-        '-nc',
-        '--no-cookies',
-        dest='cookies',
-        action='store_false',
-        help='run browser without cookies'
-    )
-
-    telegram_group = parser.add_mutually_exclusive_group()
-    telegram_group.add_argument(
-        '-t',
-        '--telegram',
-        dest='telegram',
-        action='store_true',
-        help='send notification to telegram using setup.py credentials, this is the default'
-    )
-    telegram_group.add_argument(
-        '-nt',
-        '--no-telegram',
-        dest='telegram',
-        action='store_false',
-        help='do not send notifications to telegram'
-    )
-    parser.add_argument(
+    search_parser.add_argument(
         '-d',
         '--driver',
         dest='driver',
@@ -171,24 +180,103 @@ def parse_arguments():
         action=DriverAction
     )
 
-    parser.set_defaults(search_type='remaining', headless=True,
-                        cookies=False, telegram=True, driver=ChromeDriverFactory)
+    headless_group = search_parser.add_mutually_exclusive_group()
+    headless_group.add_argument(
+        '-hl',
+        '--headless',
+        dest='headless',
+        action='store_true',
+        help='run browser in headless mode (in the background), this is the default'
+    )
+    headless_group.add_argument(
+        '-nhl',
+        '--no-headless',
+        dest='headless',
+        action='store_false',
+        help='run browser in non-headless mode'
+    )
 
-    args = parser.parse_args()
+    cookies_group = search_parser.add_mutually_exclusive_group()
+    cookies_group.add_argument(
+        '-c',
+        '--cookies',
+        dest='cookies',
+        action='store_true',
+        help='run browser with cookies'
+    )
+    cookies_group.add_argument(
+        '-nc',
+        '--no-cookies',
+        dest='cookies',
+        action='store_false',
+        help='run browser without cookies, this is the default'
+    )
 
-    if (args.email and not args.password) or (not args.email and args.password):
-        if args.email:
-            included_arg = 'email'
-            missing_arg = 'password'
-        else:
-            included_arg = 'password'
-            missing_arg = 'email'
-        raise RuntimeError(
-            f'Missing {missing_arg} argument. You included {included_arg} argument, you must also include {missing_arg} argument.'
-        )
+    nosandbox_group = search_parser.add_mutually_exclusive_group()
+    nosandbox_group.add_argument(
+        '-sb',
+        '--sandbox',
+        dest='nosandbox',
+        action='store_false',
+        help='run browser in sandbox mode, this is the default'
+    )
+
+    nosandbox_group.add_argument(
+        '-nsb',
+        '--no-sandbox',
+        dest='nosandbox',
+        action='store_true',
+        help='run browser in no-sandbox mode'
+    )
+
+    telegram_group = search_parser.add_mutually_exclusive_group()
+    telegram_group.add_argument(
+        '-t',
+        '--telegram',
+        dest='telegram',
+        action='store_true',
+        help='send notification to telegram using setup.py credentials'
+    )
+    telegram_group.add_argument(
+        '-nt',
+        '--no-telegram',
+        dest='telegram',
+        action='store_false',
+        help='do not send notifications to telegram, this is the default'
+    )
+
+    google_sheets_group = search_parser.add_mutually_exclusive_group()
+    google_sheets_group.add_argument(
+        '-gs',
+        '--google-sheets',
+        dest='google_sheets',
+        action='store_true',
+        help='add row to Google Sheets'
+    )
+    google_sheets_group.add_argument(
+        '-ngs',
+        '--no-google-sheets',
+        dest='google_sheets',
+        action='store_false',
+        help='do not add row to Google Sheets, this is the default'
+    )
+
+    search_parser.set_defaults(
+        search_type='remaining',
+        driver=ChromeDriverFactory,
+        headless=True,
+        cookies=False,
+        nosandbox=False,
+        telegram=False,
+        google_sheets=False
+    )
+
+    args = search_parser.parse_args()
+    check_is_valid_email_pw_combo(args)
+
     print_args(args)
     return args
 
 
 if __name__ == '__main__':
-    args = parse_arguments()
+    args = parse_search_args()

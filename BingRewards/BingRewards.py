@@ -1,17 +1,20 @@
 import sys
 import os
+import logging
+import base64
+import json
+from options import parse_search_args
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
 from src.telegram import TelegramMessenger
-import logging
-import base64
-from options import parse_arguments
+from src.google_sheets_reporting import GoogleSheetsReporting
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
 RUN_LOG = "run.json"
 SEARCH_LOG = "search.json"
 STATS_LOG = "stats.json"
+CONFIG_FILE_PATH = "config/config.json"
 DEBUG = True
 
 
@@ -30,14 +33,42 @@ def __decode(encoded):
         return base64.b64decode(encoded).decode()
 
 
+def get_config():
+    if os.path.isfile(CONFIG_FILE_PATH):
+        try:
+            with open(CONFIG_FILE_PATH) as f:
+                config = json.load(f)
+        except ValueError:
+            print("There was an error decoding the 'config.json' file")
+            raise
+    else:
+        raise ImportError("'config.json' file does not exist. Please run `python setup.py`.\nIf you are a previous user, existing credentials will be automatically ported over.")
+    return config
+
+
 def get_telegram_messenger(config, args):
-    telegram_api_token = __decode(config.credentials.get('telegram_api_token'))
-    telegram_userid = __decode(config.credentials.get('telegram_userid'))
+    telegram_api_token = __decode(config.get('telegram_api_token'))
+    telegram_userid = __decode(config.get('telegram_userid'))
     if not args.telegram or not telegram_api_token or not telegram_userid:
+        if args.telegram:
+            print('You have selected Telegram, but config file is missing `api token` or `userid`. Please re-run setup.py with additional arguments if you want Telegram notifications.')
         telegram_messenger = None
     else:
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
     return telegram_messenger
+
+
+def get_google_sheets_reporting(config, args):
+    sheet_id = __decode(config.get('google_sheets_sheet_id'))
+    tab_name = __decode(config.get('google_sheets_tab_name'))
+
+    if args.google_sheets and sheet_id and tab_name:
+        google_sheets_reporting = GoogleSheetsReporting(sheet_id, tab_name)
+    else:
+        if args.google_sheets:
+            print('You have selected Google Sheets reporting, but main config file is missing sheet_id or tab_name. Please re-run setup.py with additional arguments if you want Google Sheets reporting.')
+        google_sheets_reporting = None
+    return google_sheets_reporting
 
 
 def complete_search(rewards, completion, search_type, search_hist):
@@ -55,20 +86,16 @@ def main():
     if top_dir and top_dir != dir_run_from:
         os.chdir(top_dir)
 
-    try:
-        from src import config
-    except ImportError:
-        print("\nFailed to import configuration file")
-        raise
+    config = get_config()
 
-    args = parse_arguments()
+    args = parse_search_args()
     if args.email and args.password:
         email = args.email
         password = args.password
         args.cookies = False
     else:
-        email = __decode(config.credentials['email'])
-        password = __decode(config.credentials['password'])
+        email = __decode(config['email'])
+        password = __decode(config['password'])
 
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
@@ -76,12 +103,14 @@ def main():
     stats_log = StatsJsonLog(os.path.join(LOG_DIR, STATS_LOG), email)
     hist_log = HistLog(email,
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG))
+
     completion = hist_log.get_completion()
     search_hist = hist_log.get_search_hist()
 
     # telegram credentials
     telegram_messenger = get_telegram_messenger(config, args)
-    rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver)
+    google_sheets_reporting = get_google_sheets_reporting(config, args)
+    rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver, args.nosandbox)
 
     try:
         complete_search(rewards, completion, args.search_type, search_hist)
@@ -94,6 +123,9 @@ def main():
             if telegram_messenger:
                 run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
                 telegram_messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
+
+            if google_sheets_reporting:
+                google_sheets_reporting.add_row(rewards.stats, email)
 
         # check again, log if any failed
         if not completion.is_search_type_completed(args.search_type):

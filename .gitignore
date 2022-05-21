@@ -1,6 +1,7 @@
 .DS_STORE
 *test*
 BingRewards/src/config.py
+BingRewards/config/
 BingRewards/notify.py
 BingRewards/drivers/
 BingRewards/logs/
