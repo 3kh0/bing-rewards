@@ -63,7 +63,7 @@ if you want to setup a Telegram notification system please follow these steps:
 ## Google Sheets API Instructions (Optional)
 Before proceeding, please note:
 - that the process is somewhat involved, it should take around 30 minutes to get everything set-up
-- Every 24 hours, you will be forced to **manually** reauthenticate in order to generate a new token.
+- Each week, you will be forced to **manually** reauthenticate in order to generate a new token.
 
 If you would still like to proceed, here are the steps:
 

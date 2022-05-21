@@ -4,6 +4,7 @@ import os.path
 from datetime import datetime
 
 from google.auth.transport.requests import Request
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -32,7 +33,11 @@ class GoogleSheetsReporting():
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
+                try:
+                    creds.refresh(Request())
+                except RefreshError as e:
+                    print(f'{e}\nError thrown when trying to refresh expired token. You will need to manually delete the token file: `rm BingRewards/config/google_sheets_token.json`')
+                    return
             else:
                 if os.path.exists(CREDENTIALS_PATH):
                     flow = InstalledAppFlow.from_client_secrets_file(
