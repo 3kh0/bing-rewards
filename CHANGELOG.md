@@ -1,5 +1,43 @@
 # Changelog
 
+## [v1.10](https://github.com/jjjchens235/bing-rewards/tree/v1.10) (2022-05-21)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.9...v1.10)
+
+**Closed issues:**
+
+- Error after postcard was completed - process exited with code 1 \(0x00000001\) [\#212](https://github.com/jjjchens235/bing-rewards/issues/212)
+- PunchCard error - Italy [\#211](https://github.com/jjjchens235/bing-rewards/issues/211)
+- Cannot import name [\#209](https://github.com/jjjchens235/bing-rewards/issues/209)
+- Error for mobile search/telegram \(i think\) [\#204](https://github.com/jjjchens235/bing-rewards/issues/204)
+- Unhelpful error [\#203](https://github.com/jjjchens235/bing-rewards/issues/203)
+- Rewards Page has changed [\#199](https://github.com/jjjchens235/bing-rewards/issues/199)
+
+**Merged pull requests:**
+
+- Release v1.10 [\#215](https://github.com/jjjchens235/bing-rewards/pull/215) ([jjjchens235](https://github.com/jjjchens235))
+- enable support for option --no-sandbox [\#210](https://github.com/jjjchens235/bing-rewards/pull/210) ([LarrysGIT](https://github.com/LarrysGIT))
+- Start dl\_try\_count at 0 [\#207](https://github.com/jjjchens235/bing-rewards/pull/207) ([Summon528](https://github.com/Summon528))
+- Add support for reporting on Google spreadsheet [\#150](https://github.com/jjjchens235/bing-rewards/pull/150) ([malesci](https://github.com/malesci))
+
+## [v1.9](https://github.com/jjjchens235/bing-rewards/tree/v1.9) (2022-04-08)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.8...v1.9)
+
+**Fixed bugs:**
+
+- Getting 'NoneType' object is not subscriptable Errors after completing Punchcard quiz \[SOLVED\] [\#196](https://github.com/jjjchens235/bing-rewards/issues/196)
+
+**Closed issues:**
+
+- Schedule Windows [\#198](https://github.com/jjjchens235/bing-rewards/issues/198)
+- Erroring out on run: login issue [\#192](https://github.com/jjjchens235/bing-rewards/issues/192)
+- AttributeError: module 'selenium.webdriver.support.expected\_conditions' has no attribute 'any\_of' \[fix: update to selenium v4.0+\] [\#179](https://github.com/jjjchens235/bing-rewards/issues/179)
+
+**Merged pull requests:**
+
+- Fix URLs being tracked [\#200](https://github.com/jjjchens235/bing-rewards/pull/200) ([dfault-user](https://github.com/dfault-user))
+
 ## [v1.8](https://github.com/jjjchens235/bing-rewards/tree/v1.8) (2022-03-25)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.7...v1.8)
