@@ -3,6 +3,7 @@ import os
 import logging
 import base64
 import json
+import requests
 from options import parse_search_args
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
@@ -57,6 +58,13 @@ def get_telegram_messenger(config, args):
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
     return telegram_messenger
 
+def get_discord(config, args):
+    discord_webhook = __decode(config.get('discord_webhook'))
+    if args.discord_webhook:
+        if not discord_webhook:
+            print('You have selected Discord, but the config file is missing a webhook. Please re-run setup.py with additional arguments if you want Discord notifications.')
+            discord_webhook = None
+    return discord_webhook
 
 def get_google_sheets_reporting(config, args):
     sheet_id = __decode(config.get('google_sheets_sheet_id'))
@@ -109,6 +117,7 @@ def main():
 
     # telegram credentials
     telegram_messenger = get_telegram_messenger(config, args)
+    discord = get_discord(config, args)
     google_sheets_reporting = get_google_sheets_reporting(config, args)
     rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver, args.nosandbox)
 
@@ -120,9 +129,18 @@ def main():
         if hasattr(rewards, 'stats'):
             formatted_stat_str = "; ".join(rewards.stats.stats_str)
             stats_log.add_entry_and_write(formatted_stat_str, email)
+
             if telegram_messenger:
                 run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
                 telegram_messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
+            
+            if discord:
+                discord_message = email + ":\n\n" + "\n".join(rewards.stats.stats_str)
+                discord_content = {
+                    "username" : "Bing Rewards Bot",
+                    "content" : discord_message
+                }
+                requests.post(discord, json=discord_content)
 
             if google_sheets_reporting:
                 google_sheets_reporting.add_row(rewards.stats, email)
