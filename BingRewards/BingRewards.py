@@ -119,7 +119,7 @@ def main():
     telegram_messenger = get_telegram_messenger(config, args)
     discord = get_discord(config, args)
     google_sheets_reporting = get_google_sheets_reporting(config, args)
-    rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver, args.nosandbox)
+    rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver, args.nosandbox, args.google_trends_geo)
 
     try:
         complete_search(rewards, completion, args.search_type, search_hist)

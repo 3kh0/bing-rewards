@@ -14,7 +14,7 @@ import random
 from datetime import datetime, timedelta, date
 import json
 import traceback
-import locale
+from requests.exceptions import HTTPError
 
 
 class Rewards:
@@ -30,7 +30,7 @@ class Rewards:
     cookieclearquiz = 0
     _ON_POSIX = 'posix' in sys.builtin_module_names
 
-    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory, nosandbox=False):
+    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory, nosandbox=False, google_trends_geo='US'):
         self.email = email
         self.password = password
         self.debug = debug
@@ -42,6 +42,7 @@ class Rewards:
         self.search_hist = []
         self.__queries = []
         self.driver_factory = driver_factory
+        self.google_trends_geo = google_trends_geo
 
     def __get_sys_out_prefix(self, lvl, end):
         prefix = " " * (self.__SYS_OUT_TAB_LEN * (lvl - 1) - (lvl - 1))
@@ -268,29 +269,26 @@ class Rewards:
                 )
             )  # sleep at least 20 seconds to avoid over requesting server
 
-        if self._ON_POSIX and locale.getlocale()[0] is not None:
-            (lang, geo) = locale.getlocale()[0].split("_")  # en and US
-        else:
-            lang = "en"
-            geo = "US"
-
         trends_url = "https://trends.google.com/trends/api/dailytrends"
-
         search_terms = set()
         trends_dict = {
-            "hl": lang,
+            "hl": 'en',
             "ed": str(
                 (date.today() - timedelta(days=random.randint(1, 20))).strftime(
                     "%Y%m%d"
                 )
             ),
-            "geo": geo,
+            "geo": self.google_trends_geo,
             "ns": 15,
         }
 
-        req = requests.get(trends_url, params=trends_dict)
-        google_trends = json.loads(req.text[6:])
-        for topic in google_trends["default"]["trendingSearchesDays"][0][
+        resp = requests.get(trends_url, params=trends_dict)
+        if resp.status_code != 200:
+            self.__sys_out("Bad response from Google Trends API: most likely the API does not like the `geo` argument that was specified.\n", 2)
+            resp.raise_for_status()
+
+        data = json.loads(resp.text.lstrip(")]}\',\n"))
+        for topic in data["default"]["trendingSearchesDays"][0][
             "trendingSearches"
         ]:
             search_terms.add(topic["title"]["query"].lower())
@@ -1158,7 +1156,6 @@ class Rewards:
                     except JavascriptException:
                         return activity_index
                     time.sleep(2)
-                    self.driver.close()
                     self.driver.switch_to_first_tab()
 
                 #stop after completing one activity
@@ -1282,7 +1279,7 @@ class Rewards:
             else:
                 self.__sys_out(f"Failed to complete {description}", 1, True)
 
-        except (TimeoutException, NoSuchElementException):
+        except (TimeoutException, NoSuchElementException, HTTPError):
             error_msg = traceback.format_exc()
             self.__sys_out(f'Error during {description}:\n {error_msg}', 1)
             return False
