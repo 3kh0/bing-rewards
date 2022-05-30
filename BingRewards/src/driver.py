@@ -5,6 +5,8 @@ from urllib.request import urlopen
 import ssl
 import zipfile
 import shutil
+import string
+import random
 from selenium import webdriver
 import selenium
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
@@ -115,6 +117,21 @@ class DriverFactory(ABC):
 
         shutil.rmtree(extracted_dir)
         os.chmod(driver_path, 0o755)
+
+        if platform.system() == 'Linux':
+            letters = string.ascii_lowercase
+            cdc_replacement = ''.join(random.choice(letters) for i in range(3)) + "_"
+            print(f"Attempting to replace selenium marker in chromedriver with {cdc_replacement}")
+            perl_command = f"perl -pi -e 's/cdc_/{cdc_replacement}/g' {driver_path}"
+            try:
+                os.system(perl_command)
+                print("Replaced successfully")
+            except Exception:
+                print("Replacement failed")
+                pass
+        else:
+            print("Replacing selenium identifier in " + platform.system() + " is not currently supported")
+        
 
     @classmethod
     def add_driver_options(cls, device, headless, cookies, nosandbox):
