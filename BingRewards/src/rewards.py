@@ -1156,7 +1156,6 @@ class Rewards:
                     except JavascriptException:
                         return activity_index
                     time.sleep(2)
-                    self.driver.close()
                     self.driver.switch_to_first_tab()
 
                 #stop after completing one activity
