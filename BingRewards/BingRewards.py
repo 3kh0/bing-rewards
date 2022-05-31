@@ -3,7 +3,6 @@ import os
 import logging
 import base64
 import json
-import requests
 from options import parse_search_args
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
@@ -137,6 +136,7 @@ def main():
                 telegram_messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
             
             if discord:
+                import requests
                 discord_message = email + ":\n\n" + "\n".join(rewards.stats.stats_str)
                 discord_content = {
                     "username" : "Bing Rewards Bot",
