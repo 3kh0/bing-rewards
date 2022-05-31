@@ -59,11 +59,13 @@ def get_telegram_messenger(config, args):
     return telegram_messenger
 
 def get_discord(config, args):
-    discord_webhook = __decode(config.get('discord_webhook'))
+    discord_webhook = __decode(config.get('discord_webhook_url'))
     if args.discord_webhook:
         if not discord_webhook:
-            print('You have selected Discord, but the config file is missing a webhook. Please re-run setup.py with additional arguments if you want Discord notifications.')
+            print('You have selected Discord, but the config file is missing a webhook. Please re-run setup.py with additional arguments if you want Discord notifications.')    
             discord_webhook = None
+    else:
+        discord_webhook = None
     return discord_webhook
 
 def get_google_sheets_reporting(config, args):
