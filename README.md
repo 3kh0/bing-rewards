@@ -60,6 +60,15 @@ if you want to setup a Telegram notification system please follow these steps:
 	- `telegram_api_token` is the token generated from step 1. You can enter the token value separately in a secure prompt.
 	- `telegram_userid` is your userid from step 2
 
+## Discord Notification (Optional)
+if you want to setup a Discord notification system please follow these steps:
+1. Create a new server, or skip this step if you want to use an existing server you have admin access to
+	- Optional: Create a new channel dedicated to summary messages
+2. Click the settings gear on the right side of the desired channel > integrations > Webhooks > New Webhook > Copy Webhook URL
+	- The name is irrelevant beyond having a quick way of telling what the webhook was created for in discord.
+3. Re-run `setup.py` with the discord argument, like so: `python setup.py --discord-webhook-url <your webhook URL copied earlier>`
+4. To enable reporting, run BingRewards.py with the `-di` flag. Example: `python BingRewards.py -di`
+
 ## Google Sheets API Instructions (Optional)
 Before proceeding, please note:
 - that the process is somewhat involved, it should take around 30 minutes to get everything set-up
