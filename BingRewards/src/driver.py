@@ -6,7 +6,6 @@ import ssl
 import zipfile
 import shutil
 from selenium import webdriver
-import selenium
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from selenium.common.exceptions import SessionNotCreatedException, WebDriverException
@@ -42,6 +41,7 @@ class Driver(EventFiringWebDriver):
 
     def switch_to_last_tab(self):
         self.switch_to_n_tab(-1)
+
 
 class DriverFactory(ABC):
     WEB_DEVICE = 'web'

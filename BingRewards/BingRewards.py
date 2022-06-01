@@ -6,7 +6,7 @@ import json
 from options import parse_search_args
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
-from src.telegram import TelegramMessenger
+from src.messengers import TelegramMessenger, DiscordMessenger
 from src.google_sheets_reporting import GoogleSheetsReporting
 
 LOG_DIR = "logs"
@@ -49,13 +49,26 @@ def get_config():
 def get_telegram_messenger(config, args):
     telegram_api_token = __decode(config.get('telegram_api_token'))
     telegram_userid = __decode(config.get('telegram_userid'))
+    telegram_messenger = None
+
     if not args.telegram or not telegram_api_token or not telegram_userid:
         if args.telegram:
             print('You have selected Telegram, but config file is missing `api token` or `userid`. Please re-run setup.py with additional arguments if you want Telegram notifications.')
-        telegram_messenger = None
     else:
         telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
     return telegram_messenger
+
+
+def get_discord_messenger(config, args):
+    discord_webhook_url = __decode(config.get('discord_webhook_url'))
+    discord_messenger = None
+
+    if not args.discord or not discord_webhook_url:
+        if args.discord:
+            print('You have selected Discord, but the config file is missing a webhook_url. Please re-run setup.py with additional arguments if you want Discord notifications.')
+    else:
+        discord_messenger = DiscordMessenger(discord_webhook_url)
+    return discord_messenger
 
 
 def get_google_sheets_reporting(config, args):
@@ -109,6 +122,7 @@ def main():
 
     # telegram credentials
     telegram_messenger = get_telegram_messenger(config, args)
+    discord_messenger = get_discord_messenger(config, args)
     google_sheets_reporting = get_google_sheets_reporting(config, args)
     rewards = Rewards(email, password, DEBUG, args.headless, args.cookies, args.driver, args.nosandbox, args.google_trends_geo)
 
@@ -120,9 +134,13 @@ def main():
         if hasattr(rewards, 'stats'):
             formatted_stat_str = "; ".join(rewards.stats.stats_str)
             stats_log.add_entry_and_write(formatted_stat_str, email)
+
+            run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
             if telegram_messenger:
-                run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
                 telegram_messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
+
+            if discord_messenger:
+                discord_messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
 
             if google_sheets_reporting:
                 google_sheets_reporting.add_row(rewards.stats, email)
