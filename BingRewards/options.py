@@ -257,14 +257,14 @@ def parse_search_args():
     discord_group.add_argument(
         '-di',
         '--discord',
-        dest='discord_webhook',
+        dest='discord',
         action='store_true',
         help='send notification to discord using setup.py credentials'
     )
     discord_group.add_argument(
         '-ndi',
         '--no-discord',
-        dest='discord_webhook',
+        dest='discord',
         action='store_false',
         help='do not send notifications to discord, this is the default'
     )

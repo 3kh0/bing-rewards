@@ -14,10 +14,12 @@ Please note:
 5. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
 6. Run `python BingRewards/BingRewards.py` to start earning points.
 6. Occasionally, update to the latest code by running `./bing-rewards-master/update.sh`
-7. Optional alerting
-	- If you want notifications via Telegram, follow the steps  in the section `Telegram Notification (Optional)`
-	- If you want to save your stats history in Google Sheets, please follow the additional steps in the `Google Sheets API Instructions (Optional)` section below.
-## Command Line Arguments
+7. Optional alerting: You can receive alerting for the following services, instructions below for each service.
+	- Telegram
+	- Discord
+	- Google Sheets
+
+### Command Line Arguments
 There are a growing number of command line argument options. Here are a few to note:
 - `-r` or `--remaining`: remaining tasks - this is the *default* option
 - `-nhl` or `--no-headless`: Don't run in headless mode. This is a non-default option.
