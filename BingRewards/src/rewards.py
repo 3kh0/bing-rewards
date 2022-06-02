@@ -536,9 +536,10 @@ class Rewards:
         while True:
             try:
                 progress = WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'bt_Quefooter'))).text
-                current_question, complete_progress = map(
-                    int, progress.split(' of ')
-                )
+                #delimter is 'of' for EN and 'di' for IT
+                progress_delimiter = f"{progress.split(' ')[-2]}"
+                current_question, complete_progress = map(int, progress.split(progress_delimiter))
+
                 self.__sys_out_progress(current_question - 1, complete_progress, 4)
 
                 answer_encode_key = self.driver.execute_script("return _G.IG")
