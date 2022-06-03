@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.11](https://github.com/jjjchens235/bing-rewards/tree/v1.11) (2022-06-01)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.10...v1.11)
+
+**Implemented enhancements:**
+
+- Allow configuration of a discord webhook as an output feed [\#158](https://github.com/jjjchens235/bing-rewards/issues/158)
+- \[Feature request\] Run setup.py in a non interactive shell [\#146](https://github.com/jjjchens235/bing-rewards/issues/146)
+
+**Fixed bugs:**
+
+- Punchcard Frozen - Stranger things \[Resolved\] [\#221](https://github.com/jjjchens235/bing-rewards/issues/221)
+
+**Closed issues:**
+
+-  No module named 'google' [\#218](https://github.com/jjjchens235/bing-rewards/issues/218)
+- Feature Request - Allow "geo" on search queries to be passed from config or switches [\#202](https://github.com/jjjchens235/bing-rewards/issues/202)
+
+**Merged pull requests:**
+
+- Release v1.11 [\#227](https://github.com/jjjchens235/bing-rewards/pull/227) ([jjjchens235](https://github.com/jjjchens235))
+- Add discord reporting funtionality [\#220](https://github.com/jjjchens235/bing-rewards/pull/220) ([jhaugh0](https://github.com/jhaugh0))
+
 ## [v1.10](https://github.com/jjjchens235/bing-rewards/tree/v1.10) (2022-05-21)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.9...v1.10)

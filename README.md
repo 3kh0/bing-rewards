@@ -14,10 +14,12 @@ Please note:
 5. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
 6. Run `python BingRewards/BingRewards.py` to start earning points.
 6. Occasionally, update to the latest code by running `./bing-rewards-master/update.sh`
-7. Optional alerting
-	- If you want notifications via Telegram, follow the steps  in the section `Telegram Notification (Optional)`
-	- If you want to save your stats history in Google Sheets, please follow the additional steps in the `Google Sheets API Instructions (Optional)` section below.
-## Command Line Arguments
+7. Optional alerting: You can receive alerting for the following services, instructions below for each service.
+	- Telegram
+	- Discord
+	- Google Sheets
+
+### Command Line Arguments
 There are a growing number of command line argument options. Here are a few to note:
 - `-r` or `--remaining`: remaining tasks - this is the *default* option
 - `-nhl` or `--no-headless`: Don't run in headless mode. This is a non-default option.
@@ -59,6 +61,15 @@ if you want to setup a Telegram notification system please follow these steps:
 3. Re-run `setup.py` with two new arguments, like so: `python setup.py --telegram_api_token --telegram_userid <your_userid>`
 	- `telegram_api_token` is the token generated from step 1. You can enter the token value separately in a secure prompt.
 	- `telegram_userid` is your userid from step 2
+
+## Discord Notification (Optional)
+if you want to setup a Discord notification system please follow these steps:
+1. Create a new server, or skip this step if you want to use an existing server you have admin access to
+	- Optional: Create a new channel dedicated to summary messages
+2. Click the settings gear on the right side of the desired channel > integrations > Webhooks > New Webhook > Copy Webhook URL
+	- The name is irrelevant beyond having a quick way of telling what the webhook was created for in discord.
+3. Re-run `setup.py` with the discord argument, like so: `python setup.py --discord-webhook-url <your webhook URL copied earlier>`
+4. To enable reporting, run BingRewards.py with the `-di` flag. Example: `python BingRewards.py -di`
 
 ## Google Sheets API Instructions (Optional)
 Before proceeding, please note:
