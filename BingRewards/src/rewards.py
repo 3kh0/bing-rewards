@@ -1,5 +1,6 @@
 from src.driver import ChromeDriverFactory
 from src.log import Completion
+from src.messengers import BaseMessenger
 import requests
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -30,7 +31,9 @@ class Rewards:
     cookieclearquiz = 0
     _ON_POSIX = 'posix' in sys.builtin_module_names
 
-    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory, nosandbox=False, google_trends_geo='US'):
+    messengers: list[BaseMessenger]
+
+    def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory, nosandbox=False, google_trends_geo='US', messengers=None):
         self.email = email
         self.password = password
         self.debug = debug
@@ -43,6 +46,7 @@ class Rewards:
         self.__queries = []
         self.driver_factory = driver_factory
         self.google_trends_geo = google_trends_geo
+        self.messengers = messengers if messengers is not None else []
 
     def __get_sys_out_prefix(self, lvl, end):
         prefix = " " * (self.__SYS_OUT_TAB_LEN * (lvl - 1) - (lvl - 1))
@@ -98,7 +102,10 @@ class Rewards:
                 WebDriverWait(self.driver, .5).until(
                     EC.element_to_be_clickable((By.ID, 'idChkBx_SAOTCAS_TD'))
                 ).click()
-                self.__sys_out("Waiting for user to approve sign-in request. In Microsoft Authenticator, please select approve.", 2)
+                message = "Waiting for user to approve sign-in request. In Microsoft Authenticator, please select approve."
+                self.__sys_out(message, 2)
+                for messenger in self.messengers:
+                    messenger.send_message(message)
 
             except TimeoutException:
                 pass
@@ -135,7 +142,10 @@ class Rewards:
             # standard 2FA page
             try:
                 authenticator_code = self.driver.find_element(By.ID, "idRemoteNGC_DisplaySign").text
-                self.__sys_out(f"Waiting for user to approve 2FA, please select {authenticator_code} in Microsoft Authenticator", 2)
+                message = f"Waiting for user to approve 2FA, please select {authenticator_code} in Microsoft Authenticator"
+                self.__sys_out(message, 2)
+                for messenger in self.messengers:
+                    messenger.send_message(message)
                 WebDriverWait(self.driver, 30).until(
                     EC.url_contains("https://login.live.com/ppsecure")
                     )
