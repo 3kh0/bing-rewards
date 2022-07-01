@@ -6,7 +6,6 @@ import ssl
 import zipfile
 import shutil
 from selenium import webdriver
-import selenium
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from selenium.common.exceptions import SessionNotCreatedException, WebDriverException
@@ -83,26 +82,24 @@ class DriverFactory(ABC):
     @abstractmethod
     def _get_latest_driver_url(dl_try_count):
         raise NotImplementedError
-    
+
     def replace_selenium_marker(driver_path):
         os_with_perl = (
             'Linux',
-            'Darwin' #MacOS
+            'Darwin' # MacOS
         )
-        if platform.system() in os_with_perl:
-            letters = string.ascii_lowercase
-            cdc_replacement = ''.join(random.choice(letters) for i in range(3)) + "_"
-            print(f"Attempting to replace selenium marker in chromedriver with {cdc_replacement}")
-            perl_command = f"perl -pi -e 's/cdc_/{cdc_replacement}/g' {driver_path}"
-            try:
-                os.system(perl_command)
-                print(f"Successfully replaced \"cdc_\" with \"{cdc_replacement}\"")
-            except Exception as e: #intentionally broad, havent seen an error yet, but that's not to say it couldnt happen. PATH modifications could trigger one
-                print(f'Unable to replace selenium cdc_ string due to exception.\n{e}')
-                pass
-        else:
-            os_with_perl_str = ', '.join(os_with_perl)
-            print(f"Replacing selenium identifier in {platform.system()} is not currently supported. Currently supported operating systems are {os_with_perl_str}")
+        if platform.system() not in os_with_perl:
+            return
+
+        letters = string.ascii_lowercase
+        cdc_replacement = ''.join(random.choice(letters) for i in range(3)) + "_"
+        perl_command = f"perl -pi -e 's/cdc_/{cdc_replacement}/g' {driver_path}"
+
+        try:
+            os.system(perl_command)
+            print(f'Sucessfully replaced driver string "cdc_" with "{cdc_replacement}"\n')
+        except Exception as e: # intentionally broad, havent seen an error yet, but that's not to say it couldnt happen. PATH modifications could trigger one
+            print(f'Unable to replace selenium cdc_ string due to exception. No worries, program should still work without string replacement.\n{e}.')
 
     @classmethod
     def __download_driver(cls, dl_try_count=0):
@@ -202,7 +199,9 @@ class DriverFactory(ABC):
 
             except SessionNotCreatedException as se:
                 error_msg = str(se).lower()
-                if cls.VERSION_MISMATCH_STR not in error_msg:
+                if cls.VERSION_MISMATCH_STR in error_msg:
+                    print('The downloaded driver does not match browser version...\n')
+                else: # other exc besides mismatching ver
                     raise SessionNotCreatedException(error_msg)
                 cls.__download_driver(dl_try_count)
                 # driver not up to date with Chrome browser, try different version
