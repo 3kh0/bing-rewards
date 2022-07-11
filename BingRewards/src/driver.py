@@ -10,6 +10,8 @@ from selenium.webdriver.support.abstract_event_listener import AbstractEventList
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from selenium.common.exceptions import SessionNotCreatedException, WebDriverException
 import re
+import random
+import string
 
 
 class EventListener(AbstractEventListener):
@@ -42,7 +44,6 @@ class Driver(EventFiringWebDriver):
     def switch_to_last_tab(self):
         self.switch_to_n_tab(-1)
 
-
 class DriverFactory(ABC):
     WEB_DEVICE = 'web'
     MOBILE_DEVICE = 'mobile'
@@ -50,8 +51,8 @@ class DriverFactory(ABC):
 
     # Microsoft Edge user agents for additional points
     # agent src: https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
-    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36 Edg/99.0.1150.36a"
-    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.79 Mobile Safari/537.36 EdgA/97.0.1072.69"
+    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36 Edg/103.0.1264.44"
+    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.70 Mobile Safari/537.36 EdgA/100.0.1185.50"
 
     @property
     @staticmethod
@@ -81,6 +82,24 @@ class DriverFactory(ABC):
     @abstractmethod
     def _get_latest_driver_url(dl_try_count):
         raise NotImplementedError
+
+    def replace_selenium_marker(driver_path):
+        os_with_perl = (
+            'Linux',
+            'Darwin' # MacOS
+        )
+        if platform.system() not in os_with_perl:
+            return
+
+        letters = string.ascii_lowercase
+        cdc_replacement = ''.join(random.choice(letters) for i in range(3)) + "_"
+        perl_command = f"perl -pi -e 's/cdc_/{cdc_replacement}/g' {driver_path}"
+
+        try:
+            os.system(perl_command)
+            print(f'Sucessfully replaced driver string "cdc_" with "{cdc_replacement}"\n')
+        except Exception as e: # intentionally broad, havent seen an error yet, but that's not to say it couldnt happen. PATH modifications could trigger one
+            print(f'Unable to replace selenium cdc_ string due to exception. No worries, program should still work without string replacement.\n{e}.')
 
     @classmethod
     def __download_driver(cls, dl_try_count=0):
@@ -115,6 +134,8 @@ class DriverFactory(ABC):
 
         shutil.rmtree(extracted_dir)
         os.chmod(driver_path, 0o755)
+
+        cls.replace_selenium_marker(driver_path)
 
     @classmethod
     def add_driver_options(cls, device, headless, cookies, nosandbox):
@@ -178,7 +199,9 @@ class DriverFactory(ABC):
 
             except SessionNotCreatedException as se:
                 error_msg = str(se).lower()
-                if cls.VERSION_MISMATCH_STR not in error_msg:
+                if cls.VERSION_MISMATCH_STR in error_msg:
+                    print('The downloaded driver does not match browser version...\n')
+                else: # other exc besides mismatching ver
                     raise SessionNotCreatedException(error_msg)
                 cls.__download_driver(dl_try_count)
                 # driver not up to date with Chrome browser, try different version
