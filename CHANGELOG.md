@@ -1,5 +1,43 @@
 # Changelog
 
+## [v1.12](https://github.com/jjjchens235/bing-rewards/tree/v1.12) (2022-07-11)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.11...v1.12)
+
+**Implemented enhancements:**
+
+- Possible Xbox task automation [\#164](https://github.com/jjjchens235/bing-rewards/issues/164)
+
+**Fixed bugs:**
+
+- Selenium TimeoutException on quizzes [\#185](https://github.com/jjjchens235/bing-rewards/issues/185)
+- End progress not being captured correctly for non-USA countries [\#122](https://github.com/jjjchens235/bing-rewards/issues/122)
+
+**Closed issues:**
+
+- Bot stuck after login [\#243](https://github.com/jjjchens235/bing-rewards/issues/243)
+- Could Not Find A Version That Satisfies Requirement For Selenium [\#240](https://github.com/jjjchens235/bing-rewards/issues/240)
+- How to customize for another Country? [\#234](https://github.com/jjjchens235/bing-rewards/issues/234)
+- Add support MSN workout videos [\#233](https://github.com/jjjchens235/bing-rewards/issues/233)
+- Selenium does not work correctly on Ubuntu server [\#231](https://github.com/jjjchens235/bing-rewards/issues/231)
+- prompts for 2fa code, no 2fa enabled [\#230](https://github.com/jjjchens235/bing-rewards/issues/230)
+- Crontab error \(no such file\) [\#228](https://github.com/jjjchens235/bing-rewards/issues/228)
+- Mac Monterey Terminal syntax from pip, python to pip3, python3 [\#226](https://github.com/jjjchens235/bing-rewards/issues/226)
+- Stuck on a Task [\#225](https://github.com/jjjchens235/bing-rewards/issues/225)
+- \[Question\] How can I use this as a container and how can I use this while having passwordless enabled on my Microsoft account? [\#217](https://github.com/jjjchens235/bing-rewards/issues/217)
+- \[Request\] Send Telegram Message on 2FA request [\#214](https://github.com/jjjchens235/bing-rewards/issues/214)
+- \[Feature request\] Hide selenium use in the drivers [\#208](https://github.com/jjjchens235/bing-rewards/issues/208)
+- 'chromedriver.exe' executable needs to be in PATH. [\#190](https://github.com/jjjchens235/bing-rewards/issues/190)
+- Fails sign-in if account has last signed in with email confirmation [\#189](https://github.com/jjjchens235/bing-rewards/issues/189)
+- Empty Tiles get Failed [\#157](https://github.com/jjjchens235/bing-rewards/issues/157)
+- This or That issue [\#153](https://github.com/jjjchens235/bing-rewards/issues/153)
+
+**Merged pull requests:**
+
+- Release v1.12 [\#244](https://github.com/jjjchens235/bing-rewards/pull/244) ([jjjchens235](https://github.com/jjjchens235))
+- forward 2fa prompts to telegram/discord [\#236](https://github.com/jjjchens235/bing-rewards/pull/236) ([chen-ye](https://github.com/chen-ye))
+- Add linux support for replacing selenium marker in chromedriver [\#223](https://github.com/jjjchens235/bing-rewards/pull/223) ([jhaugh0](https://github.com/jhaugh0))
+
 ## [v1.11](https://github.com/jjjchens235/bing-rewards/tree/v1.11) (2022-06-01)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.10...v1.11)
