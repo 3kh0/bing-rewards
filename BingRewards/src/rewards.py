@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, date
 import json
 import traceback
 from requests.exceptions import HTTPError
+from typing import List
 
 
 class Rewards:
@@ -31,7 +32,7 @@ class Rewards:
     cookieclearquiz = 0
     _ON_POSIX = 'posix' in sys.builtin_module_names
 
-    messengers: list[BaseMessenger]
+    messengers: List[BaseMessenger]
 
     def __init__(self, email, password, debug=True, headless=True, cookies=False, driver_factory=ChromeDriverFactory, nosandbox=False, google_trends_geo='US', messengers=None):
         self.email = email
