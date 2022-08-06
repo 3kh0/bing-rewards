@@ -135,7 +135,10 @@ class DriverFactory(ABC):
         shutil.rmtree(extracted_dir)
         os.chmod(driver_path, 0o755)
 
-        cls.replace_selenium_marker(driver_path)
+
+        # removing because -nhl mode no longer works with this
+        #if cls.WebDriverCls == webdriver.Chrome:
+        #    cls.replace_selenium_marker(driver_path)
 
     @classmethod
     def add_driver_options(cls, device, headless, cookies, nosandbox):
