@@ -1,28 +1,5 @@
 # Changelog
 
-## [Unreleased](https://github.com/jjjchens235/bing-rewards/tree/HEAD)
-
-[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.13...HEAD)
-
-**Merged pull requests:**
-
-- Release v1.13 [\#264](https://github.com/jjjchens235/bing-rewards/pull/264) ([jjjchens235](https://github.com/jjjchens235))
-
-## [v1.13](https://github.com/jjjchens235/bing-rewards/tree/v1.13) (2022-08-29)
-
-[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.12...v1.13)
-
-**Closed issues:**
-
-- TypeError: 'type' object is not subscriptable [\#255](https://github.com/jjjchens235/bing-rewards/issues/255)
-- Choose chrome or edge profile [\#254](https://github.com/jjjchens235/bing-rewards/issues/254)
-- Consistently failing all searches [\#252](https://github.com/jjjchens235/bing-rewards/issues/252)
-- unknown error: session deleted because of page crash [\#250](https://github.com/jjjchens235/bing-rewards/issues/250)
-- RuntimeError: Unable to handle https://login.live.com/ [\#248](https://github.com/jjjchens235/bing-rewards/issues/248)
-- Scheduling automatic updating in Windows? [\#247](https://github.com/jjjchens235/bing-rewards/issues/247)
-- TypeError: 'type' object is not subscriptable [\#245](https://github.com/jjjchens235/bing-rewards/issues/245)
-- Sign in with password instead of email code [\#242](https://github.com/jjjchens235/bing-rewards/issues/242)
-
 ## [v1.12](https://github.com/jjjchens235/bing-rewards/tree/v1.12) (2022-07-11)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.11...v1.12)

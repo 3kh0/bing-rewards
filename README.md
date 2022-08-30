@@ -36,6 +36,15 @@ actually translates to `python BingRewards.py -r -hl -d chrome`, i.e run the rem
 Here's an example of running non-default arguments
 `python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, the password will be prompted for separately.
 
+## Container Installation
+1. In terminal, run `docker pull killerherts/bing-rewards:latest`
+2. Set-up the config with either option 1 or 2 
+	1. Option 1, run setup.py again: `docker run -t -d --name bing-rewards killerherts/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d
+	2. Option 2: Pass your config volume directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/config --name bing-rewards killerherts/bing-rewards:latest`
+4. To enter the container for maintance `docker exec -it bing-rewards /bin/bash`
+Notes: Intially the container will be setup to run script once every 8 hours this can be modified using `docker exec -it bing-rewards /bin/bash crontab -e`
+Logs can be mounted to host file system with  `-v <directory to keep logs>:/bing`
+
 ## Scheduling (Optional)
 You may want to use your operating system's scheduler to run this program automatically. The script will run completely in the background and should NOT interfere with your daily routine.
 
@@ -46,7 +55,7 @@ You may want to use your operating system's scheduler to run this program automa
 4. When adding the action, point the program to *__python.exe__* (most likely located in *__C:/Program Files__*) and add the argument line `BingRewards/BingRewards.py`. In the *Start in* box, place the absolute path to where you've cloned this repository.
 5. It's also recommended to select the option to only execute when there is a network connection available under the *Conditions* tab.
 
-#### Mac / Linux (crontab)
+#### Mac / Linux / Docker (crontab)
 
 1. Open up the terminal and go to your home directory `cd ~`
 2. Type `crontab -e`.

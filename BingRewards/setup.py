@@ -17,7 +17,7 @@ if top_dir and top_dir != dir_run_from:
 sys.path.append('BingRewards')
 from options import parse_setup_args
 
-CONFIG_DIR = 'BingRewards/config/'
+CONFIG_DIR = 'config/'
 CONFIG_FILE = "config.json"
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, CONFIG_FILE)
 DEPRECATED_CONFIG_FILE_PATH = os.path.join("BingRewards/src/config.py")

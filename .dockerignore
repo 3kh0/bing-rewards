@@ -1,0 +1,4 @@
+BingRewards/config
+*/logs*
+.git
+compose.yaml

@@ -1,0 +1,16 @@
+version: '3.3'
+services:
+    bing-rewards:
+        container_name: bing-rewards
+        image: killerherts/bing-rewards
+        environment:
+          - PUID=99
+          - PGID=100  #PGID PUID UMASK should be updated to match your env this match unraid default
+          - UMASK=022
+          - TZ=<insert to match env>
+        volumes:
+            - '<location of your config file>:/config'
+            - '<path to where you want to collect logs>:/bing'
+        stdin_open: true # docker run -i
+        tty: true        # docker run -t
+        restart: unless-stopped
