@@ -51,8 +51,8 @@ class DriverFactory(ABC):
 
     # Microsoft Edge user agents for additional points
     # agent src: https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
-    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36 Edg/103.0.1264.44"
-    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.70 Mobile Safari/537.36 EdgA/100.0.1185.50"
+    __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33"
+    __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.79 Mobile Safari/537.36 EdgA/100.0.1185.50"
 
     @property
     @staticmethod
@@ -151,7 +151,7 @@ class DriverFactory(ABC):
         options.add_argument("disable-infobars")
         options.add_argument("--disable-gpu")
         options.add_argument('--disable-dev-shm-usage')
-        
+
         options.add_experimental_option(
             "prefs", {
                 # geolocation permission, 0=Ask, 1=Allow, 2=Deny

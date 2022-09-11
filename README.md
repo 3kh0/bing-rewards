@@ -9,7 +9,7 @@ Please note:
 1. Download [Chrome](https://www.google.com/chrome/) or [Edge](https://www.microsoft.com/edge)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install requirements.txt file included in the repo: `pip install -r BingRewards/requirements.txt`.
-4. Create/update config file by running `python setup.py` .
+4. Create/update config file by running `python BingRewards/setup.py` .
 	-  **Please note**: Your credentials will be stored as base64 encoded text.
 5. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
 6. Run `python BingRewards/BingRewards.py` to start earning points.
@@ -37,12 +37,14 @@ Here's an example of running non-default arguments
 `python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, the password will be prompted for separately.
 
 ## Container Installation
-1. In terminal, run `docker pull killerherts/bing-rewards:latest`
+1. In terminal, run `docker pull killerherts/bing-rewards:test`
 2. Set-up the config with either option 1 or 2 
-	1. Option 1, run setup.py again: `docker run -t -d --name bing-rewards killerherts/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d
-	2. Option 2: Pass your config volume directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/config --name bing-rewards killerherts/bing-rewards:latest`
-4. To enter the container for maintance `docker exec -it bing-rewards /bin/bash`
-Notes: Intially the container will be setup to run script once every 8 hours this can be modified using `docker exec -it bing-rewards /bin/bash crontab -e`
+	1. Option 1, run setup.py again: `docker run -t -d --name bing-rewards killerherts/bing-rewards:test python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d
+	2. Option 2: Pass your config volume directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/config --name bing-rewards killerherts/bing-rewards:test`
+4. To enter the container for maintenance `docker exec -it bing-rewards /bin/bash`
+	- To run the script inside the container you need to add the 'no sand box flag': `python BingRewards -nsb`
+
+Notes: Initially the container will be setup to run script once every 8 hours this can be modified using `docker exec -it bing-rewards /bin/bash crontab -e`
 Logs can be mounted to host file system with  `-v <directory to keep logs>:/bing`
 
 ## Scheduling (Optional)
