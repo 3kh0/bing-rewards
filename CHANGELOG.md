@@ -1,5 +1,55 @@
 # Changelog
 
+## [Unreleased](https://github.com/jjjchens235/bing-rewards/tree/HEAD)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.14...HEAD)
+
+**Closed issues:**
+
+- Discord Message error not sent [\#271](https://github.com/jjjchens235/bing-rewards/issues/271)
+- \[Feature Request\] Ability to run in a docker [\#206](https://github.com/jjjchens235/bing-rewards/issues/206)
+
+**Merged pull requests:**
+
+- Release v1.14 [\#282](https://github.com/jjjchens235/bing-rewards/pull/282) ([jjjchens235](https://github.com/jjjchens235))
+
+## [v1.14](https://github.com/jjjchens235/bing-rewards/tree/v1.14) (2022-09-26)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.13...v1.14)
+
+**Closed issues:**
+
+- Stuck on "You selected remaining" [\#279](https://github.com/jjjchens235/bing-rewards/issues/279)
+- ONLY US SUPPORTED [\#278](https://github.com/jjjchens235/bing-rewards/issues/278)
+- You need to run it outside of python. [\#276](https://github.com/jjjchens235/bing-rewards/issues/276)
+- More like a question but where do I run the lil text from step 3? [\#275](https://github.com/jjjchens235/bing-rewards/issues/275)
+- Multiple accounts support? [\#274](https://github.com/jjjchens235/bing-rewards/issues/274)
+- Timeout exceptions on open\_dashboard [\#272](https://github.com/jjjchens235/bing-rewards/issues/272)
+- Upgrade script for Windows? [\#270](https://github.com/jjjchens235/bing-rewards/issues/270)
+- n/a [\#265](https://github.com/jjjchens235/bing-rewards/issues/265)
+- Fail Desktop search + fail mobile search [\#263](https://github.com/jjjchens235/bing-rewards/issues/263)
+- Problem with MacOS M1 PRO [\#253](https://github.com/jjjchens235/bing-rewards/issues/253)
+
+**Merged pull requests:**
+
+- Docker Feature [\#266](https://github.com/jjjchens235/bing-rewards/pull/266) ([Killerherts](https://github.com/Killerherts))
+- Release v1.13 [\#264](https://github.com/jjjchens235/bing-rewards/pull/264) ([jjjchens235](https://github.com/jjjchens235))
+
+## [v1.13](https://github.com/jjjchens235/bing-rewards/tree/v1.13) (2022-08-29)
+
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.12...v1.13)
+
+**Closed issues:**
+
+- TypeError: 'type' object is not subscriptable [\#255](https://github.com/jjjchens235/bing-rewards/issues/255)
+- Choose chrome or edge profile [\#254](https://github.com/jjjchens235/bing-rewards/issues/254)
+- Consistently failing all searches [\#252](https://github.com/jjjchens235/bing-rewards/issues/252)
+- unknown error: session deleted because of page crash [\#250](https://github.com/jjjchens235/bing-rewards/issues/250)
+- RuntimeError: Unable to handle https://login.live.com/ [\#248](https://github.com/jjjchens235/bing-rewards/issues/248)
+- Scheduling automatic updating in Windows? [\#247](https://github.com/jjjchens235/bing-rewards/issues/247)
+- TypeError: 'type' object is not subscriptable [\#245](https://github.com/jjjchens235/bing-rewards/issues/245)
+- Sign in with password instead of email code [\#242](https://github.com/jjjchens235/bing-rewards/issues/242)
+
 ## [v1.12](https://github.com/jjjchens235/bing-rewards/tree/v1.12) (2022-07-11)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.11...v1.12)
