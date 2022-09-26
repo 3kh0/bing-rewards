@@ -37,12 +37,13 @@ Here's an example of running non-default arguments
 `python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, the password will be prompted for separately.
 
 ## Container Installation
-1. In terminal, run `docker pull killerherts/bing-rewards:test`
+1. In terminal, run `docker pull killerherts/bing-rewards:<tag>`. You can specify either `latest` or `dev` tag
+	- The image with the `latest` tag will pull logic from this repo's master branch, and image with the `dev` tag will pull from this repo's dev branch.
 2. Set-up the config with either option 1 or 2 
-	1. Option 1, run setup.py again: `docker run -t -d --name bing-rewards killerherts/bing-rewards:test python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d
-	2. Option 2: Pass your config volume directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/config --name bing-rewards killerherts/bing-rewards:test`
+	1. Option 1: run setup.py again like so `docker run -t -d --name bing-rewards killerherts/bing-rewards:<tag> python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d
+	2. Option 2: Pass your config volume directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/config --name bing-rewards killerherts/bing-rewards:<tag>`
 4. To enter the container for maintenance `docker exec -it bing-rewards /bin/bash`
-	- To run the script inside the container you need to add the 'no sand box flag': `python BingRewards -nsb`
+	- To run the script inside the container you need to add the 'no sand box flag': `python BingRewards.py -nsb`
 
 Notes: Initially the container will be setup to run script once every 8 hours this can be modified using `docker exec -it bing-rewards /bin/bash crontab -e`
 Logs can be mounted to host file system with  `-v <directory to keep logs>:/bing`
@@ -102,11 +103,12 @@ If you would still like to proceed, here are the steps:
 		- add test user email, use the same email as your google account
 		- click `Save and Continue`
 3. Go back to `Credentials` tab 
-	- Click `+ Create Credentials` -> `OAuth Client Id`
-	- For `Application type` select `Web application`
-	- For `Name` make up a name.
-	- Click `CREATE`
-	- A popup will say `OAuth client created` with your credentials, at the bottom click `DOWNLOAD JSON`
+	1. Click `+ Create Credentials` -> `OAuth Client Id`
+	1. For `Application type` select `Web application`
+	1. For `Name` make up a name.
+	1. (Optional): Under section `Authorized redirect URIs`, click `Add URI`. Add the following 2 URI's: `https://localhost/` and `http://localhost/`
+	1. Click `CREATE`
+	1. A popup will say `OAuth client created` with your credentials, at the bottom click `DOWNLOAD JSON`
 4. Update json filename and path
 	- move the json file to this path: `bing-rewards-master/BingRewards/config`
 	- rename the file to: `google_sheets_credentials.json`. 
