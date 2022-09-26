@@ -132,6 +132,12 @@ class Rewards:
                 EC.element_to_be_clickable((By.ID, 'iNext'))
             ).click()
 
+        #'Is your security info still accurate?' page
+        elif "https://account.live.com/proofs/remind" in url:
+            WebDriverWait(self.driver, 2).until(
+                EC.element_to_be_clickable((By.ID, 'iLooksGood'))
+            ).click()
+
         #'confirm identity' or 'recover account' page
         elif "identity/confirm" in url or "/recover" in url:
             raise RuntimeError(
