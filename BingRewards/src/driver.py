@@ -272,7 +272,7 @@ class ChromeDriverFactory(DriverFactory):
 class MsEdgeDriverFactory(DriverFactory):
     WebDriverCls = webdriver.Edge
     WebDriverOptions = webdriver.EdgeOptions
-    VERSION_MISMATCH_STR = 'this version of msedgedriver only supports msedge version'
+    VERSION_MISMATCH_STR = 'this version of microsoft edge webdriver only supports microsoft edge version'
     driver_name = "msedgedriver.exe" if platform.system() == "Windows" else "msedgedriver"
 
     def _get_latest_driver_url(dl_try_count):
