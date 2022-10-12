@@ -261,7 +261,7 @@ class ChromeDriverFactory(DriverFactory):
         elif system == "Darwin":
             # M1
             if platform.processor() == 'arm':
-                url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_mac64_m1.zip"
+                url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_mac_arm64.zip"
             else:
                 url = f"https://chromedriver.storage.googleapis.com/{latest_version}/chromedriver_mac64.zip"
         elif system == "Linux":
