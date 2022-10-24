@@ -22,5 +22,3 @@
 #
 # m h  dom mon dow   command
 logfile=/bing-rewards/BingRewards/logs/cronBing.log
-* */8 * * * /bin/bash /bing-rewards/script.sh > $logfile 2>&1
-0 0 */1 * *  /bin/bash /bing-rewards/update.sh > $logfile 2>&1
