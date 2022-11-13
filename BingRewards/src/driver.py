@@ -181,7 +181,7 @@ class DriverFactory(ABC):
     @classmethod
     def get_driver(cls, device, headless, cookies, nosandbox) -> Driver:
         dl_try_count = 0
-        MAX_TRIES = 3
+        MAX_TRIES = 4
         is_dl_success = False
         options = cls.add_driver_options(device, headless, cookies, nosandbox)
 
@@ -208,12 +208,14 @@ class DriverFactory(ABC):
                     print('The downloaded driver does not match browser version...\n')
                 else: # other exc besides mismatching ver
                     raise SessionNotCreatedException(error_msg)
-                cls.__download_driver(dl_try_count)
-                # driver not up to date with Chrome browser, try different version
-                dl_try_count += 1
+
                 if dl_try_count == MAX_TRIES:
                     raise SessionNotCreatedException(
                         f'Tried downloading the {dl_try_count} most recent drivers. None match your browser version. Aborting now, please update your browser.')
+
+                cls.__download_driver(dl_try_count)
+                # driver not up to date with Chrome browser, try different version
+                dl_try_count += 1
 
             # WebDriverException is Selenium generic exception
             except WebDriverException as wde:
