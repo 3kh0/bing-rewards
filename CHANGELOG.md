@@ -1,16 +1,38 @@
 # Changelog
 
-## [Unreleased](https://github.com/jjjchens235/bing-rewards/tree/HEAD)
+## [v1.15](https://github.com/jjjchens235/bing-rewards/tree/v1.15) (2022-11-15)
 
-[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.14...HEAD)
+[Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.14...v1.15)
 
 **Closed issues:**
 
+- Anoying Push Message "Login Automatic in all Websites" [\#303](https://github.com/jjjchens235/bing-rewards/issues/303)
+- Banned after 2 Days [\#301](https://github.com/jjjchens235/bing-rewards/issues/301)
+- Docker pull manifest for killerherts/bing-rewards:latest not found [\#300](https://github.com/jjjchens235/bing-rewards/issues/300)
+- selenium.common.exceptions.WebDriverException: Message: unknown error: cannot find Chrome binary [\#298](https://github.com/jjjchens235/bing-rewards/issues/298)
+- how often run? [\#297](https://github.com/jjjchens235/bing-rewards/issues/297)
+- Unable to start - urllib.error.HTTPError: HTTP Error 404: Not Found [\#296](https://github.com/jjjchens235/bing-rewards/issues/296)
+- Discord and telegram notifications not working [\#293](https://github.com/jjjchens235/bing-rewards/issues/293)
+- Successful login, does not work afterwards [\#291](https://github.com/jjjchens235/bing-rewards/issues/291)
+- Multiple docker issues.. [\#290](https://github.com/jjjchens235/bing-rewards/issues/290)
+- Running in docker - no space left on device [\#289](https://github.com/jjjchens235/bing-rewards/issues/289)
+- New User Interface [\#288](https://github.com/jjjchens235/bing-rewards/issues/288)
+- Telegram notification setup [\#285](https://github.com/jjjchens235/bing-rewards/issues/285)
+- update.sh [\#283](https://github.com/jjjchens235/bing-rewards/issues/283)
 - Discord Message error not sent [\#271](https://github.com/jjjchens235/bing-rewards/issues/271)
+- \[Feature Request\] - Allow use of fresh account [\#268](https://github.com/jjjchens235/bing-rewards/issues/268)
+- \[Feature Request\] - Run offers with user-agent for Edge [\#267](https://github.com/jjjchens235/bing-rewards/issues/267)
+- Errors installing requirements, Ubuntu [\#238](https://github.com/jjjchens235/bing-rewards/issues/238)
+- Ability to Trust a Device with no Display [\#237](https://github.com/jjjchens235/bing-rewards/issues/237)
 - \[Feature Request\] Ability to run in a docker [\#206](https://github.com/jjjchens235/bing-rewards/issues/206)
 
 **Merged pull requests:**
 
+- Release v1.15 [\#305](https://github.com/jjjchens235/bing-rewards/pull/305) ([jjjchens235](https://github.com/jjjchens235))
+- Docker Update To Fix TZ, Logs, &  Add ENV variables [\#294](https://github.com/jjjchens235/bing-rewards/pull/294) ([Killerherts](https://github.com/Killerherts))
+- Add PowerShell update script \(for Windows users\) [\#287](https://github.com/jjjchens235/bing-rewards/pull/287) ([circles-png](https://github.com/circles-png))
+- Update msedge version mismatch string [\#286](https://github.com/jjjchens235/bing-rewards/pull/286) ([Summon528](https://github.com/Summon528))
+- Fix M1 Mac Chromedriver URL [\#284](https://github.com/jjjchens235/bing-rewards/pull/284) ([tahuja3482](https://github.com/tahuja3482))
 - Release v1.14 [\#282](https://github.com/jjjchens235/bing-rewards/pull/282) ([jjjchens235](https://github.com/jjjchens235))
 
 ## [v1.14](https://github.com/jjjchens235/bing-rewards/tree/v1.14) (2022-09-26)
