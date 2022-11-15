@@ -5,26 +5,28 @@ Please note:
 - only `USA` website guaranteed to be supported
 - multiple accounts NOT supported
 
-## Getting Started
+## Getting Started (Local set-up)
+Note: If using Docker, feel free to skip directly to that section.
+
 1. Download [Chrome](https://www.google.com/chrome/) or [Edge](https://www.microsoft.com/edge)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install requirements.txt file included in the repo: `pip install -r BingRewards/requirements.txt`.
 4. Create/update config file by running `python BingRewards/setup.py` .
- -  **Please note**: Your credentials will be stored as base64 encoded text.
- -  If your using the container setup you will need to run 'docker exec -it bing-rewards python BingRewards/setup.py'
+	 -  **Please note**: Your credentials will be stored as base64 encoded text.
 5. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
 6. Run `python BingRewards/BingRewards.py` to start earning points. 
- - If your using the container setup you will need to run 'docker exec bing-rewards python BingRewards/BingRewards.py -nsb'
-6. Occasionally, update to the latest code by running `./bing-rewards-master/update.sh`
-7. Optional alerting: You can receive alerting for the following services, instructions below for each service.
- - Telegram
- - Discord
- - Google Sheets
+	- You may need to add `-nsb` flag if running on Linux 
+8. Occasionally, update to the latest code by running `./bing-rewards-master/update.sh`
+9. Optional alerting: You can receive alerting for the following services, instructions below for each service.
+	- Telegram
+	- Discord
+	- Google Sheets
 
 ### Command Line Arguments
 There are a growing number of command line argument options. Here are a few to note:
 - `-r` or `--remaining`: remaining tasks - this is the *default* option
 - `-nhl` or `--no-headless`: Don't run in headless mode. This is a non-default option.
+- `-nsb` or `--no-sandbox`: Run browser in [no-sandbox mode](https://unix.stackexchange.com/a/68951). Useful for *Linux*. This is a non-default option.
 
 To see remaining argument options, please run:
 ```sh
@@ -38,24 +40,35 @@ actually translates to `python BingRewards.py -r -hl -d chrome`, i.e run the rem
 Here's an example of running non-default arguments
 `python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, the password will be prompted for separately.
 
-## Container Installation 
+## Docker Container Set-up (Optional)
+
+Docker makes it easy for you to run any program, including this one, regardless of your environment. You just need to [install docker](https://docs.docker.com/get-docker/) on your machine. 
+
+Please note that not all features are supported using Docker, i.e Telegram.
+
+Once docker is installed, follow these instructions to set-up the BingRewards container:
+
 1. In terminal, run `docker pull killerherts/bing-rewards:latest`
 2. Set-up the config with either option 1 or 2 
- 1. Option 1, run setup.py again: `docker run -t -d --name bing-rewards killerherts/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d
- 2. Option 2: Pass your config directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/bing-rewards/BingRewards/config --name bing-rewards killerherts/bing-rewards:latest`
-4. To enter the container for maintenance `docker exec -it bing-rewards /bin/bash`
+	 1. Option 1, run setup.py within the container: `docker run -t -d --name bing-rewards killerherts/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d flags.
+	 2. Option 2: Pass your config directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/bing-rewards/BingRewards/config --name bing-rewards killerherts/bing-rewards:latest`. Note, this option assumes you have a set-up a local copy of this project on your machine.
+3. To run BingRewards, you have a variety of options:
+	1. Wait for the scheduled cron job to run (every 8 hours)
+	2. Execute the python script manually: `docker exec bing-rewards python BingRewards.py -nsb`
+3. If for any reason you want to enter the container then run: `docker exec -it bing-rewards /bin/bash`
 
 #### Container Notes: 
-1. Set a preferred bot run schedule with 
-`-e SCH=<cronexpression>` Default : `0 */8 * * *`
-2. Set a preferred timezone with 
-`-e TZ=<timezone>` Default: `America/New_York`
-3. Set a preferred update schedule with 
-`-e UPDATE=<cronexpression>` Default : `0 0 /1 * *`
+1. You may override default environment variables, by adding the following flags in the `docker run` command:
+	1. Set a preferred bot run schedule with 
+	`-e SCH=<cronexpression>` Default : `0 */8 * * *`
+	2. Set a preferred timezone with 
+	`-e TZ=<timezone>` Default: `America/New_York`
+	3. Set a preferred update schedule with 
+	`-e UPDATE=<cronexpression>` Default : `0 0 /1 * *`
 4. Logs can be mounted to host file system by using the following with docker run
  `-v <absolute-path-to-logs-directory>:/bing-rewards/BingRewards/logs`
-5. Images will be rebuilt daily at 12:26 PM UTC this will update chromium and other image dependencies. If your having issues with the container update it with the following [instructions](https://stackoverflow.com/questions/26734402/how-to-upgrade-docker-container-after-its-image-changed)
-6. If you would like to use docker compose a sample configuration can be found here https://github.com/jjjchens235/bing-rewards/blob/master/compose.yaml
+5. Images will be rebuilt daily at 12:26 PM UTC this will update chromium and other image dependencies. If your having issues with the container update it with the following [instructions](https://stackoverflow.com/a/26833005)
+6. If you would like to use docker compose a sample configuration can be found [here](https://github.com/jjjchens235/bing-rewards/blob/master/compose.yaml)
 
 ## Scheduling (Optional)
 You may want to use your operating system's scheduler to run this program automatically. The script will run completely in the background and should NOT interfere with your daily routine.
