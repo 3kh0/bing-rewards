@@ -5,16 +5,19 @@ Please note:
 - only `USA` website guaranteed to be supported
 - multiple accounts NOT supported
 
-## Getting Started
+## Getting Started (Local set-up)
+Note: If using Docker, feel free to skip directly to that section.
+
 1. Download [Chrome](https://www.google.com/chrome/) or [Edge](https://www.microsoft.com/edge)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install requirements.txt file included in the repo: `pip install -r BingRewards/requirements.txt`.
 4. Create/update config file by running `python BingRewards/setup.py` .
-	-  **Please note**: Your credentials will be stored as base64 encoded text.
+	 -  **Please note**: Your credentials will be stored as base64 encoded text.
 5. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
-6. Run `python BingRewards/BingRewards.py` to start earning points.
-6. Occasionally, update to the latest code by running `./bing-rewards-master/update.sh`
-7. Optional alerting: You can receive alerting for the following services, instructions below for each service.
+6. Run `python BingRewards/BingRewards.py` to start earning points. 
+	- You may need to add `-nsb` flag if running on Linux 
+8. Occasionally, update to the latest code by running `./bing-rewards-master/update.sh`
+9. Optional alerting: You can receive alerting for the following services, instructions below for each service.
 	- Telegram
 	- Discord
 	- Google Sheets
@@ -23,6 +26,7 @@ Please note:
 There are a growing number of command line argument options. Here are a few to note:
 - `-r` or `--remaining`: remaining tasks - this is the *default* option
 - `-nhl` or `--no-headless`: Don't run in headless mode. This is a non-default option.
+- `-nsb` or `--no-sandbox`: Run browser in [no-sandbox mode](https://unix.stackexchange.com/a/68951). Useful for *Linux*. This is a non-default option.
 
 To see remaining argument options, please run:
 ```sh
@@ -36,17 +40,35 @@ actually translates to `python BingRewards.py -r -hl -d chrome`, i.e run the rem
 Here's an example of running non-default arguments
 `python BingRewards.py -w -nhl -e my_email@gmail.com -p`, i.e run web searches in non-headless mode with specified email, the password will be prompted for separately.
 
-## Container Installation
-1. In terminal, run `docker pull killerherts/bing-rewards:<tag>`. You can specify either `latest` or `dev` tag
-	- The image with the `latest` tag will pull logic from this repo's master branch, and image with the `dev` tag will pull from this repo's dev branch.
-2. Set-up the config with either option 1 or 2 
-	1. Option 1: run setup.py again like so `docker run -t -d --name bing-rewards killerherts/bing-rewards:<tag> python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d
-	2. Option 2: Pass your config volume directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/config --name bing-rewards killerherts/bing-rewards:<tag>`
-4. To enter the container for maintenance `docker exec -it bing-rewards /bin/bash`
-	- To run the script inside the container you need to add the 'no sand box flag': `python BingRewards.py -nsb`
+## Docker Container Set-up (Optional)
 
-Notes: Initially the container will be setup to run script once every 8 hours this can be modified using `docker exec -it bing-rewards /bin/bash crontab -e`
-Logs can be mounted to host file system with  `-v <directory to keep logs>:/bing`
+Docker makes it easy for you to run any program, including this one, regardless of your environment. You just need to [install docker](https://docs.docker.com/get-docker/) on your machine. 
+
+Please note that not all features are supported using Docker, i.e Telegram.
+
+Once docker is installed, follow these instructions to set-up the BingRewards container:
+
+1. In terminal, run `docker pull killerherts/bing-rewards:latest`
+2. Set-up the config with either option 1 or 2 
+	 1. Option 1, run setup.py within the container: `docker run -t -d --name bing-rewards killerherts/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d flags.
+	 2. Option 2: Pass your config directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/bing-rewards/BingRewards/config --name bing-rewards killerherts/bing-rewards:latest`. Note, this option assumes you have a set-up a local copy of this project on your machine.
+3. To run BingRewards, you have a variety of options:
+	1. Wait for the scheduled cron job to run (every 8 hours)
+	2. Execute the python script manually: `docker exec bing-rewards python BingRewards.py -nsb`
+3. If for any reason you want to enter the container then run: `docker exec -it bing-rewards /bin/bash`
+
+#### Container Notes: 
+1. You may override default environment variables, by adding the following flags in the `docker run` command:
+	1. Set a preferred bot run schedule with 
+	`-e SCH=<cronexpression>` Default : `0 */8 * * *`
+	2. Set a preferred timezone with 
+	`-e TZ=<timezone>` Default: `America/New_York`
+	3. Set a preferred update schedule with 
+	`-e UPDATE=<cronexpression>` Default : `0 0 /1 * *`
+4. Logs can be mounted to host file system by using the following with docker run
+ `-v <absolute-path-to-logs-directory>:/bing-rewards/BingRewards/logs`
+5. Images will be rebuilt daily at 12:26 PM UTC this will update chromium and other image dependencies. If your having issues with the container update it with the following [instructions](https://stackoverflow.com/a/26833005)
+6. If you would like to use docker compose a sample configuration can be found [here](https://github.com/jjjchens235/bing-rewards/blob/master/compose.yaml)
 
 ## Scheduling (Optional)
 You may want to use your operating system's scheduler to run this program automatically. The script will run completely in the background and should NOT interfere with your daily routine.
@@ -112,7 +134,7 @@ If you would still like to proceed, here are the steps:
 4. Update json filename and path
 	- move the json file to this path: `bing-rewards-master/BingRewards/config`
 	- rename the file to: `google_sheets_credentials.json`. 
-	- For the two steps above, via cmd line, it would look something like this: 
+	- For the two steps above, via cmd line, it would look something like this:
 ```sh
 cd bing-rewards-master/BingRewards/config/
 #move downloaded file to correct dir and rename file
@@ -141,7 +163,8 @@ Currently `only passwordless is supported` and it must be done through the `Micr
 Each time you log-in, a code will be printed out in the `command line console`, and you will need to select it in Authenticator. You will have to do this an additional time when you do the mobile search.
 
 ## Multiple accounts
-Multiple accounts are not supported currently, and there are no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
+Multiple accounts are not supported currently,
+ and there are no plans to add this feature. This is the most common question/request, but the reason for this is because it goes against the original author's intention and I want to honor that.
 
 ## Acknowledgment
 - The original author took down the code from their GitHub back in July 2018. The author gave me permission to re-upload and maintain, but wishes to stay anonymous. I will continue to maintain until this page says otherwise.
