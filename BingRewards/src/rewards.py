@@ -22,7 +22,7 @@ from typing import List
 class Rewards:
     __LOGIN_URL = "https://login.live.com/"
     __BING_URL = "https://bing.com"
-    __DASHBOARD_URL = "https://rewards.microsoft.com/"
+    __DASHBOARD_URL = "https://rewards.bing.com/"
 
     __WEB_DRIVER_WAIT_LONG = 30
     __WEB_DRIVER_WAIT_SHORT = 5
@@ -211,7 +211,8 @@ class Rewards:
                 # 'any_of' checks for either condition
                 EC.any_of(
                     EC.url_contains("https://rewards.microsoft.com/?redref"),
-                    EC.url_contains("https://rewards.microsoft.com/")
+                    EC.url_contains("https://rewards.microsoft.com/"),                    
+                    EC.url_contains("https://rewards.bing.com/"),                    
                 )
             )
             # need to sign in via welcome page first
