@@ -211,8 +211,8 @@ class Rewards:
                 # 'any_of' checks for either condition
                 EC.any_of(
                     EC.url_contains("https://rewards.microsoft.com/?redref"),
-                    EC.url_contains("https://rewards.microsoft.com/"),                    
-                    EC.url_contains("https://rewards.bing.com/"),                    
+                    EC.url_contains("https://rewards.microsoft.com/"),
+                    EC.url_contains("https://rewards.bing.com/"),
                 )
             )
             # need to sign in via welcome page first
@@ -1246,16 +1246,9 @@ class Rewards:
             lifetime_points = user_d['lifetimePoints']
             streak_count = streak_d['activityProgress']
 
-            #use xpath to get days till streak bonus
-            user_level = user_d['levelInfo']['activeLevel']
-            days_to_bonus_index = 3 if user_level == 'Level2' else 4
-            days_to_bonus_str = self.driver.find_elements(
-                By.XPATH, '//mee-rewards-counter-animation//span'
-            )[days_to_bonus_index].text
-
             self.stats = RewardStats(
-            earned_now, earned_today, streak_count, available_points,
-            lifetime_points, days_to_bonus_str
+            earned_now, earned_today, streak_count,
+            available_points, lifetime_points
             )
 
             self.__sys_out("Summary", 1, flush=True)
@@ -1410,15 +1403,13 @@ class Rewards:
 
 class RewardStats:
     def __init__(
-        self, earned_now, earned_today, streak_count, available_points,
-        lifetime_points, days_to_bonus_str
+        self, earned_now, earned_today, streak_count, available_points, lifetime_points
     ):
         self.earned_now = earned_now
         self.earned_today = earned_today
         self.streak_count = streak_count
         self.available_points = available_points
         self.lifetime_points = lifetime_points
-        self.days_to_bonus_str = days_to_bonus_str
         self.build_str()
 
     def build_str(self):
@@ -1431,6 +1422,5 @@ class RewardStats:
 
         self.stats_str = [
             self.earned_now_str, self.earned_today_str, self.streak_count_str,
-            self.days_to_bonus_str, self.available_points_str,
-            self.lifetime_points_str
+            self.available_points_str, self.lifetime_points_str
         ]
