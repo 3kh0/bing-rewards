@@ -277,6 +277,28 @@ class MsEdgeDriverFactory(DriverFactory):
     VERSION_MISMATCH_STR = 'this version of microsoft edge webdriver only supports microsoft edge version'
     driver_name = "msedgedriver.exe" if platform.system() == "Windows" else "msedgedriver"
 
+    @staticmethod
+    def get_major_edge_driver_versions(all_versions):
+        """
+        The MS driver page includes all minor versions, i.e
+        110.0.1587.0, 110.0.1586.0, 110.0.1585.0
+        109.0.1518.8, 109.0.1518.26, 109.0.1518.23
+
+        This function returns only the greatest major versions:
+        110.0.1587.0, 109.0.1518.8
+        """
+        major_versions = []
+        latest_major_version_num = '100'
+        for current_version in all_versions:
+            current_version_num = current_version.decode().split()[1]
+            current_major_version_num = current_version_num.split('.')[0]
+            if current_major_version_num != latest_major_version_num:
+                major_versions.append(current_version_num)
+                latest_major_version_num = current_major_version_num
+        # remove the latest (dev) version, it's limited
+        major_versions = major_versions[1:]
+        return sorted(major_versions, reverse=True)
+
     def _get_latest_driver_url(dl_try_count):
         EDGE_RELEASE_URL = "https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
         try:
@@ -289,16 +311,23 @@ class MsEdgeDriverFactory(DriverFactory):
                 EDGE_RELEASE_URL
             ).read()
 
-        latest_version = re.findall(
+        all_versions = sorted(list(set(re.findall(
             b"Version: \d{2,3}\.0\.\d{4}\.\d+", response
-        )[dl_try_count].decode().split()[1]
+        ))), reverse=True)
+        major_versions = MsEdgeDriverFactory.get_major_edge_driver_versions(all_versions)
+
+        latest_version = major_versions[dl_try_count]
         print(f'Downloading {platform.system()} msedgedriver version: {latest_version}')
 
         system = platform.system()
         if system == "Windows":
             url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_win64.zip"
         elif system == "Darwin":
-            url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_mac64.zip"
+            # M1
+            if platform.processor() == 'arm':
+                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_mac64_m1.zip"
+            else:
+                url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_mac64.zip"
         elif system == "Linux":
             url = f"https://msedgedriver.azureedge.net/{latest_version}/edgedriver_linux64.zip"
         return url
