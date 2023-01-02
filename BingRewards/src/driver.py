@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 import os
 import platform
-from urllib.request import urlopen
+# from urllib.request import urlopen
+import urllib
 import ssl
 import zipfile
 import shutil
@@ -53,6 +54,7 @@ class DriverFactory(ABC):
     # agent src: https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
     __WEB_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.33"
     __MOBILE_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.79 Mobile Safari/537.36 EdgA/100.0.1185.50"
+    MAX_DOWNLOAD_ATTEMPTS = 4
 
     @property
     @staticmethod
@@ -104,12 +106,13 @@ class DriverFactory(ABC):
     @classmethod
     def __download_driver(cls, dl_try_count=0):
         url = cls._get_latest_driver_url(dl_try_count)
+
         try:
-            response = urlopen(
+            response = urllib.request.urlopen(
                 url, context=ssl.SSLContext(ssl.PROTOCOL_TLS)
             )  # context args for mac
         except ssl.SSLError:
-            response = urlopen(url)  # context args for mac
+            response = urllib.request.urlopen(url)  # context args for mac
         zip_file_path = os.path.join(
             cls.DRIVERS_DIR, os.path.basename(url)
         )
@@ -181,41 +184,32 @@ class DriverFactory(ABC):
     @classmethod
     def get_driver(cls, device, headless, cookies, nosandbox) -> Driver:
         dl_try_count = 0
-        MAX_TRIES = 4
-        is_dl_success = False
         options = cls.add_driver_options(device, headless, cookies, nosandbox)
 
         # raspberry pi: assumes driver already installed via `sudo apt-get install chromium-chromedriver`
-        if platform.machine() in ["armv7l","aarch64"]:
+        if platform.machine() in ["armv7l", "aarch64"]:
             driver_path = "/usr/lib/chromium-browser/chromedriver"
-        # all others
+        # all other platforms, install driver ourselves
         else:
             if not os.path.exists(cls.DRIVERS_DIR):
                 os.mkdir(cls.DRIVERS_DIR)
             driver_path = os.path.join(cls.DRIVERS_DIR, cls.driver_name)
-            if not os.path.exists(driver_path):
-                cls.__download_driver()
-                dl_try_count += 1
 
-        while not is_dl_success:
+        # Instantiate and if necessary, download new driver
+        while True:
+            # Try instantiating a driver
+            # Instantiate before dling bc driver may already exist
             try:
-                driver = cls.WebDriverCls(driver_path, options=options)
-                is_dl_success = True
+                if os.path.exists(driver_path):
+                    driver = cls.WebDriverCls(driver_path, options=options)
+                    return Driver(driver, EventListener(), device)
 
             except SessionNotCreatedException as se:
                 error_msg = str(se).lower()
                 if cls.VERSION_MISMATCH_STR in error_msg:
-                    print('The downloaded driver does not match browser version...\n')
+                    print('The downloaded driver does not match your browser version...\n')
                 else: # other exc besides mismatching ver
                     raise SessionNotCreatedException(error_msg)
-
-                if dl_try_count == MAX_TRIES:
-                    raise SessionNotCreatedException(
-                        f'Tried downloading the {dl_try_count} most recent drivers. None match your browser version. Aborting now, please update your browser.')
-
-                cls.__download_driver(dl_try_count)
-                # driver not up to date with Chrome browser, try different version
-                dl_try_count += 1
 
             # WebDriverException is Selenium generic exception
             except WebDriverException as wde:
@@ -229,7 +223,16 @@ class DriverFactory(ABC):
                 else:
                     raise WebDriverException(error_msg)
 
-        return Driver(driver, EventListener(), device)
+            # Try downloading driver
+            try:
+                if dl_try_count >= cls.MAX_DOWNLOAD_ATTEMPTS:
+                    raise SessionNotCreatedException(
+                        f'Tried downloading the {dl_try_count} most recent drivers. None match your browser version. Aborting now, please update your browser.'
+                    )
+                cls.__download_driver(dl_try_count)
+            except urllib.error.HTTPError:
+                print('Download page does not exist for this version/platform combo.')
+            dl_try_count += 1
 
 
 class ChromeDriverFactory(DriverFactory):
@@ -243,19 +246,19 @@ class ChromeDriverFactory(DriverFactory):
         # version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         CHROME_RELEASE_URL = "https://sites.google.com/chromium.org/driver/downloads?authuser=0"
         try:
-            response = urlopen(
+            response = urllib.request.urlopen(
                 CHROME_RELEASE_URL,
                 context=ssl.SSLContext(ssl.PROTOCOL_TLS)
             ).read()
         except ssl.SSLError:
-            response = urlopen(
+            response = urllib.request.urlopen(
                 CHROME_RELEASE_URL
             ).read()
 
         latest_version = re.findall(
             b"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+", response
         )[dl_try_count].decode().split()[1]
-        print(f'Downloading {platform.system()} chromedriver version: {latest_version}')
+        print(f'\nDownloading {platform.system()} chromedriver version: {latest_version}')
 
         system = platform.system()
         if system == "Windows":
@@ -296,18 +299,18 @@ class MsEdgeDriverFactory(DriverFactory):
                 major_versions.append(current_version_num)
                 latest_major_version_num = current_major_version_num
         # remove the latest (dev) version, it's limited
-        major_versions = major_versions[1:]
+        # major_versions = major_versions[1:]
         return sorted(major_versions, reverse=True)
 
     def _get_latest_driver_url(dl_try_count):
         EDGE_RELEASE_URL = "https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
         try:
-            response = urlopen(
+            response = urllib.request.urlopen(
                 EDGE_RELEASE_URL,
                 context=ssl.SSLContext(ssl.PROTOCOL_TLS)
             ).read()
         except ssl.SSLError:
-            response = urlopen(
+            response = urllib.request.urlopen(
                 EDGE_RELEASE_URL
             ).read()
 
@@ -317,7 +320,7 @@ class MsEdgeDriverFactory(DriverFactory):
         major_versions = MsEdgeDriverFactory.get_major_edge_driver_versions(all_versions)
 
         latest_version = major_versions[dl_try_count]
-        print(f'Downloading {platform.system()} msedgedriver version: {latest_version}')
+        print(f'\nDownloading {platform.system()} msedgedriver version: {latest_version}')
 
         system = platform.system()
         if system == "Windows":
