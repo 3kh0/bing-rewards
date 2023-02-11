@@ -9,10 +9,14 @@ MAXTIME=$[RANDOM%$MAXWAIT+1]
 echo "Waiting For "$MAXTIME" seconds"
 REWRITE="\e[25D\e[1A\e[K"
 echo "Starting..."
-while [ $MAXTIME -gt 0 ]; do 
+while [ $MAXTIME -gt 0 ]; do
     MAXTIME=$((MAXTIME-1))
     sleep 1
     echo -e "${REWRITE}$MAXTIME"
 done
 echo -e "${REWRITE}Done sleeping."
+
+sudo apt-get update
+sudo apt-get install chromium
+
 /usr/local/bin/python /bing-rewards/BingRewards/BingRewards.py -nsb
