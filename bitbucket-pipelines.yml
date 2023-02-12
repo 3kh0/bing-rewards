@@ -1,0 +1,16 @@
+options:
+  docker: true
+image: atlassian/default-image:4
+
+
+pipelines:
+  default:
+    - step:
+        name: Build and push Docker image
+        script:
+          # creates an image_tag referring to the latest commit
+          - export IMAGE_TAG=jwong235/bing-rewards:$BITBUCKET_COMMIT
+          - docker login -u jwong235 -p $DOCKER_PASSWORD
+          # Builds the DockerFile using the image_tag variable
+          - docker build -t $IMAGE_TAG .
+          - docker push $IMAGE_TAG
