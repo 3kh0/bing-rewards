@@ -190,11 +190,6 @@ class Rewards:
             is_login_complete = self.__check_login_url(self.driver.current_url)
 
         self.__sys_out("Successfully logged in", 2, True)
-        VALID_MARKETS = ['mkt=EN-US', 'mkt=EN-GB', 'mkt=FR-FR', 'mkt=ES-ES', 'mkt=EN-AU', 'mkt=ZH-CN', 'mkt=IT-IT', 'mkt=DE-DE']
-        if all(market not in self.driver.current_url for market in VALID_MARKETS):
-            raise RuntimeError(
-                f"Logged in, but user not located in one of these valid markets: {VALID_MARKETS}."
-            )
 
     def __open_dashboard(self, try_count=0):
         """
