@@ -1,22 +1,20 @@
 options:
   docker: true
-image: atlassian/default-image:4
-
-
+image: 'atlassian/default-image:4'
 pipelines:
   default:
     - step:
         name: Build and push Docker image
         script:
           - export DOCKER_HUB_REPO=jwong235/bing-rewards
-            # image tag using commit hash
-          - export IMAGE_TAG_COMMIT=$DOCKER_HUB_REPO:$BITBUCKET_COMMIT
-            # image tag using 'latest'
-          - export IMAGE_TAG_LATEST=$DOCKER_HUB_REPO:latest
-           
+          - 'export IMAGE_TAG_COMMIT=$DOCKER_HUB_REPO:$BITBUCKET_COMMIT'
+          - >
+            if [ "$BITBUCKET_BRANCH" == "master" ]; then
+              export IMAGE_TAG_LATEST=$DOCKER_HUB_REPO:latest
+            elif [ "$BITBUCKET_BRANCH" == "dev" ]; then
+                export IMAGE_TAG_LATEST=$DOCKER_HUB_REPO:dev
+            fi 
           - docker login -u jwong235 -p $DOCKER_PASSWORD
-           
-            # builds one image with two tags
           - docker build -t $IMAGE_TAG_COMMIT -t $IMAGE_TAG_LATEST .
           - docker push $IMAGE_TAG_COMMIT
           - docker push $IMAGE_TAG_LATEST
