@@ -6,7 +6,7 @@ Please note that not all features are supported using Docker, i.e Telegram.
 
 Once docker is installed, follow these instructions to set-up the BingRewards container:
 
-1. In terminal, run `docker pull jwong235/bing-rewards:latest`
+1. In terminal, run `docker pull jwong235/bing-rewards` to pull latest image. Or go to [DockerHub](https://hub.docker.com/repository/docker/jwong235/bing-rewards/general) if you want to choose a specific image based on commit hash.
 2. Set-up the config with either option 1 or 2 
 	 1. Option 1, run setup.py within the container: `docker run -t -d --name bing-rewards jwong235/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d flags.
 	 2. Option 2: Pass your config directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/bing-rewards/BingRewards/config --name bing-rewards jwong235/bing-rewards:latest`. Note, this option assumes you have a set-up a local copy of this project on your machine.

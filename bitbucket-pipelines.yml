@@ -8,9 +8,15 @@ pipelines:
     - step:
         name: Build and push Docker image
         script:
-          # creates an image_tag referring to the latest commit
-          - export IMAGE_TAG=jwong235/bing-rewards:$BITBUCKET_COMMIT
+          - export DOCKER_HUB_REPO=jwong235/bing-rewards
+            # image tag using commit hash
+          - export IMAGE_TAG_COMMIT=$DOCKER_HUB_REPO:$BITBUCKET_COMMIT
+            # image tag using 'latest'
+          - export IMAGE_TAG_LATEST=$DOCKER_HUB_REPO:latest
+           
           - docker login -u jwong235 -p $DOCKER_PASSWORD
-          # Builds the DockerFile using the image_tag variable
-          - docker build -t $IMAGE_TAG .
-          - docker push $IMAGE_TAG
+           
+            # builds one image with two tags
+          - docker build -t $IMAGE_TAG_COMMIT -t $IMAGE_TAG_LATEST .
+          - docker push $IMAGE_TAG_COMMIT
+          - docker push $IMAGE_TAG_LATEST
