@@ -30,6 +30,7 @@ Note: If using Docker, go directly to `/docs/docker_setup` for further instructi
 
 ### Additional info
 There is additional info in the `/docs/` folder for the following:
+
 - docker set-up
 - telegram/discord/google sheets set-up
 - automated scheduling

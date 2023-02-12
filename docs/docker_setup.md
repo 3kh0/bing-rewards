@@ -6,10 +6,10 @@ Please note that not all features are supported using Docker, i.e Telegram.
 
 Once docker is installed, follow these instructions to set-up the BingRewards container:
 
-1. In terminal, run `docker pull killerherts/bing-rewards:latest`
+1. In terminal, run `docker pull jwong235/bing-rewards:latest`
 2. Set-up the config with either option 1 or 2 
-	 1. Option 1, run setup.py within the container: `docker run -t -d --name bing-rewards killerherts/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d flags.
-	 2. Option 2: Pass your config directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/bing-rewards/BingRewards/config --name bing-rewards killerherts/bing-rewards:latest`. Note, this option assumes you have a set-up a local copy of this project on your machine.
+	 1. Option 1, run setup.py within the container: `docker run -t -d --name bing-rewards jwong235/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d flags.
+	 2. Option 2: Pass your config directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/bing-rewards/BingRewards/config --name bing-rewards jwong235/bing-rewards:latest`. Note, this option assumes you have a set-up a local copy of this project on your machine.
 3. To run BingRewards, you have a variety of options:
 	1. Wait for the scheduled cron job to run (every 8 hours)
 	2. Execute the python script manually: `docker exec bing-rewards python BingRewards.py -nsb`
@@ -28,3 +28,7 @@ Once docker is installed, follow these instructions to set-up the BingRewards co
 5. Images will be rebuilt daily at 12:26 PM UTC this will update chromium and other image dependencies. If your having issues with the container update it with the following [instructions](https://stackoverflow.com/a/26833005)
 6. If you would like to use docker compose a sample configuration can be found [here](https://github.com/jjjchens235/bing-rewards/blob/master/compose.yaml)
 
+#### Acknowledgment
+Docker image originally developed by `Killerherts`.
+
+After GitHub take-down, moved to my own DockerHub because GitHub Actions no longer works.
