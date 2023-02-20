@@ -13,12 +13,17 @@ from dateutil import tz
 import json
 
 
+def get_current_datetime(tzinfo=tz.tzlocal()):
+    return datetime.now().replace(tzinfo=tzinfo)
+
+
 class HistLog:
     """
     The 'controller' for the
     search history, run history, and completion objects
     """
-    __DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
+    __DATETIME_FORMAT = "%a, %b %d %Y %I:%M:%S%p"
+    __OLD_DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
 
     __LOCAL_TIMEZONE = tz.tzlocal()
     __PST_TIMEZONE = tz.gettz(
@@ -37,24 +42,27 @@ class HistLog:
     __OFFERS_OPTION = "Offers"
     __PUNCHCARD_OPTION = "Latest Punch Card Activity"
 
-    def __init__(self, email, run_path, search_path, run_datetime=datetime.now()):
+    def __init__(self, email, run_path, search_path):
         self.email = email
-        self.__run_datetime = run_datetime.replace(tzinfo=self.__LOCAL_TIMEZONE)
 
         self.__run_log = RunHistoryJsonLog(run_path, email)
         self.__search_log = SearchHistoryJsonLog(search_path, email)
         self.__completion = Completion()
 
     def get_timestamp(self):
-        return self.__run_datetime.strftime(self.__DATETIME_FORMAT)
+
+        return get_current_datetime().strftime(self.__DATETIME_FORMAT)
 
     def is_already_ran_today(self):
         try:
             last_ran = self.__run_log.user_entries[-1].split(": ")[0]
-            last_ran_pst = datetime.strptime(last_ran, self.__DATETIME_FORMAT).replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
-            run_datetime_pst = self.__run_datetime.astimezone(
-                self.__PST_TIMEZONE
-            )
+            try:
+                last_ran = datetime.strptime(last_ran, self.__DATETIME_FORMAT)
+            except ValueError: # port old datetime_format
+                last_ran = datetime.strptime(last_ran, self.__OLD_DATETIME_FORMAT)
+
+            last_ran_pst = last_ran.replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
+            run_datetime_pst = get_current_datetime(self.__PST_TIMEZONE)
             delta_days = (run_datetime_pst.date() - last_ran_pst.date()).days
             is_already_ran_today = (
                 (delta_days == 0 and last_ran_pst.hour >= self.__RESET_HOUR) or
@@ -218,12 +226,11 @@ class BaseJsonLog:
     4. Re-attach the updated user_entries back to the original json object
     5. Write (overwrite!) the json back to the log file
     """
-    DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
+    __DATETIME_FORMAT = "%a, %b %d %Y %I:%M:%S%p"
     LOCAL_TIMEZONE = tz.tzlocal()
 
-    def __init__(self, log_path, email, run_datetime=datetime.now()):
+    def __init__(self, log_path, email):
         self.log_path = log_path
-        self.run_datetime = run_datetime.replace(tzinfo=self.LOCAL_TIMEZONE)
         self.read()
         self.user_entries = self.data.get(email, [])
 
@@ -236,7 +243,7 @@ class BaseJsonLog:
 
     def add_user_entry(self, entry, include_log_dt):
         if include_log_dt:
-            log_time = self.run_datetime.strftime(self.DATETIME_FORMAT)
+            log_time = get_current_datetime().strftime(self.__DATETIME_FORMAT)
             entry = f'{log_time}: {entry}'
         self.user_entries.append(entry)
         self.user_entries = self.user_entries[-self.MAX_SIZE:]
