@@ -5,7 +5,6 @@ setup.py will simply parse these command line options.
 """
 import os
 import getpass
-import base64
 import sys
 import json
 
@@ -23,23 +22,19 @@ CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, CONFIG_FILE)
 DEPRECATED_CONFIG_FILE_PATH = os.path.join("BingRewards/src/config.py")
 
 
-def __encode(s):
-    return base64.b64encode(s.encode()).decode()
-
-
 def __get_args(existing_credentials):
     new_credentials = existing_credentials.copy()
     args = parse_setup_args()
     for arg_name, arg_value in vars(args).items():
         if arg_value:
-            new_credentials[arg_name] = __encode(arg_value)
+            new_credentials[arg_name] = arg_value
     return new_credentials
 
 
 def __prompt_simple_input(existing_credentials):
     new_credentials = existing_credentials.copy()
-    email = __encode(input("*MS Rewards Email: "))
-    password = __encode(getpass.getpass("*Password: "))
+    email = input("*MS Rewards Email: ")
+    password = getpass.getpass("*Password: ")
 
     new_credentials['email'] = email
     new_credentials['password'] = password

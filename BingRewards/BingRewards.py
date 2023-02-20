@@ -1,7 +1,6 @@
 import sys
 import os
 import logging
-import base64
 import json
 from options import parse_search_args
 from src.rewards import Rewards
@@ -28,11 +27,6 @@ def _log_hist_log(hist_log):
     logging.debug("")
 
 
-def __decode(encoded):
-    if encoded:
-        return base64.b64decode(encoded).decode()
-
-
 def get_config():
     if os.path.isfile(CONFIG_FILE_PATH):
         try:
@@ -49,8 +43,8 @@ def get_config():
 
 
 def get_telegram_messenger(config, args):
-    telegram_api_token = __decode(config.get('telegram_api_token'))
-    telegram_userid = __decode(config.get('telegram_userid'))
+    telegram_api_token = config.get('telegram_api_token')
+    telegram_userid = config.get('telegram_userid')
     telegram_messenger = None
 
     if not args.telegram or not telegram_api_token or not telegram_userid:
@@ -66,7 +60,7 @@ def get_telegram_messenger(config, args):
 
 
 def get_discord_messenger(config, args):
-    discord_webhook_url = __decode(config.get('discord_webhook_url'))
+    discord_webhook_url = config.get('discord_webhook_url')
     discord_messenger = None
 
     if not args.discord or not discord_webhook_url:
@@ -80,8 +74,8 @@ def get_discord_messenger(config, args):
 
 
 def get_google_sheets_reporting(config, args):
-    sheet_id = __decode(config.get('google_sheets_sheet_id'))
-    tab_name = __decode(config.get('google_sheets_tab_name'))
+    sheet_id = config.get('google_sheets_sheet_id')
+    tab_name = config.get('google_sheets_tab_name')
 
     if args.google_sheets and sheet_id and tab_name:
         google_sheets_reporting = GoogleSheetsReporting(sheet_id, tab_name)
@@ -104,9 +98,7 @@ def complete_search(rewards, completion, search_type, search_hist):
 '''
 
 
-def run_account(
-    email, password, args, messengers, google_sheets_reporting
-):
+def run_account(email, password, args, messengers, google_sheets_reporting):
     """ Run one individual account """
     rewards = Rewards(
         email, password, DEBUG, args.headless, args.cookies, args.driver,
@@ -125,6 +117,10 @@ def run_account(
         print(f'{args.search_type.capitalize()} already completed\n')
         return
 
+    print(
+        f'''\nRunning with:
+        Account: {email}
+        Search type: {args.search_type.capitalize()}''')
     current_attempts = 0
 
     try:
@@ -134,13 +130,11 @@ def run_account(
 
             search_hist = hist_log.get_search_hist()
 
-            print(f'''\n\nRunning with:
-            Account: {email}
-            Search type: {args.search_type.capitalize()}
-            Run #: {current_attempts+1}
-            ''')
+            print(f'\n\nRun {current_attempts+1}:')
 
-            rewards.complete_search_type(args.search_type, completion, search_hist)
+            rewards.complete_search_type(
+                args.search_type, completion, search_hist
+            )
             current_attempts += 1
 
             hist_log.write(rewards.completion)
@@ -187,12 +181,11 @@ def run_account(
         raise
 
 
-
 def main():
     """
     Run all accounts
     """
-    emails = [] # TODO: change to config
+    emails = []  # TODO: change to config
     passwords = []
 
     # change to top dir
@@ -209,8 +202,8 @@ def main():
         password = args.password
         args.cookies = False
     else:
-        email = __decode(config['email'])
-        password = __decode(config['password'])
+        email = config['email']
+        password = config['password']
 
     emails.append(email)
     passwords.append(password)
@@ -229,9 +222,7 @@ def main():
 
     # max_attempts = 2 # TODO: change to config
     for email in emails:
-        run_account(
-            email, password, args, messengers, google_sheets_reporting
-        )
+        run_account(email, password, args, messengers, google_sheets_reporting)
 
 
 if __name__ == "__main__":
