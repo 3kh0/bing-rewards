@@ -61,6 +61,18 @@ def get_parent_parser():
         help=
         "the email password to use. Use -p with no argument to trigger a secure pw prompt"
     )
+
+    # max attempts per account
+    parent_parser.add_argument(
+        '-ma',
+        '--max-attempts-per-account',
+        dest='max_attempts_per_account',
+        default=2,
+        type=int,
+        nargs='?',
+        help="Maximum number of attempts for one account, only if the previous attempt failed."
+    )
+
     return parent_parser
 
 
