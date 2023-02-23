@@ -1,5 +1,7 @@
 An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
 
+Discord: Join our server at https://discord.gg/xgFUcxnquD to receive Bing Rewards updates and discuss the tool with other users.
+
 Please note: 
 - only `USA` website guaranteed to be supported
 - multiple accounts NOT supported
