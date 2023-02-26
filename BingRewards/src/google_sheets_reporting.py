@@ -61,7 +61,7 @@ class GoogleSheetsReporting():
             col_names = [
                 [
                     'run_time', 'email', 'earned_now', 'earned_today',
-                    'streak_count', 'days_to_bonus', 'available_points',
+                    'streak_count', 'available_points',
                     'lifetime_points'
                 ]
             ]
@@ -83,7 +83,7 @@ class GoogleSheetsReporting():
                         [
                             f'{current_time}', email, stats.earned_now,
                             stats.earned_today, stats.streak_count,
-                            stats.days_to_bonus_str, stats.available_points,
+                            stats.available_points,
                             stats.lifetime_points
                         ]
                     ]
