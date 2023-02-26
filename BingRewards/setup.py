@@ -4,7 +4,6 @@ Please read before editing: Any additional credential options should be added to
 setup.py will simply parse these command line options.
 """
 import os
-import getpass
 import sys
 import json
 
@@ -33,11 +32,8 @@ def __get_args(existing_credentials):
 
 def __prompt_simple_input(existing_credentials):
     new_credentials = existing_credentials.copy()
-    email = input("*MS Rewards Email: ")
-    password = getpass.getpass("*Password: ")
-
-    new_credentials['email'] = email
-    new_credentials['password'] = password
+    new_credentials['email'] = input("*MS Rewards Email: ")
+    new_credentials['password'] = input("*Password: ")
     return new_credentials
 
 

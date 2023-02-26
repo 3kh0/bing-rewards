@@ -1,18 +1,5 @@
 import argparse
-import getpass
 from src.driver import ChromeDriverFactory, MsEdgeDriverFactory
-
-
-class PasswordAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if values:
-            print(
-                '\nWarning: User set the password in plain text. Use `-p` with no arguments next time for better security.'
-            )
-            setattr(namespace, self.dest, values)
-        else:
-            prompt = f'{option_string}:'
-            setattr(namespace, self.dest, getpass.getpass(prompt=prompt))
 
 
 class DriverAction(argparse.Action):
@@ -56,7 +43,6 @@ def get_parent_parser():
     parent_parser.add_argument(
         '-p',
         '--password',
-        action=PasswordAction,
         nargs='?',
         help=
         "the email password to use. Use -p with no argument to trigger a secure pw prompt"
@@ -90,10 +76,7 @@ def parse_setup_args():
     setup_parser.add_argument(
         '-ta',
         '--telegram_api_token',
-        action=PasswordAction,
-        nargs='?',
-        help=
-        "telegram api token to store in config, use with no argument to trigger a secure prompt",
+        help="telegram api token to store in config",
     )
 
     # discord config
