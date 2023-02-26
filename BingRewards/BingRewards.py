@@ -3,6 +3,7 @@ import os
 import logging
 import json
 from options import parse_search_args
+from setup import CONFIG_FILE_PATH
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
 from src.messengers import TelegramMessenger, DiscordMessenger, BaseMessenger
@@ -13,7 +14,7 @@ ERROR_LOG = "error.log"
 RUN_LOG = "run.json"
 SEARCH_LOG = "search.json"
 STATS_LOG = "stats.json"
-CONFIG_FILE_PATH = "config/config.json"
+# CONFIG_FILE_PATH = "config/config.json"
 DEBUG = True
 
 
@@ -37,7 +38,7 @@ def get_config():
             raise
     else:
         raise ImportError(
-            "'config.json' file does not exist. Please run `python setup.py`.\nIf you are a previous user, existing credentials will be automatically ported over."
+            f"'{CONFIG_FILE_PATH}' file does not exist. Please run `python setup.py`.\nIf you are a previous user, existing credentials will be automatically ported over."
         )
     return config
 
