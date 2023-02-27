@@ -32,34 +32,36 @@ def check_is_valid_email_pw_combo(args):
         raise RuntimeError(
             f'Missing {missing_arg} argument. You included {included_arg} argument, you must also include {missing_arg} argument.'
         )
+    if (args.email) and (len(args.email) != len(args.password)):
+        raise RuntimeError(
+            'Need to pass in same number of "email" and "password" arguments'
+        )
 
 
 def get_parent_parser():
-    ''' parent parser - store default args '''
+    """
+    parent parser - store default args
+    Warning: setting default PARENT arguments is probably
+    a bad idea since they will overwrite settings inadvertedly
+    """
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument(
-        '-e', '--email', help='email to use, supersedes the config email'
+        '-e',
+        '--email',
+        nargs='+',
+        help='Microsoft email(s) to use. You can add/use multiple emails, i.e "-e abc@gmail.com def@gmail.com"'
     )
+
     parent_parser.add_argument(
         '-p',
         '--password',
-        nargs='?',
+        nargs='+',
         help=
-        "the email password to use. Use -p with no argument to trigger a secure pw prompt"
+        """The email password(s) to use.\
+        You can add/use multiple passwords i.e " -p 'pw123' 'pw456' "\
+        Warning1: your plain text password will be saved in your bash history.\
+        Warning2: wrap your password in single quotes if it has special chars"""
     )
-
-    # max attempts per account
-    parent_parser.add_argument(
-        '-ma',
-        '--max-attempts-per-account',
-        dest='max_attempts_per_account',
-        default=2,
-        type=int,
-        nargs='?',
-        help=
-        "Maximum number of attempts for one account, only if the previous attempt failed."
-    )
-
     return parent_parser
 
 
@@ -295,6 +297,17 @@ def parse_search_args():
         "two-letter country code to use for Google Trends API 'geo' argument. Please note: not all country codes are supported by the API. Default is 'US'."
     )
 
+    # max attempts per account
+    search_parser.add_argument(
+        '-ma',
+        '--max-attempts-per-account',
+        dest='max_attempts_per_account',
+        type=int,
+        nargs='?',
+        help=
+        "Maximum number of attempts for one account, only if the previous attempt failed."
+    )
+
     search_parser.set_defaults(
         search_type='remaining',
         driver=ChromeDriverFactory,
@@ -302,7 +315,8 @@ def parse_search_args():
         cookies=False,
         nosandbox=False,
         telegram=False,
-        google_sheets=False
+        google_sheets=False,
+        max_attempts_per_account=2
     )
 
     args = search_parser.parse_args()

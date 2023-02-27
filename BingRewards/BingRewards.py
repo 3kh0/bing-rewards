@@ -3,7 +3,7 @@ import os
 import logging
 import json
 from options import parse_search_args
-from setup import CONFIG_FILE_PATH
+from setup import CONFIG_FILE_PATH, process_microsoft_account_args
 from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
 from src.messengers import TelegramMessenger, DiscordMessenger, BaseMessenger
@@ -89,18 +89,8 @@ def get_google_sheets_reporting(config, args):
     return google_sheets_reporting
 
 
-'''
-def complete_search(rewards, completion, search_type, search_hist):
-    print(f"\nYou selected {search_type}")
-    if not completion.is_search_type_completed(search_type):
-        rewards.complete_search_type(search_type, completion, search_hist)
-    else:
-        print(f'{search_type.capitalize()} already completed\n')
-'''
-
-
 def run_account(email, password, args, messengers, google_sheets_reporting):
-    """ Run one individual account """
+    """ Run one individual account n times"""
     rewards = Rewards(
         email, password, DEBUG, args.headless, args.cookies, args.driver,
         args.nosandbox, args.google_trends_geo, messengers
@@ -113,15 +103,16 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
         os.path.join(LOG_DIR, SEARCH_LOG)
     )
 
+    print(
+        f'''\nRunning with:
+        Account: {email}
+        Search type: {args.search_type.capitalize()}'''
+    )
     completion = hist_log.get_completion()
     if completion.is_search_type_completed(args.search_type):
         print(f'{args.search_type.capitalize()} already completed\n')
         return
 
-    print(
-        f'''\nRunning with:
-        Account: {email}
-        Search type: {args.search_type.capitalize()}''')
     current_attempts = 0
 
     try:
@@ -131,7 +122,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
 
             search_hist = hist_log.get_search_hist()
 
-            print(f'\n\nRun {current_attempts+1}:')
+            print(f'\n\nRun {current_attempts+1} [{email}]:')
 
             rewards.complete_search_type(
                 args.search_type, completion, search_hist
@@ -186,9 +177,6 @@ def main():
     """
     Run all accounts
     """
-    emails = []  # TODO: change to config
-    passwords = []
-
     # change to top dir
     dir_run_from = os.getcwd()
     top_dir = os.path.dirname(sys.argv[0])
@@ -199,15 +187,10 @@ def main():
 
     args = parse_search_args()
     if args.email and args.password:
-        email = args.email
-        password = args.password
+        microsoft_accounts = process_microsoft_account_args(args)
         args.cookies = False
     else:
-        email = config['email']
-        password = config['password']
-
-    emails.append(email)
-    passwords.append(password)
+        microsoft_accounts = config['microsoft_accounts']
 
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
@@ -221,9 +204,11 @@ def main():
     ]
     google_sheets_reporting = get_google_sheets_reporting(config, args)
 
-    # max_attempts = 2 # TODO: change to config
-    for email in emails:
-        run_account(email, password, args, messengers, google_sheets_reporting)
+    for microsoft_account in microsoft_accounts:
+        run_account(
+            microsoft_account['email'], microsoft_account['password'], args,
+            messengers, google_sheets_reporting
+        )
 
 
 if __name__ == "__main__":
