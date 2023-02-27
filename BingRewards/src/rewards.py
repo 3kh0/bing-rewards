@@ -92,12 +92,22 @@ class Rewards:
             else:
                 self.stdout.append(out)
 
-    def __check_login_url(self, url):
+    def __check_url(self, current_url, final_url_substring):
         #made it to the home page! login complete
-        if "https://account.microsoft.com/" in url:
+        if final_url_substring in current_url:
             return True
 
-        elif "https://login.live.com/ppsecure" in url:
+        elif 'signin-oauth' in current_url:
+            try:
+                #check the url
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_LONG).until(
+                    # 'any_of' checks for either condition
+                    EC.url_changes(current_url)
+                )
+            except TimeoutException:
+                raise RuntimeError("Stuck on 'signin-oath page")
+
+        elif "https://login.live.com/ppsecure" in current_url:
             # approve sign in page
             try:
                 WebDriverWait(self.driver, .5).until(
@@ -124,7 +134,7 @@ class Rewards:
                 self.driver.find_element(By.XPATH, '//*[@id="idSIButton9"]').click()
 
         #'agree to terms and conditions' page
-        elif "https://account.live.com/tou" in url:
+        elif "https://account.live.com/tou" in current_url:
             WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                 EC.url_contains("https://account.live.com/tou")
             )
@@ -133,19 +143,19 @@ class Rewards:
             ).click()
 
         #'Is your security info still accurate?' page
-        elif "https://account.live.com/proofs/remind" in url:
+        elif "https://account.live.com/proofs/remind" in current_url:
             WebDriverWait(self.driver, 2).until(
                 EC.element_to_be_clickable((By.ID, 'iLooksGood'))
             ).click()
 
         #'confirm identity' or 'recover account' page
-        elif "identity/confirm" in url or "/recover" in url:
+        elif "identity/confirm" in current_url or "/recover" in current_url:
             raise RuntimeError(
                 "Must confirm account identity by signing in manually first. Please login again with your Microsoft account in Google Chrome."
             )
 
         # 2FA page: login url doesn't change
-        elif url == self.__LOGIN_URL:
+        elif current_url == self.__LOGIN_URL:
             # standard 2FA page
             try:
                 authenticator_code = self.driver.find_element(By.ID, "idRemoteNGC_DisplaySign").text
@@ -157,7 +167,7 @@ class Rewards:
                     EC.url_contains("https://login.live.com/ppsecure")
                     )
             except NoSuchElementException:
-                raise RuntimeError(f"Unable to handle {url}")
+                raise RuntimeError(f"Unable to handle {current_url}")
             except TimeoutException:
                 raise TimeoutException("You did not select code within Microsoft Authenticator in time.")
 
@@ -187,7 +197,8 @@ class Rewards:
         is_login_complete = False
         while not is_login_complete:
             time.sleep(1)
-            is_login_complete = self.__check_login_url(self.driver.current_url)
+            login_complete_url = "https://account.microsoft.com/"
+            is_login_complete = self.__check_url(self.driver.current_url, login_complete_url)
 
         self.__sys_out("Successfully logged in", 2, True)
 
@@ -200,16 +211,13 @@ class Rewards:
         max_try_count = 2
         self.driver.get(self.__DASHBOARD_URL)
 
+        # after logging in, but prior to getting to rewards page, you may hit extra page
+        is_reward_page_loaded = False
+        while not is_reward_page_loaded:
+            time.sleep(2)
+            is_reward_page_loaded = self.__check_url(self.driver.current_url, self.__DASHBOARD_URL)
+
         try:
-            #check the url
-            WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                # 'any_of' checks for either condition
-                EC.any_of(
-                    EC.url_contains("https://rewards.microsoft.com/?redref"),
-                    EC.url_contains("https://rewards.microsoft.com/"),
-                    EC.url_contains("https://rewards.bing.com/"),
-                )
-            )
             # need to sign in via welcome page first
             if 'welcome' in self.driver.current_url:
                 self.driver.find_element(By.XPATH, '//*[@id="raf-signin-link-id"]').click()
