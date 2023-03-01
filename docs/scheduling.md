@@ -5,8 +5,13 @@ You may want to use your operating system's scheduler to run this program automa
 1. Open *Task Scheduler* and click *Create Task*.
 2. Choose *Run whether user is logged on or not* under *Security options* and check the box at the bottom that says *Hidden*.
 3. Add a new trigger, either *On workstation unlock* for your specific username or *On a schedule* daily depending on what you want.
-4. When adding the action, point the program to *__python.exe__* (most likely located in *__C:/Program Files__*) and add the argument line `BingRewards/BingRewards.py`. In the *Start in* box, place the absolute path to where you've cloned this repository.
+4. Action panel, specify these Python parameters:
+	1. `Program/script` box: point the program to your *__python.exe__* file, to locate it follow these [instructions](https://linuxhint.com/find-where-python-installed-windows/)
+	1. `Add arguments` box, i.e *BingRewards/BingRewards.py* 
+	1. In the `Start in` box, place the absolute path to where you've cloned this repository, i.e *C:\\Users\\jdoe\\Downloads\\bing-rewards-master\\*
 5. It's also recommended to select the option to only execute when there is a network connection available under the *Conditions* tab.
+
+This StackOverflow [comment](https://stackoverflow.com/a/44727480) may also be useful if you get stuck.
 
 #### Mac / Linux / Docker (crontab)
 

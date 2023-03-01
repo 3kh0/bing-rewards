@@ -4,9 +4,9 @@ Docker makes it easy for you to run any program, including this one, regardless 
 
 Please note that not all features are supported using Docker, i.e Telegram.
 
-Once docker is installed, follow these instructions to set-up the BingRewards container:
+Once docker is installed, follow these instructions to set up the BingRewards container:
 
-1. In terminal, run `docker pull jwong235/bing-rewards` to pull latest image. Or go to [DockerHub](https://hub.docker.com/repository/docker/jwong235/bing-rewards/general) if you want to choose a specific image based on commit hash.
+1. In the terminal, run `docker pull jwong235/bing-rewards` to pull the latest image. Or go to [DockerHub](https://hub.docker.com/repository/docker/jwong235/bing-rewards/general) if you want to choose a specific image based on the commit hash.
 2. Set-up the config with either option 1 or 2 
 	 1. Option 1, run setup.py within the container: `docker run -t -d --name bing-rewards jwong235/bing-rewards:latest python setup.py -e <your_email> -p <password>`  You must include your password as there will be no user prompt with -t -d flags.
 	 2. Option 2: Pass your config directly into the container: `docker run -t -d -v <absolute-path-to-config-directory>:/bing-rewards/BingRewards/config --name bing-rewards jwong235/bing-rewards:latest`. Note, this option assumes you have a set-up a local copy of this project on your machine.
@@ -23,12 +23,12 @@ Once docker is installed, follow these instructions to set-up the BingRewards co
 	`-e TZ=<timezone>` Default: `America/New_York`
 	3. Set a preferred update schedule with 
 	`-e UPDATE=<cronexpression>` Default : `0 0 /1 * *`
-4. Logs can be mounted to host file system by using the following with docker run
+4. Logs can be mounted to the host file system by using the following with docker run
  `-v <absolute-path-to-logs-directory>:/bing-rewards/BingRewards/logs`
 5. Images will be rebuilt daily at 12:26 PM UTC this will update chromium and other image dependencies. If your having issues with the container update it with the following [instructions](https://stackoverflow.com/a/26833005)
-6. If you would like to use docker compose a sample configuration can be found [here](https://github.com/jjjchens235/bing-rewards/blob/master/compose.yaml)
+6. If you would like to use docker-compose a sample configuration can be found [here](https://github.com/jjjchens235/bing-rewards/blob/master/compose.yaml)
 
 #### Acknowledgment
-Docker image originally developed by `Killerherts`.
+The Docker image was originally developed by `Killerherts`.
 
-After GitHub take-down, moved to my own DockerHub because GitHub Actions no longer works.
+After the GitHub take-down, moved to my own DockerHub because GitHub Actions no longer works.
