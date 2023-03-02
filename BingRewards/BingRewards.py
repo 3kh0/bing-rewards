@@ -89,6 +89,21 @@ def get_google_sheets_reporting(config, args):
     return google_sheets_reporting
 
 
+def message_stats(
+    messengers, google_sheets_reporting, rewards, hist_log, email
+):
+    """ Send run notification using app """
+
+    run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
+    for messenger in messengers:
+        messenger.send_reward_message(
+            rewards.stats.stats_str, run_hist_str, email
+        )
+
+    if google_sheets_reporting:
+        google_sheets_reporting.add_row(rewards.stats, email)
+
+
 def run_account(email, password, args, messengers, google_sheets_reporting):
     """ Run one individual account n times"""
     rewards = Rewards(
@@ -115,62 +130,61 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
 
     current_attempts = 0
 
-    try:
-        while not completion.is_search_type_completed(
-            args.search_type
-        ) and current_attempts < args.max_attempts_per_account:
+    # Run search 'n' times per account
+    while not completion.is_search_type_completed(
+        args.search_type
+    ) and current_attempts < args.max_attempts_per_account:
 
-            search_hist = hist_log.get_search_hist()
+        search_hist = hist_log.get_search_hist()
 
-            print(f'\n\nRun {current_attempts+1} [{email}]:')
+        print(f'\n\nRun {current_attempts+1} [{email}]:')
 
+        try:
             rewards.complete_search_type(
                 args.search_type, completion, search_hist
             )
-            current_attempts += 1
 
+        except:  # catch *all* exceptions
+            _log_hist_log(hist_log)
             hist_log.write(rewards.completion)
-            completion = hist_log.get_completion()
 
-            # check again, log if any failed
-            if not completion.is_search_type_completed(args.search_type):
-                logging.basicConfig(
-                    level=logging.DEBUG,
-                    format='%(message)s',
-                    filename=os.path.join(LOG_DIR, ERROR_LOG)
-                )
-                logging.debug(hist_log.get_timestamp())
-                for line in rewards.stdout:
-                    logging.debug(line)
-                logging.debug("")
-
-        # After finishing running account, send messages
-        if hasattr(rewards, 'stats'):
-            formatted_stat_str = "; ".join(rewards.stats.stats_str)
-            stats_log.add_entry_and_write(formatted_stat_str, email)
-
-            run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
+            if len(messengers):
+                # send error msg to telegram
+                import traceback
+                error_msg = traceback.format_exc()
 
             for messenger in messengers:
-                messenger.send_reward_message(
-                    rewards.stats.stats_str, run_hist_str, email
-                )
+                messenger.send_message(error_msg)
 
-            if google_sheets_reporting:
-                google_sheets_reporting.add_row(rewards.stats, email)
+            print(f'\n\nABORTING run for {email} due to error_msg:\n{error_msg[:100]}')
+            return
+            # raise
 
-    except:  # catch *all* exceptions
-        _log_hist_log(hist_log)
+        current_attempts += 1
+
         hist_log.write(rewards.completion)
+        completion = hist_log.get_completion()
 
-        if len(messengers):
-            # send error msg to telegram
-            import traceback
-            error_msg = traceback.format_exc()
+    # log if searches still failing after running 'n' times
+    if not completion.is_search_type_completed(args.search_type):
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(message)s',
+            filename=os.path.join(LOG_DIR, ERROR_LOG)
+        )
+        logging.debug(hist_log.get_timestamp())
+        for line in rewards.stdout:
+            logging.debug(line)
+        logging.debug("")
 
-        for messenger in messengers:
-            messenger.send_message(error_msg)
-        raise
+    # Message out the results
+    if hasattr(rewards, 'stats'):
+        formatted_stat_str = "; ".join(rewards.stats.stats_str)
+        stats_log.add_entry_and_write(formatted_stat_str, email)
+
+        message_stats(
+            messengers, google_sheets_reporting, rewards, hist_log, email
+        )
 
 
 def main():
