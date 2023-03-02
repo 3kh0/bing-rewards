@@ -12,7 +12,9 @@ Note: If using Docker, go directly to `/docs/docker_setup` for further instructi
 3. Install the requirements.txt file included in the repo: `pip install -r BingRewards/requirements.txt`
 4. Create/update the config file by running `python BingRewards/setup.py`. Multiple accounts is supported.
 	 -  **Please note**: Your credentials will be stored in plain text
-5. You must have signed onto your account using this machine before. Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
+5. You must have signed onto your account using this machine before. 
+	- Open Chrome or Edge and visit https://login.live.com. The site may ask to send you a verification email or text.
+	- Then, go to https://rewards.bing.com/ and go through the intro pages.
 6. Run `python BingRewards/BingRewards.py` to start earning points. 
 	- You may need to add `-nsb` flag if running on Linux, including for Docker 
 8. Occasionally, update to the latest code by running `./bing-rewards-master/update.sh`
@@ -22,7 +24,7 @@ Note: If using Docker, go directly to `/docs/docker_setup` for further instructi
 	- Google Sheets
 
 ### Additional info
-There is additional info in the `/docs` folder for the following:
+There is additional info in the [/docs folder](https://bitbucket.org/bing-rewards/bing-rewards/src/master/docs/) for the following:
 
 - docker set-up
 - telegram/discord/google sheets set-up

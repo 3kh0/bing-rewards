@@ -198,9 +198,14 @@ class Rewards:
                 )
             ).click()
 
+        # welcome tour - rewards page
+        elif f'{self.__DASHBOARD_URL}welcometour' == current_url:
+            raise RuntimeError(
+                f"Made it to {current_url}.\n Please login to rewards page and accept the welcome tour."
+            )
         else:
             raise RuntimeError(
-                "Made it to an unrecognized page during login process."
+                f'Made it to unrecognized page "{current_url}" during login process.'
             )
 
         # login process not complete yet

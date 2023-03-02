@@ -305,7 +305,7 @@ def parse_search_args():
         type=int,
         nargs='?',
         help=
-        "Maximum number of attempts for one account, only if the previous attempt failed."
+        "Maximum number of attempts for one account, only if the previous attempt wasn't complete. Will NOT continue on unexpected exceptions"
     )
 
     search_parser.set_defaults(

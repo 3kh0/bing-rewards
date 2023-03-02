@@ -119,7 +119,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
     )
 
     print(
-        f'''\nRunning with:
+        f'''\n\n\nRunning with:
         Account: {email}
         Search type: {args.search_type.capitalize()}'''
     )
@@ -156,7 +156,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
             for messenger in messengers:
                 messenger.send_message(error_msg)
 
-            print(f'\n\nABORTING run for {email} due to error_msg:\n{error_msg[:100]}')
+            print(f'\n\nABORTING run for {email} due to error_msg:\n{error_msg[:1000]}')
             return
             # raise
 
