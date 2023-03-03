@@ -212,7 +212,7 @@ def parse_search_args():
         '--cookies',
         dest='cookies',
         action='store_true',
-        help='run browser with cookies'
+        help='run browser with cookies to skip login process, turned off automatically if running multiple accounts'
     )
     cookies_group.add_argument(
         '-nc',

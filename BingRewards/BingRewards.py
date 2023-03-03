@@ -156,7 +156,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
             for messenger in messengers:
                 messenger.send_message(error_msg)
 
-            print(f'\n\nABORTING run for {email} due to error_msg:\n{error_msg[:1000]}')
+            print(f'\n\nABORTING run for {email} due to uncaught exception:\n{error_msg[:1000]}')
             return
             # raise
 
@@ -202,9 +202,13 @@ def main():
     args = parse_search_args()
     if args.email and args.password:
         microsoft_accounts = process_microsoft_account_args(args)
-        args.cookies = False
     else:
         microsoft_accounts = config['microsoft_accounts']
+
+    # Always turn off cookies if running multiple accounts
+    if len(microsoft_accounts) > 1 and args.cookies:
+        args.cookies = False
+        print('\nCookies turned off due to running multiple accounts.\n')
 
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
