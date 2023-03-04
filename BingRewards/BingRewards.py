@@ -8,6 +8,7 @@ from src.rewards import Rewards
 from src.log import HistLog, StatsJsonLog
 from src.messengers import TelegramMessenger, DiscordMessenger, BaseMessenger
 from src.google_sheets_reporting import GoogleSheetsReporting
+from selenium.common.exceptions import WebDriverException
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
@@ -104,6 +105,25 @@ def message_stats(
         google_sheets_reporting.add_row(rewards.stats, email)
 
 
+def handle_search_exception(hist_log, rewards, messengers):
+    """
+    For each exception, always do the following:
+    1. write to error.log
+    2. Write to run.log current completion status
+    3. send an alert if user has a messenger
+    """
+
+    _log_hist_log(hist_log)
+    hist_log.write(rewards.completion)
+
+    # send error msg to telegram
+    import traceback
+    error_msg = traceback.format_exc()
+
+    for messenger in messengers:
+        messenger.send_message(error_msg)
+    return error_msg
+
 def run_account(email, password, args, messengers, google_sheets_reporting):
     """ Run one individual account n times"""
     rewards = Rewards(
@@ -143,26 +163,22 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
             rewards.complete_search_type(
                 args.search_type, completion, search_hist
             )
-
-        except:  # catch *all* exceptions
-            _log_hist_log(hist_log)
             hist_log.write(rewards.completion)
 
-            if len(messengers):
-                # send error msg to telegram
-                import traceback
-                error_msg = traceback.format_exc()
+        except Exception as e:  # catch *all* exceptions
+            error_msg = handle_search_exception(hist_log, rewards, messengers)
 
-            for messenger in messengers:
-                messenger.send_message(error_msg)
-
-            print(f'\n\nABORTING run for {email} due to uncaught exception:\n{error_msg[:1000]}')
-            return
-            # raise
+            if isinstance(e, KeyboardInterrupt):
+                raise
+            # some selenium exception, try again
+            elif isinstance(e, WebDriverException):
+                print(f'\n\nWebDriverException, will try again for {email} if runs remain:\n{error_msg[:1000]}')
+            # unknown non-selenium exception, next account
+            else:
+                print(f'\n\nABORTING run(s) for {email} due to uncaught exception:\n{error_msg[:1000]}')
+                return
 
         current_attempts += 1
-
-        hist_log.write(rewards.completion)
         completion = hist_log.get_completion()
 
     # log if searches still failing after running 'n' times

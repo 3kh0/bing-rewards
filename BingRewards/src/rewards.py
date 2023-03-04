@@ -115,7 +115,8 @@ class Rewards:
                     EC.url_changes(current_url)
                 )
             except TimeoutException:
-                raise RuntimeError("Stuck on 'signin-oath page")
+                print("Stuck on 'signin-oath page")
+                raise
 
         elif "https://login.live.com/ppsecure" in current_url:
             # approve sign in page
@@ -134,7 +135,7 @@ class Rewards:
             #'stay signed in' page
             finally:
                 try:
-                    WebDriverWait(self.driver, 30).until(
+                    WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_LONG).until(
                         EC.element_to_be_clickable(
                             (By.ID, 'KmsiCheckboxField')
                         )
@@ -184,7 +185,8 @@ class Rewards:
                     EC.url_contains("https://login.live.com/ppsecure")
                 )
             except NoSuchElementException:
-                raise RuntimeError(f"Unable to handle {current_url}")
+                print(f"Unable to handle {current_url} during 2FA flow")
+                raise
             except TimeoutException:
                 raise TimeoutException(
                     "You did not select code within Microsoft Authenticator in time."
@@ -192,11 +194,14 @@ class Rewards:
 
         # sign-up/register rewards page
         elif f'{self.__DASHBOARD_URL}welcome' == current_url:
-            WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_LONG).until(
-                EC.element_to_be_clickable(
-                    (By.ID, 'start-earning-rewards-link')
-                )
-            ).click()
+            try:
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_LONG).until(
+                    EC.element_to_be_clickable(
+                        (By.ID, 'start-earning-rewards-link')
+                    )
+                ).click()
+            except TimeoutException:
+                raise RuntimeError(f'unable to welcome page with url: {current_url}\n. Sign in manually to fix this.')
 
         # welcome tour - rewards page
         elif f'{self.__DASHBOARD_URL}welcometour' == current_url:
