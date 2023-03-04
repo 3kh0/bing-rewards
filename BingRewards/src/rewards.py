@@ -121,7 +121,8 @@ class Rewards:
         elif "https://login.live.com/ppsecure" in current_url:
             # approve sign in page
             try:
-                WebDriverWait(self.driver, .5).until(
+                # Check if 2FA Account
+                WebDriverWait(self.driver, 1.5).until(
                     EC.element_to_be_clickable((By.ID, 'idChkBx_SAOTCAS_TD'))
                 ).click()
                 message = "Waiting for user to approve sign-in request. In Microsoft Authenticator, please select approve."
