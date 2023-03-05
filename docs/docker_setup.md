@@ -2,7 +2,7 @@
 
 Docker makes it easy for you to run any program, including this one, regardless of your environment. You just need to [install docker](https://docs.docker.com/get-docker/) on your machine. 
 
-Please note that not all features are supported using Docker, i.e Telegram.
+Please note that not all regular features have been tested in Docker, i.e Telegram/Discord. However, the services should still work as long as the config file in the container has the credentials.
 
 Once docker is installed, follow these instructions to set up the BingRewards container:
 

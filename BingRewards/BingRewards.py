@@ -167,15 +167,16 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
 
         except Exception as e:  # catch *all* exceptions
             error_msg = handle_search_exception(hist_log, rewards, messengers)
+            max_message_length = 2000
 
             if isinstance(e, KeyboardInterrupt):
                 raise
             # some selenium exception, try again
             elif isinstance(e, WebDriverException):
-                print(f'\n\nWebDriverException, will try again for {email} if runs remain:\n{error_msg[:1000]}')
+                print(f'\n\nWebDriverException, will try again for {email} if runs remain:\n{error_msg[:max_message_length]}')
             # unknown non-selenium exception, next account
             else:
-                print(f'\n\nABORTING run(s) for {email} due to uncaught exception:\n{error_msg[:1000]}')
+                print(f'\n\nABORTING run(s) for {email} due to uncaught exception:\n{error_msg[:max_message_length]}')
                 return
 
         current_attempts += 1

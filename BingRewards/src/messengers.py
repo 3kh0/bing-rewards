@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 
 
 class BaseMessenger(ABC):
+    MAX_MESSAGE_LENGTH = 2000
+
     def __init__(self, messenger_type):
         self.messenger_type = messenger_type
 
@@ -30,6 +32,7 @@ class BaseMessenger(ABC):
         "\n".join(stats_str) + \
         f"\nRun Log: {[run_hist_str]}"
 
+        message = message[:self.MAX_MESSAGE_LENGTH]
         self.send_message(message)
 
 
