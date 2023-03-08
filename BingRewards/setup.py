@@ -11,14 +11,6 @@ import copy
 import base64
 import getpass
 
-#probably a better way of doing this, this is to ensure 1) setup.py can be run from any directory 2) options import don't fail
-dir_run_from = os.getcwd()
-top_dir = os.path.dirname(sys.argv[0])
-if top_dir and top_dir != dir_run_from:
-    os.chdir(top_dir)
-sys.path.append('BingRewards')
-from options import parse_setup_args
-
 CONFIG_DIR = 'config/'
 CONFIG_FILE = "config_multiple_accounts.json"
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, CONFIG_FILE)
@@ -61,6 +53,7 @@ class Setup():
         sys.exit('\nExiting setup.py now')
 
     def process_args(self, existing_credentials):
+        from options import parse_setup_args
         new_credentials = copy.deepcopy(existing_credentials)
         args = parse_setup_args()
         if args.email:
@@ -114,6 +107,14 @@ class Setup():
         - the arguments specified by the user.
         - if the new values are different from the existing ones
         """
+
+        #probably a better way of doing this, this is to ensure 1) setup.py can be run from any directory 2) options import don't fail. Removed to class so that we don't chdir when importing from this file
+        dir_run_from = os.getcwd()
+        top_dir = os.path.dirname(sys.argv[0])
+        if top_dir and top_dir != dir_run_from:
+            os.chdir(top_dir)
+        sys.path.append('BingRewards')
+
         deprecation = ConfigDeprecation()
         # config file exists
         if os.path.isfile(CONFIG_FILE_PATH):

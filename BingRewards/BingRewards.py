@@ -124,6 +124,7 @@ def handle_search_exception(hist_log, rewards, messengers):
         messenger.send_message(error_msg)
     return error_msg
 
+
 def run_account(email, password, args, messengers, google_sheets_reporting):
     """ Run one individual account n times"""
     rewards = Rewards(
@@ -139,7 +140,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
     )
 
     print(
-        f'''\n\n\nRunning with:
+        f'''\n\nRunning with:
         Account: {email}
         Search type: {args.search_type.capitalize()}'''
     )
