@@ -3,9 +3,12 @@ Previous run completion status is saved in a log file run.json.
 log.py's primary responsibility is reading in this log file
 and converting it into a completion object within get_completion()
 
-The completion object is passed into rewards.py to ascertain what remaining tasks to run
+The completion object is passed into rewards.py
+to ascertain what remaining tasks to run.
 
-rewards.py returns an updated completion object which is finally converted back into a new log entry and then written to the log file within write()
+rewards.py returns an updated completion object which is
+finally converted back into a new log entry
+and then written to the log file within write()
 """
 import os
 from datetime import datetime
@@ -22,6 +25,7 @@ class HistLog:
     The 'controller' for the
     search history, run history, and completion objects
     """
+
     __DATETIME_FORMAT = "%a, %b %d %Y %I:%M:%S%p"
     __OLD_DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
 
@@ -50,7 +54,6 @@ class HistLog:
         self.__completion = Completion()
 
     def get_timestamp(self):
-
         return get_current_datetime().strftime(self.__DATETIME_FORMAT)
 
     def is_already_ran_today(self):
@@ -58,16 +61,17 @@ class HistLog:
             last_ran = self.__run_log.user_entries[-1].split(": ")[0]
             try:
                 last_ran = datetime.strptime(last_ran, self.__DATETIME_FORMAT)
-            except ValueError: # port old datetime_format
+            except ValueError:  # port old datetime_format
                 last_ran = datetime.strptime(last_ran, self.__OLD_DATETIME_FORMAT)
 
-            last_ran_pst = last_ran.replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(self.__PST_TIMEZONE)
+            last_ran_pst = last_ran.replace(tzinfo=self.__LOCAL_TIMEZONE).astimezone(
+                self.__PST_TIMEZONE
+            )
             run_datetime_pst = get_current_datetime(self.__PST_TIMEZONE)
             delta_days = (run_datetime_pst.date() - last_ran_pst.date()).days
             is_already_ran_today = (
-                (delta_days == 0 and last_ran_pst.hour >= self.__RESET_HOUR) or
-                (delta_days == 1 and run_datetime_pst.hour < self.__RESET_HOUR)
-            )
+                delta_days == 0 and last_ran_pst.hour >= self.__RESET_HOUR
+            ) or (delta_days == 1 and run_datetime_pst.hour < self.__RESET_HOUR)
         except IndexError:
             is_already_ran_today = False
         return is_already_ran_today
@@ -95,7 +99,7 @@ class HistLog:
                 if self.__PUNCHCARD_OPTION not in completed:
                     self.__completion.punchcard = True
         else:
-            #clear search history if account's first run of the day
+            # clear search history if account's first run of the day
             self.__search_log.user_entries = []
 
         return self.__completion
@@ -108,7 +112,7 @@ class HistLog:
 
     def write(self, completion):
         self.__completion.update(completion)
-        #create run.log entry based on updated Completion obj
+        # create run.log entry based on updated Completion obj
         if not self.__completion.is_all_completed():
             failed = []
             if not self.__completion.is_edge_search_completed():
@@ -121,16 +125,21 @@ class HistLog:
                 failed.append(self.__OFFERS_OPTION)
             if not self.__completion.is_punchcard_completed():
                 failed.append(self.__PUNCHCARD_OPTION)
-            failed = ', '.join(failed)
+            failed = ", ".join(failed)
             completion_msg = self.__COMPLETED_FALSE.format(failed)
         else:
             completion_msg = self.__COMPLETED_TRUE
 
-        # write run log if first time running today or last log entry not success
-        if not self.is_already_ran_today() or self.__COMPLETED_TRUE not in self.__run_log.user_entries[-1]:
+        # write run log if first time running today OR
+        # last log entry not success
+        if (
+            not self.is_already_ran_today()
+            or self.__COMPLETED_TRUE not in self.__run_log.user_entries[-1]
+        ):
             self.__run_log.add_entry_and_write(completion_msg, self.email)
 
-        #write to search log. note that `search_log.user_entries` list adds searches when passed into Rewards()
+        # write to search log, `search_log.user_entries` adds searches
+        # when passed into Rewards()
         if self.__search_log.user_entries:
             self.__search_log.reattach_to_json(self.email)
             self.__search_log.write()
@@ -169,12 +178,16 @@ class Completion:
         return self.punchcard
 
     def is_web_device_completed(self):
-        """ These searches require web driver """
+        """These searches require web driver"""
         return self.web_search and self.offers and self.punchcard
 
     def is_all_completed(self):
-        return self.is_edge_and_web_search_completed(
-        ) and self.mobile_search and self.offers and self.punchcard
+        return (
+            self.is_edge_and_web_search_completed()
+            and self.mobile_search
+            and self.offers
+            and self.punchcard
+        )
 
     def update(self, completion):
         """
@@ -199,17 +212,17 @@ class Completion:
         self.punchcard = max(self.punchcard, completion.punchcard)
 
     def is_search_type_completed(self, search_type):
-        if search_type == 'web':
+        if search_type == "web":
             return self.is_edge_and_web_search_completed()
-        elif search_type == 'mobile':
+        elif search_type == "mobile":
             return self.is_edge_and_mobile_search_completed()
-        elif search_type == 'both':
+        elif search_type == "both":
             return self.is_both_searches_completed()
-        elif search_type == 'offers':
+        elif search_type == "offers":
             return self.is_offers_completed()
-        elif search_type == 'punch card':
+        elif search_type == "punch card":
             return self.is_punchcard_completed()
-        elif search_type in ('all', 'remaining'):
+        elif search_type in ("all", "remaining"):
             return self.is_all_completed()
 
 
@@ -221,11 +234,13 @@ class BaseJsonLog:
 
     The flow for each log is to
     1. read in the json for all the users
-    2. Obtain the log entries as a list for just the current user, i.e self.user_entries
+    2. Obtain the log entries as a list for
+    just the current user, i.e self.user_entries
     3. Expose just self.user_entries to HistLog, append any new entries
     4. Re-attach the updated user_entries back to the original json object
     5. Write (overwrite!) the json back to the log file
     """
+
     __DATETIME_FORMAT = "%a, %b %d %Y %I:%M:%S%p"
     LOCAL_TIMEZONE = tz.tzlocal()
 
@@ -238,15 +253,17 @@ class BaseJsonLog:
         if not os.path.exists(self.log_path):
             self.data = {}
         else:
-            with open(self.log_path, ) as f:
+            with open(
+                self.log_path,
+            ) as f:
                 self.data = json.load(f)
 
     def add_user_entry(self, entry, include_log_dt):
         if include_log_dt:
             log_time = get_current_datetime().strftime(self.__DATETIME_FORMAT)
-            entry = f'{log_time}: {entry}'
+            entry = f"{log_time}: {entry}"
         self.user_entries.append(entry)
-        self.user_entries = self.user_entries[-self.MAX_SIZE:]
+        self.user_entries = self.user_entries[-self.MAX_SIZE :]
 
     def reattach_to_json(self, email):
         """attach user log entries to json dict"""

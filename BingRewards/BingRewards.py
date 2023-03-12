@@ -22,8 +22,8 @@ DEBUG = True
 def _log_hist_log(hist_log):
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(message)s',
-        filename=os.path.join(LOG_DIR, ERROR_LOG)
+        format="%(message)s",
+        filename=os.path.join(LOG_DIR, ERROR_LOG),
     )
     logging.exception(hist_log.get_timestamp())
     logging.debug("")
@@ -39,36 +39,43 @@ def get_config():
             raise
     else:
         raise ImportError(
-            f"'{CONFIG_FILE_PATH}' file does not exist. Please run `python setup.py`.\nIf you are a previous user, existing credentials will be automatically ported over."
+            f"'{CONFIG_FILE_PATH}' file does not exist. Please "
+            "run `python setup.py`.\n"
+            "If you are a previous user, existing credentials "
+            "will be automatically ported over."
         )
     return config
 
 
 def get_telegram_messenger(config, args):
-    telegram_api_token = config.get('telegram_api_token')
-    telegram_userid = config.get('telegram_userid')
+    telegram_api_token = config.get("telegram_api_token")
+    telegram_userid = config.get("telegram_userid")
     telegram_messenger = None
 
     if not args.telegram or not telegram_api_token or not telegram_userid:
         if args.telegram:
             print(
-                'You have selected Telegram, but config file is missing `api token` or `userid`. Please re-run setup.py with additional arguments if you want Telegram notifications.'
+                "You have selected Telegram, but config file "
+                "is missing `api token` or `userid`. "
+                "Please re-run setup.py with additional arguments "
+                "if you want Telegram notifications."
             )
     else:
-        telegram_messenger = TelegramMessenger(
-            telegram_api_token, telegram_userid
-        )
+        telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
     return telegram_messenger
 
 
 def get_discord_messenger(config, args):
-    discord_webhook_url = config.get('discord_webhook_url')
+    discord_webhook_url = config.get("discord_webhook_url")
     discord_messenger = None
 
     if not args.discord or not discord_webhook_url:
         if args.discord:
             print(
-                'You have selected Discord, but the config file is missing a webhook_url. Please re-run setup.py with additional arguments if you want Discord notifications.'
+                "You have selected Discord, but the config "
+                "file is missing a webhook_url. "
+                "Please re-run setup.py with additional arguments "
+                "if you want Discord notifications."
             )
     else:
         discord_messenger = DiscordMessenger(discord_webhook_url)
@@ -76,30 +83,29 @@ def get_discord_messenger(config, args):
 
 
 def get_google_sheets_reporting(config, args):
-    sheet_id = config.get('google_sheets_sheet_id')
-    tab_name = config.get('google_sheets_tab_name')
+    sheet_id = config.get("google_sheets_sheet_id")
+    tab_name = config.get("google_sheets_tab_name")
 
     if args.google_sheets and sheet_id and tab_name:
         google_sheets_reporting = GoogleSheetsReporting(sheet_id, tab_name)
     else:
         if args.google_sheets:
             print(
-                'You have selected Google Sheets reporting, but main config file is missing sheet_id or tab_name. Please re-run setup.py with additional arguments if you want Google Sheets reporting.'
+                "You have selected Google Sheets reporting, but main config"
+                " file is missing sheet_id or tab_name. Please re-run setup.py"
+                " with additional arguments if you want Google Sheets"
+                " reporting."
             )
         google_sheets_reporting = None
     return google_sheets_reporting
 
 
-def message_stats(
-    messengers, google_sheets_reporting, rewards, hist_log, email
-):
-    """ Send run notification using app """
+def message_stats(messengers, google_sheets_reporting, rewards, hist_log, email):
+    """Send run notification using app"""
 
-    run_hist_str = hist_log.get_run_hist()[-1].split(': ')[1]
+    run_hist_str = hist_log.get_run_hist()[-1].split(": ")[1]
     for messenger in messengers:
-        messenger.send_reward_message(
-            rewards.stats.stats_str, run_hist_str, email
-        )
+        messenger.send_reward_message(rewards.stats.stats_str, run_hist_str, email)
 
     if google_sheets_reporting:
         google_sheets_reporting.add_row(rewards.stats, email)
@@ -118,6 +124,7 @@ def handle_search_exception(hist_log, rewards, messengers):
 
     # send error msg to telegram
     import traceback
+
     error_msg = traceback.format_exc()
 
     for messenger in messengers:
@@ -126,44 +133,50 @@ def handle_search_exception(hist_log, rewards, messengers):
 
 
 def run_account(email, password, args, messengers, google_sheets_reporting):
-    """ Run one individual account n times"""
+    """Run one individual account n times"""
     rewards = Rewards(
-        email, password, DEBUG, args.headless, args.cookies, args.driver,
-        args.nosandbox, args.google_trends_geo, messengers
+        email,
+        password,
+        DEBUG,
+        args.headless,
+        args.cookies,
+        args.driver,
+        args.nosandbox,
+        args.google_trends_geo,
+        messengers,
     )
 
     stats_log = StatsJsonLog(os.path.join(LOG_DIR, STATS_LOG), email)
 
     hist_log = HistLog(
-        email, os.path.join(LOG_DIR, RUN_LOG),
-        os.path.join(LOG_DIR, SEARCH_LOG)
+        email,
+        os.path.join(LOG_DIR, RUN_LOG),
+        os.path.join(LOG_DIR, SEARCH_LOG),
     )
 
     print(
-        f'''\n\nRunning with:
+        f"""\n\nRunning with:
         Account: {email}
-        Search type: {args.search_type.capitalize()}'''
+        Search type: {args.search_type.capitalize()}"""
     )
     completion = hist_log.get_completion()
     if completion.is_search_type_completed(args.search_type):
-        print(f'{args.search_type.capitalize()} already completed\n')
+        print(f"{args.search_type.capitalize()} already completed\n")
         return
 
     current_attempts = 0
 
     # Run search 'n' times per account
-    while not completion.is_search_type_completed(
-        args.search_type
-    ) and current_attempts < args.max_attempts_per_account:
-
+    while (
+        not completion.is_search_type_completed(args.search_type)
+        and current_attempts < args.max_attempts_per_account
+    ):
         search_hist = hist_log.get_search_hist()
 
-        print(f'\n\nRun {current_attempts+1} [{email}]:')
+        print(f"\n\nRun {current_attempts+1} [{email}]:")
 
         try:
-            rewards.complete_search_type(
-                args.search_type, completion, search_hist
-            )
+            rewards.complete_search_type(args.search_type, completion, search_hist)
             hist_log.write(rewards.completion)
 
         except Exception as e:  # catch *all* exceptions
@@ -174,10 +187,16 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
                 raise
             # some selenium exception, try again
             elif isinstance(e, WebDriverException):
-                print(f'\n\nWebDriverException, will try again for {email} if runs remain:\n{error_msg[:max_message_length]}')
+                print(
+                    f"\n\nWebDriverException, will try again for {email} if"
+                    f" runs remain:\n{error_msg[:max_message_length]}"
+                )
             # unknown non-selenium exception, next account
             else:
-                print(f'\n\nABORTING run(s) for {email} due to uncaught exception:\n{error_msg[:max_message_length]}')
+                print(
+                    f"\n\nABORTING run(s) for {email} due to uncaught"
+                    f" exception:\n{error_msg[:max_message_length]}"
+                )
                 return
 
         current_attempts += 1
@@ -187,8 +206,8 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
     if not completion.is_search_type_completed(args.search_type):
         logging.basicConfig(
             level=logging.DEBUG,
-            format='%(message)s',
-            filename=os.path.join(LOG_DIR, ERROR_LOG)
+            format="%(message)s",
+            filename=os.path.join(LOG_DIR, ERROR_LOG),
         )
         logging.debug(hist_log.get_timestamp())
         for line in rewards.stdout:
@@ -196,13 +215,11 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
         logging.debug("")
 
     # Message out the results
-    if hasattr(rewards, 'stats'):
+    if hasattr(rewards, "stats"):
         formatted_stat_str = "; ".join(rewards.stats.stats_str)
         stats_log.add_entry_and_write(formatted_stat_str, email)
 
-        message_stats(
-            messengers, google_sheets_reporting, rewards, hist_log, email
-        )
+        message_stats(messengers, google_sheets_reporting, rewards, hist_log, email)
 
 
 def main():
@@ -221,12 +238,12 @@ def main():
     if args.email and args.password:
         microsoft_accounts = process_microsoft_account_args(args)
     else:
-        microsoft_accounts = config['microsoft_accounts']
+        microsoft_accounts = config["microsoft_accounts"]
 
     # Always turn off cookies if running multiple accounts
     if len(microsoft_accounts) > 1 and args.cookies:
         args.cookies = False
-        print('\nCookies turned off due to running multiple accounts.\n')
+        print("\nCookies turned off due to running multiple accounts.\n")
 
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
@@ -235,15 +252,19 @@ def main():
     telegram_messenger = get_telegram_messenger(config, args)
     discord_messenger = get_discord_messenger(config, args)
     messengers: list[BaseMessenger] = [
-        messenger for messenger in [telegram_messenger, discord_messenger]
+        messenger
+        for messenger in [telegram_messenger, discord_messenger]
         if messenger is not None
     ]
     google_sheets_reporting = get_google_sheets_reporting(config, args)
 
     for microsoft_account in microsoft_accounts:
         run_account(
-            microsoft_account['email'], microsoft_account['password'], args,
-            messengers, google_sheets_reporting
+            microsoft_account["email"],
+            microsoft_account["password"],
+            args,
+            messengers,
+            google_sheets_reporting,
         )
 
 

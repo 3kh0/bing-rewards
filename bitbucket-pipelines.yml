@@ -19,3 +19,15 @@ pipelines:
             if [[ ${BITBUCKET_TAG} =~ ^v[0-9]+\.[0-9]+$ ]]; then
               docker push $IMAGE_TAG_LATEST
             fi
+  pull-requests:
+    '**':
+    - step:
+        caches:
+          - pip
+        script:
+          - pip install flake8 black
+          - git fetch origin "+refs/heads/$BITBUCKET_PR_DESTINATION_BRANCH:refs/remotes/origin/$BITBUCKET_PR_DESTINATION_BRANCH"
+          - export python_file_diff=$(git diff --name-only origin/$BITBUCKET_PR_DESTINATION_BRANCH... | grep '\.py$')
+          - echo $python_file_diff | tr ' ' '\n'
+          - echo $python_file_diff | xargs flake8 --config=.flake8
+          - echo $python_file_diff | xargs black --check
