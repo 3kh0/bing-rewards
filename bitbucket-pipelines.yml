@@ -1,11 +1,11 @@
 options:
   docker: true
-image: 'atlassian/default-image:4'
 pipelines:
   tags:
     '*':
     - step:
         name: Build and push Docker image on new git tag
+        image: atlassian/default-image:4
         script:
           - export DOCKER_HUB_REPO=jwong235/bing-rewards
           - export IMAGE_TAG=$DOCKER_HUB_REPO:$BITBUCKET_TAG
@@ -22,12 +22,14 @@ pipelines:
   pull-requests:
     '**':
     - step:
+        image: python:3.9-slim-buster
         caches:
           - pip
         script:
           - pip install flake8 black
           - git fetch origin "+refs/heads/$BITBUCKET_PR_DESTINATION_BRANCH:refs/remotes/origin/$BITBUCKET_PR_DESTINATION_BRANCH"
           - export python_file_diff=$(git diff --name-only origin/$BITBUCKET_PR_DESTINATION_BRANCH... | grep '\.py$')
+          - echo "Changed files:"
           - echo $python_file_diff | tr ' ' '\n'
           - echo $python_file_diff | xargs flake8 --config=.flake8
           - echo $python_file_diff | xargs black --check
