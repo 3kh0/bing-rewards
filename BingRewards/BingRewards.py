@@ -202,6 +202,13 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
         current_attempts += 1
         completion = hist_log.get_completion()
 
+        # Send notifcations after each run
+        if hasattr(rewards, "stats"):
+            formatted_stat_str = "; ".join(rewards.stats.stats_str)
+            stats_log.add_entry_and_write(formatted_stat_str, email)
+
+            message_stats(messengers, google_sheets_reporting, rewards, hist_log, email)
+
     # log if searches still failing after running 'n' times
     if not completion.is_search_type_completed(args.search_type):
         logging.basicConfig(
@@ -213,13 +220,6 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
         for line in rewards.stdout:
             logging.debug(line)
         logging.debug("")
-
-    # Message out the results
-    if hasattr(rewards, "stats"):
-        formatted_stat_str = "; ".join(rewards.stats.stats_str)
-        stats_log.add_entry_and_write(formatted_stat_str, email)
-
-        message_stats(messengers, google_sheets_reporting, rewards, hist_log, email)
 
 
 def main():
