@@ -27,6 +27,7 @@ pipelines:
           - pip
         script:
           - pip install flake8 black
+          - apt-get update && apt-get install -y git
           - git fetch origin "+refs/heads/$BITBUCKET_PR_DESTINATION_BRANCH:refs/remotes/origin/$BITBUCKET_PR_DESTINATION_BRANCH"
           - export python_file_diff=$(git diff --name-only origin/$BITBUCKET_PR_DESTINATION_BRANCH... | grep '\.py$')
           - echo "Changed files:"
