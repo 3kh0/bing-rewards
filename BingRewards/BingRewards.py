@@ -179,7 +179,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
             rewards.complete_search_type(args.search_type, completion, search_hist)
             hist_log.write(rewards.completion)
 
-        except Exception as e:  # catch *all* exceptions
+        except (Exception, KeyboardInterrupt) as e:  # catch *all* exceptions
             error_msg = handle_search_exception(hist_log, rewards, messengers)
             max_message_length = 2000
 
