@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.1
+- Format code using black / flake8 standards, add to CI/CD pipeline
+- Send notifications on all account runs, not just the final run.
+- KeyboardInterrupt exception currently not writing to log, fixed
+
+## v2.0
+- Multiple account support added (finally!)
+- Multiple runs per account
+- Notification (Discord etc) message size limit
+- Improve handling of login flow, especially new 'oauth' page
+- Update automated ci/cd pipeline to push images on tagged commits 
+
+## v1.17
+- This is first release since migration to Bitbucket
+- The final minor change that still uses base64 encoding for config file
+
 ## [v1.15](https://github.com/jjjchens235/bing-rewards/tree/v1.15) (2022-11-15)
 
 [Full Changelog](https://github.com/jjjchens235/bing-rewards/compare/v1.14...v1.15)
