@@ -236,14 +236,13 @@ class DriverFactory(ABC):
             # WebDriverException is Selenium generic exception
             except WebDriverException as wde:
                 error_msg = str(wde)
+                print(f"\nerror_msg: {error_msg}")
 
                 # handle cookie error
                 if "DevToolsActivePort file doesn't exist" in error_msg:
                     print(
-                        "Driver error using cookies option." "Trying without cookies."
-                    )
-                    print(
-                        "Driver error using cookies option." "Trying without cookies."
+                        "Possibly due to driver error using cookies option."
+                        "Trying without cookies."
                     )
                     options = cls.add_driver_options(
                         device, headless, cookies=False, nosandbox=nosandbox
@@ -289,9 +288,9 @@ class ChromeDriverFactory(DriverFactory):
             response = urllib.request.urlopen(CHROME_RELEASE_URL).read()
 
         version_regex = r"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+"
-        latest_version = (
-            re.findall(f"{version_regex}", response)[dl_try_count].decode().split()[1]
-        )
+        latest_version = re.findall(f"{version_regex}", str(response))[
+            dl_try_count
+        ].split()[1]
         print(
             f"\nDownloading {platform.system()} chromedriver version:"
             f" {latest_version}"
