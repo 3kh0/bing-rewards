@@ -20,7 +20,9 @@ RUN set -ex \
     && chmod 0777 /etc/cron.d/bing.cron \
     && chmod +x /bing-rewards/entry.sh \
     && chmod +x /bing-rewards/update.sh \
-    && chmod u+s /usr/sbin/cron 	
+    && chmod u+s /usr/sbin/cron \
+		&& pip install --upgrade pip \
+		&& pip install --no-warn-script-location -r /bing-rewards/BingRewards/requirements.txt
 # Set display port as an environment variable
 ENV DISPLAY=:99
 ENV PATH="/home/root/.local/bin:${PATH}"
