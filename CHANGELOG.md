@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.2
+- install requirements in docker image rather than entrypoint script
+- update .dockerignore and .gitignore
+- move files to scripts/ dir
+
+## v2.2
+- fix driver version regex byte tyeperror 
+
 ## v2.1
 - Format code using black / flake8 standards, add to CI/CD pipeline
 - Send notifications on all account runs, not just the final run.
