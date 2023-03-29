@@ -22,7 +22,7 @@ pipelines:
   pull-requests:
     '**':
     - step:
-        image: python:3.9-slim-buster
+        image: python:3.9.13-slim
         caches:
           - pip
         script:
