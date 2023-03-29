@@ -4,4 +4,4 @@ if ($branch -ne 'master') {
 }
 
 git pull
-pip3 install -r BingRewards/requirements.txt
+pip install -r BingRewards/requirements.txt
