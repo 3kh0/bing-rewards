@@ -1,4 +1,10 @@
 BingRewards/config
 BingRewards/drivers
-*/logs*
+BingRewards/logs
+BingRewards/test*.py
+BingRewards/test_deprec
 compose.yaml
+.DS_STORE
+**/__pycache__/
+**/stored_browser_data/
+**/*.pyc

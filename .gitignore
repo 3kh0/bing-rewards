@@ -1,5 +1,6 @@
 .DS_STORE
-*test*
+BingRewards/test*.py
+BingRewards/test_deprec/
 BingRewards/src/config.py
 BingRewards/config/
 BingRewards/notify.py
