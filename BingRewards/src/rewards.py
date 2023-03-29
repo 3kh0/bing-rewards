@@ -2,6 +2,7 @@ from src.driver import ChromeDriverFactory
 from src.log import Completion
 from src.messengers import BaseMessenger
 import requests
+import signal
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -112,6 +113,17 @@ class Rewards:
                 self.stdout.append(out)
 
     def __check_url(self, current_url, final_url_regex_pattern):
+        def alarm_handler(signum, frame):
+            raise RuntimeError(
+                "You did not enter your security code in time. \
+                Try again, or manually sign-in once with this machine."
+            )
+
+        def print_page_body():
+            body = self.driver.find_elements(By.TAG_NAME, "body")
+            if body:
+                print(f"\nURL page error text\n: {body[0].text}")
+
         # made it to the destination page
         if re.match(final_url_regex_pattern, current_url):
             return True
@@ -123,7 +135,18 @@ class Rewards:
                     EC.url_changes(current_url)
                 )
             except TimeoutException:
-                print("Stuck on 'signin-oath page")
+                print("Stuck on 'signin-oath' page")
+                raise
+
+        # page redirect after confirmation code
+        elif "srf?id=" in current_url:
+            try:
+                # check the url
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.url_changes(current_url)
+                )
+            except TimeoutException:
+                print(f"Stuck on page redirect, try again. Last url: {current_url}")
                 raise
 
         elif "https://login.live.com/ppsecure" in current_url:
@@ -141,7 +164,7 @@ class Rewards:
                 for messenger in self.messengers:
                     messenger.send_message(message)
 
-            except TimeoutException:
+            except TimeoutException:  # Not 2FA account
                 pass
 
             # 'stay signed in' page
@@ -151,6 +174,7 @@ class Rewards:
                         EC.element_to_be_clickable((By.ID, "KmsiCheckboxField"))
                     ).click()
                 except TimeoutException:
+                    print_page_body()
                     print(
                         "\nIssue logging in, please run in -nhl mode to see"
                         " the problem\n"
@@ -174,8 +198,34 @@ class Rewards:
                 EC.element_to_be_clickable((By.ID, "iLooksGood"))
             ).click()
 
-        # 'confirm identity' or 'recover account' page
-        elif "identity/confirm" in current_url or "/recover" in current_url:
+        # 'confirm identity'
+        elif "identity/confirm" in current_url:
+            try:
+                # re-enter the email
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.visibility_of_element_located((By.ID, "iProofEmail"))
+                ).send_keys(self.email, Keys.RETURN)
+            except TimeoutException:
+                print_page_body()
+                raise
+
+            # Ask the user for their emailed security code
+            print(
+                "\n\nYou have 90 sec to enter the security code that was emailed to your entered email address"
+            )
+            # Set the signal handler for SIGALRM (alarm signal)
+            signal.signal(signal.SIGALRM, alarm_handler)
+            signal.alarm(90)
+            security_code = input("**Enter the `security code` emailed to you: ")
+            signal.alarm(0)  # Cancel the alarm if email entered
+
+            # Enter the security code
+            WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                EC.visibility_of_element_located((By.ID, "iOttText"))
+            ).send_keys(security_code, Keys.RETURN)
+
+        # 'recover account' page
+        elif "/recover" in current_url:
             raise RuntimeError(
                 "Must confirm account identity by signing in manually first."
                 " Please login again with your Microsoft account in Google"
@@ -201,6 +251,7 @@ class Rewards:
                 )
             except NoSuchElementException:
                 print(f"Unable to handle {current_url} during 2FA flow")
+                print_page_body()
                 raise
             except TimeoutException:
                 raise TimeoutException(
@@ -226,6 +277,7 @@ class Rewards:
                 " accept the welcome tour."
             )
         else:
+            print_page_body()
             raise RuntimeError(
                 f'Made it to unrecognized page "{current_url}" during login' " process."
             )
@@ -250,7 +302,7 @@ class Rewards:
         is_login_complete = False
         while not is_login_complete:
             time.sleep(1)
-            login_page_loaded_regex = r"https://account.microsoft.com/.*mkt.*"
+            login_page_loaded_regex = r"https://(account|login).microsoft.com/.*mkt.*"
             is_login_complete = self.__check_url(
                 self.driver.current_url, login_page_loaded_regex
             )
