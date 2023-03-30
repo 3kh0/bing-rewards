@@ -187,7 +187,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
             # some selenium exception, try again
             elif isinstance(e, WebDriverException):
                 print(
-                    f"\n\nWebDriverException, will try again for {email} if"
+                    f"\n\nWebDriverException, will try again for {email} if "
                     f"runs remain:\n{error_msg}"
                 )
             # unknown non-selenium exception, next account

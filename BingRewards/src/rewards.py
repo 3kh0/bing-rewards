@@ -276,6 +276,14 @@ class Rewards:
                 f"Made it to {current_url}.\n Please login to rewards page and"
                 " accept the welcome tour."
             )
+
+        # rewards page not loading page
+        elif "Signin?idru=" in current_url or "signin-oidc" in current_url:
+            print(f'Made it to {current_url}, aborting, generally re-run can handle this\n')
+            print_page_body()
+            # raise generic webdriver exception to force re-run
+            raise WebDriverException
+
         else:
             print_page_body()
             raise RuntimeError(
