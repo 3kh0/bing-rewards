@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.2.4
+- add limited integration testing to ci/cd pipeline
+- allow user to input confirmation code during login process
+- print out page element on login failure
+- remove error character limit when printing out error
+
+## v2.2.3
+- fix CI/CD regex for when to push tag image:latest
+
 ## v2.2.2
 - install requirements in docker image rather than entrypoint script
 - update .dockerignore and .gitignore

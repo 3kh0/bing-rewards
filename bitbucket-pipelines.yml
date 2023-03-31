@@ -30,7 +30,20 @@ pipelines:
           - apt-get update && apt-get install -y git
           - git fetch origin "+refs/heads/$BITBUCKET_PR_DESTINATION_BRANCH:refs/remotes/origin/$BITBUCKET_PR_DESTINATION_BRANCH"
           - export python_file_diff=$(git diff --name-only origin/$BITBUCKET_PR_DESTINATION_BRANCH... | grep '\.py$')
-          - echo "Changed files:"
-          - echo $python_file_diff | tr ' ' '\n'
-          - echo $python_file_diff | xargs flake8 --config=.flake8
-          - echo $python_file_diff | xargs black --check
+          - echo -e "Changed python files:\n$(echo $python_file_diff | tr ' ' '\n')"
+          - if [ -n "$python_file_diff" ]; then echo $python_file_diff | xargs flake8 --config=.flake8; fi
+          - if [ -n "$python_file_diff" ]; then echo $python_file_diff | xargs black --check; fi
+    - step:
+        image: jwong235/bing-rewards:latest
+        script:
+          - apt-get update && apt-get install -y jq
+          - cd ..
+          - python build/BingRewards/setup.py -e $MS_TEST_ACCOUNT -p $MS_TEST_PASSWORD
+          - python build/BingRewards/BingRewards.py -nsb -m
+          - log_output=$(jq -r --arg MS_TEST_ACCOUNT "$MS_TEST_ACCOUNT" '.[$MS_TEST_ACCOUNT] | .[-1]' build/BingRewards/logs/run.json)
+          - echo "$log_output"
+          # Test if program can be started, i.e log was written
+          # It's not possible to test this futher because we can't enter the confirmation code
+          - if [[ "$log_output" == *"Failed Edge Search"* ]]; then exit 0; else exit 1; fi
+
+
