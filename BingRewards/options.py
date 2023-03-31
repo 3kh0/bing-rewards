@@ -1,5 +1,9 @@
 import argparse
-from src.driver import ChromeDriverFactory, MsEdgeDriverFactory
+from src.driver import (
+    ChromeDriverFactory,
+    MsEdgeDriverFactory,
+    UndetectedChromeDriverFactory,
+)
 
 
 class DriverAction(argparse.Action):
@@ -7,6 +11,7 @@ class DriverAction(argparse.Action):
         mapping = {
             "chrome": ChromeDriverFactory,
             "msedge": MsEdgeDriverFactory,
+            "uchrome": UndetectedChromeDriverFactory,
         }
         setattr(namespace, self.dest, mapping[value])
 
@@ -196,8 +201,9 @@ def parse_search_args():
         "--driver",
         dest="driver",
         type=str.lower,
-        choices=["chrome", "msedge"],
+        choices=["chrome", "msedge", "uchrome"],
         action=DriverAction,
+        help="Specify browser driver. 'chrome' is the default, 'uchrome' stands for undetected_chrome"
     )
 
     headless_group = search_parser.add_mutually_exclusive_group()

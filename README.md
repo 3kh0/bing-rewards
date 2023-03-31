@@ -8,6 +8,7 @@ In place of GitHub which disabled this project in Jan 2023, there is now a [Disc
 Note: If using Docker, go directly to `/docs/docker_setup` for further instructions
 
 1. Download [Chrome](https://www.google.com/chrome/) or [Edge](https://www.microsoft.com/edge)
+	- For Chrome, there is now support for [undetected_chromedriver](https://github.com/ultrafunkamsterdam/undetected-chromedriver)
 2. Install [Python3](https://www.python.org/downloads/)
 3. Install the requirements.txt file included in the repo: `pip install -r BingRewards/requirements.txt`
 4. Create/update the config file by running `python BingRewards/setup.py`. Multiple accounts is supported.
@@ -37,6 +38,7 @@ There are a growing number of command-line argument options. Here are a few to n
 - `-r` or `--remaining`: remaining tasks - this is the *default* option
 - `-nhl` or `--no-headless`: Don't run in headless mode. This is a non-default option.
 - `-nsb` or `--no-sandbox`: Run browser in [no-sandbox mode](https://unix.stackexchange.com/a/68951). Useful for *Linux*. This is a non-default option.
+- `-d` or `--driver`: Specify browser drive {chrome, msedge, uchrome} where 'chrome' is the default and 'uchrome' stands for undetected_chromedriver.
 
 To see the remaining argument options, please run:
 ```sh

@@ -1,72 +1,77 @@
-from abc import ABC, abstractmethod
 import os
-import platform
-
-# from urllib.request import urlopen
-import urllib
-import ssl
-import zipfile
 import shutil
+import platform
+import re
+import ssl
+import urllib
+import zipfile
+
+import undetected_chromedriver as uc
+
+from abc import ABC, abstractmethod
 from selenium import webdriver
-from selenium.webdriver.support.abstract_event_listener import (
-    AbstractEventListener,
-)
-from selenium.webdriver.support.event_firing_webdriver import (
-    EventFiringWebDriver,
-)
+
 from selenium.common.exceptions import (
     SessionNotCreatedException,
     WebDriverException,
 )
-import re
-import random
-import string
 
 
-class EventListener(AbstractEventListener):
-    """Attempt to disable animations"""
+def get_driver_extended_class(base_class) -> webdriver.Remote:
+    """
+    The extended driver class is wrapped in a function
+    so that each driver type (i.e chrome, edge)
+    can be extended dynamically.
+    """
 
-    def after_click(self, url, driver):
-        animation = r"try { jQuery.fx.off = true; } catch(e) {}"
-        driver.execute_script(animation)
+    class DriverExtended(base_class):
+        """
+        This class extends existing driver functionality.
+        """
 
+        def __init__(self, device, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.device = device
 
-class Driver(EventFiringWebDriver):
-    def __init__(self, driver, EventListener, device):
-        super().__init__(driver, EventListener)
-        self.device = device
+        def close_other_tabs(self):
+            """Closes all but current tab"""
+            curr = self.current_window_handle
+            for handle in self.window_handles:
+                self.switch_to.window(handle)
+                if handle != curr:
+                    self.close()
+            self.switch_to.window(curr)
 
-    def close_other_tabs(self):
-        """Closes all but current tab"""
-        curr = self.current_window_handle
-        for handle in self.window_handles:
-            self.switch_to.window(handle)
-            if handle != curr:
-                self.close()
-        self.switch_to.window(curr)
+        def switch_to_n_tab(self, n):
+            self.switch_to.window(self.window_handles[n])
 
-    def switch_to_n_tab(self, n):
-        self.switch_to.window(self.window_handles[n])
+        def switch_to_first_tab(self):
+            self.switch_to_n_tab(0)
 
-    def switch_to_first_tab(self):
-        self.switch_to_n_tab(0)
+        def switch_to_last_tab(self):
+            self.switch_to_n_tab(-1)
 
-    def switch_to_last_tab(self):
-        self.switch_to_n_tab(-1)
+    return DriverExtended
 
 
 class DriverFactory(ABC):
+    """
+    Base class responsible for
+    - downloading correct driver executable
+    - adding driver options at runtime
+    """
+
     WEB_DEVICE = "web"
     MOBILE_DEVICE = "mobile"
     DRIVERS_DIR = "drivers"
 
     # Microsoft Edge user agents for additional points
     # https://www.whatismybrowser.com/guides/the-latest-user-agent/edge
-    __WEB_USER_AGENT = (
+    WEB_USER_AGENT = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,"
         " like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.57"
     )
-    __MOBILE_USER_AGENT = (
+    MOBILE_USER_AGENT = (
         "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML,"
         " like Gecko) Chrome/110.0.5481.153 Mobile Safari/537.36"
         " EdgA/110.0.1587.50"
@@ -82,7 +87,7 @@ class DriverFactory(ABC):
     @property
     @staticmethod
     @abstractmethod
-    def WebDriverCls():
+    def WebDriverClass():
         pass
 
     @property
@@ -101,28 +106,6 @@ class DriverFactory(ABC):
     @abstractmethod
     def _get_latest_driver_url(dl_try_count):
         raise NotImplementedError
-
-    def replace_selenium_marker(driver_path):
-        os_with_perl = ("Linux", "Darwin")  # MacOS
-        if platform.system() not in os_with_perl:
-            return
-
-        letters = string.ascii_lowercase
-        cdc_replacement = "".join(random.choice(letters) for i in range(3)) + "_"
-        perl_command = f"perl -pi -e 's/cdc_/{cdc_replacement}/g' {driver_path}"
-
-        try:
-            os.system(perl_command)
-            print(
-                'Sucessfully replaced driver string "cdc_" with'
-                f' "{cdc_replacement}"\n'
-            )
-        except Exception as e:
-            print(
-                "Unable to replace selenium cdc_ string due to exception. No"
-                " worries, program should still work without string"
-                f" replacement.\n{e}."
-            )
 
     @classmethod
     def __download_driver(cls, dl_try_count=0):
@@ -157,22 +140,17 @@ class DriverFactory(ABC):
         shutil.rmtree(extracted_dir)
         os.chmod(driver_path, 0o755)
 
-        # removing because -nhl mode no longer works with this
-        # if cls.WebDriverCls == webdriver.Chrome:
-        #    cls.replace_selenium_marker(driver_path)
-
     @classmethod
     def add_driver_options(cls, device, headless, cookies, nosandbox):
         options = cls.WebDriverOptions()
 
+        # options.add_argument("disable-infobars") # does not work with undetected_chrome
         options.add_argument("--disable-extensions")
         options.add_argument("--window-size=1280,1024")
         options.add_argument("--log-level=3")
         options.add_argument("--disable-notifications")
-        options.add_argument("disable-infobars")
         options.add_argument("--disable-gpu")
         options.add_argument("--disable-dev-shm-usage")
-
         options.add_experimental_option(
             "prefs",
             {
@@ -187,9 +165,9 @@ class DriverFactory(ABC):
             options.add_argument("--headless")
 
         if device == cls.WEB_DEVICE:
-            options.add_argument("user-agent=" + cls.__WEB_USER_AGENT)
+            options.add_argument("user-agent=" + cls.WEB_USER_AGENT)
         else:
-            options.add_argument("user-agent=" + cls.__MOBILE_USER_AGENT)
+            options.add_argument("user-agent=" + cls.MOBILE_USER_AGENT)
 
         if cookies:
             cookies_path = os.path.join(os.getcwd(), "stored_browser_data/")
@@ -201,7 +179,7 @@ class DriverFactory(ABC):
         return options
 
     @classmethod
-    def get_driver(cls, device, headless, cookies, nosandbox) -> Driver:
+    def get_driver(cls, device, headless, cookies, nosandbox) -> webdriver.Remote:
         dl_try_count = 0
         options = cls.add_driver_options(device, headless, cookies, nosandbox)
 
@@ -216,12 +194,14 @@ class DriverFactory(ABC):
 
         # Instantiate and if necessary, download new driver
         while True:
-            # Try instantiating a driver
             # Instantiate before dling bc driver may already exist
             try:
                 if os.path.exists(driver_path):
-                    driver = cls.WebDriverCls(driver_path, options=options)
-                    return Driver(driver, EventListener(), device)
+                    DriverExtendedClass = get_driver_extended_class(cls.WebDriverClass)
+                    driver = DriverExtendedClass(
+                        device, executable_path=driver_path, options=options
+                    )
+                    return driver
 
             except SessionNotCreatedException as se:
                 error_msg = str(se).lower()
@@ -268,7 +248,7 @@ class DriverFactory(ABC):
 
 
 class ChromeDriverFactory(DriverFactory):
-    WebDriverCls = webdriver.Chrome
+    WebDriverClass = webdriver.Chrome
     WebDriverOptions = webdriver.ChromeOptions
     VERSION_MISMATCH_STR = "this version of chromedriver only supports chrome version"
     driver_name = (
@@ -322,8 +302,31 @@ class ChromeDriverFactory(DriverFactory):
         return url
 
 
+class UndetectedChromeDriverFactory(DriverFactory):
+    """
+    https://github.com/ultrafunkamsterdam/undetected-chromedriver
+    Optimized Selenium Chromedriver patch which does not trigger
+    anti-bot services
+    Automatically downloads the driver binary and patches it.
+    """
+
+    WebDriverClass = uc.Chrome
+    WebDriverOptions = uc.ChromeOptions
+
+    @classmethod
+    def get_driver(cls, device, headless, cookies, nosandbox) -> webdriver.remote:
+        """
+        Override parent function because
+        undetected_chrome package uses a seperate driver executable
+        """
+        options = cls.add_driver_options(device, headless, cookies, nosandbox)
+        DriverExtendedClass = get_driver_extended_class(cls.WebDriverClass)
+        driver = DriverExtendedClass(device, options=options)
+        return driver
+
+
 class MsEdgeDriverFactory(DriverFactory):
-    WebDriverCls = webdriver.Edge
+    WebDriverClass = webdriver.Edge
     WebDriverOptions = webdriver.EdgeOptions
     VERSION_MISMATCH_STR = (
         "this version of microsoft edge webdriver only supports microsoft edge"
