@@ -112,17 +112,17 @@ class Rewards:
             else:
                 self.stdout.append(out)
 
-    def __check_url(self, current_url, final_url_regex_pattern):
+    def print_page_content(self):
+        body = self.driver.find_elements(By.TAG_NAME, "body")
+        if body:
+            print(f"\nURL page error text\n: {body[0].text}")
+
+    def __check_login_url(self, current_url, final_url_regex_pattern):
         def alarm_handler(signum, frame):
             raise RuntimeError(
                 "You did not enter your security code in time. \
                 Try again, or manually sign-in once with this machine."
             )
-
-        def print_page_body():
-            body = self.driver.find_elements(By.TAG_NAME, "body")
-            if body:
-                print(f"\nURL page error text\n: {body[0].text}")
 
         # made it to the destination page
         if re.match(final_url_regex_pattern, current_url):
@@ -174,7 +174,7 @@ class Rewards:
                         EC.element_to_be_clickable((By.ID, "KmsiCheckboxField"))
                     ).click()
                 except TimeoutException:
-                    print_page_body()
+                    self.print_page_content()
                     print(
                         "\nIssue logging in, please run in -nhl mode to see"
                         " the problem\n"
@@ -206,7 +206,7 @@ class Rewards:
                     EC.visibility_of_element_located((By.ID, "iProofEmail"))
                 ).send_keys(self.email, Keys.RETURN)
             except TimeoutException:
-                print_page_body()
+                self.print_page_content()
                 raise
 
             # Ask the user for their emailed security code
@@ -251,41 +251,15 @@ class Rewards:
                 )
             except NoSuchElementException:
                 print(f"Unable to handle {current_url} during 2FA flow")
-                print_page_body()
+                self.print_page_content()
                 raise
             except TimeoutException:
                 raise TimeoutException(
                     "You did not select code within Microsoft Authenticator in" " time."
                 )
 
-        # sign-up/register rewards page
-        elif f"{self.__DASHBOARD_URL}welcome" == current_url:
-            try:
-                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_LONG).until(
-                    EC.element_to_be_clickable((By.ID, "start-earning-rewards-link"))
-                ).click()
-            except TimeoutException:
-                raise RuntimeError(
-                    f"unable to welcome page with url: {current_url}\n. Sign"
-                    " in manually to fix this."
-                )
-
-        # welcome tour - rewards page
-        elif f"{self.__DASHBOARD_URL}welcometour" == current_url:
-            raise RuntimeError(
-                f"Made it to {current_url}.\n Please login to rewards page and"
-                " accept the welcome tour."
-            )
-
-        # rewards page not loading page
-        elif "Signin?idru=" in current_url or "signin-oidc" in current_url:
-            print(f'Made it to {current_url}, aborting, generally re-run can handle this\n')
-            print_page_body()
-            # raise generic webdriver exception to force re-run
-            raise WebDriverException
-
         else:
-            print_page_body()
+            self.print_page_content()
             raise RuntimeError(
                 f'Made it to unrecognized page "{current_url}" during login' " process."
             )
@@ -311,48 +285,105 @@ class Rewards:
         while not is_login_complete:
             time.sleep(1)
             login_page_loaded_regex = r"https://(account|login).microsoft.com/.*mkt.*"
-            is_login_complete = self.__check_url(
+            is_login_complete = self.__check_login_url(
                 self.driver.current_url, login_page_loaded_regex
             )
 
         self.__sys_out("Successfully logged in", 2, True)
 
-    def __open_dashboard(self, try_count=0):
+    def __check_dashboard_url(self, current_url, final_url_regex_pattern):
+        """
+        Need to handle these possibilities:
+
+        1. Made it to the dashboard url
+            1. If so, check that offers elements are loaded
+
+        2. Made it to some other url
+            1. either need to raise runtime error ('sign up for rewards')
+            2. or reload the page ('Signin?idru=')
+            3. or handle the page (sign up/register)
+        """
+        # made it to the rewards dashboard page
+        if re.match(final_url_regex_pattern, current_url):
+            time.sleep(2)  # let any redirects happen
+            try:
+                # need to sign in via welcome page first
+                if "welcome" in self.driver.current_url:
+                    self.driver.find_element(
+                        By.XPATH, '//*[@id="raf-signin-link-id"]'
+                    ).click()
+
+                # wait for offers to load completely
+                offer_xpath = (
+                    '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[1]/'
+                    "div/card-content/mee-rewards-daily-set-item-content/div/a"
+                )
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.presence_of_element_located((By.XPATH, offer_xpath))
+                )
+
+            except (TimeoutException, NoSuchElementException):
+                print("Offer elements not loaded in dashboard page")
+                return False
+
+            return True
+
+        # Signin?idru url means page not loaded
+        elif "Signin?idru=" in current_url or "signin-oidc" in current_url:
+            print(f"\nMade it to {current_url}, which means page not loaded.")
+            self.print_page_content()
+            return False
+
+        # sign-up/register rewards page
+        if f"{self.__DASHBOARD_URL}welcome" == current_url:
+            try:
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_LONG).until(
+                    EC.element_to_be_clickable((By.ID, "start-earning-rewards-link"))
+                ).click()
+            except TimeoutException:
+                raise RuntimeError(
+                    f"unable to access welcome page with url: {current_url}\n. Sign"
+                    " in manually to fix this."
+                )
+
+        # welcome tour - rewards page
+        elif f"{self.__DASHBOARD_URL}welcometour" == current_url:
+            raise RuntimeError(
+                f"Made it to {current_url}.\n Please login to rewards page and"
+                " accept the welcome tour."
+            )
+
+        else:
+            self.print_page_content()
+            raise RuntimeError(
+                f'Made it to unrecognized page "{current_url}" during login' " process."
+            )
+
+    def __open_dashboard(self, try_count=1):
         """
         Opens dashboard url
         Checks that the url is correct
         And all the offer elements are loaded
         """
-        max_try_count = 2
-        self.driver.get(self.__DASHBOARD_URL)
-
-        # after logging in, may have page before rewards page
-        is_reward_page_loaded = False
+        max_try_count = 10
         reward_page_loaded_regex = f"{self.__DASHBOARD_URL}$"
-        while not is_reward_page_loaded:
-            time.sleep(2)
-            is_reward_page_loaded = self.__check_url(
-                self.driver.current_url, reward_page_loaded_regex
-            )
+        self.driver.get(self.__DASHBOARD_URL)
+        self.driver.refresh()
 
-        try:
-            # need to sign in via welcome page first
-            if "welcome" in self.driver.current_url:
-                self.driver.find_element(
-                    By.XPATH, '//*[@id="raf-signin-link-id"]'
-                ).click()
+        is_reward_page_loaded = self.__check_dashboard_url(
+            self.driver.current_url, reward_page_loaded_regex
+        )
 
-            # wait for offers to load completely
-            offer_xpath = (
-                '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[1]/'
-                "div/card-content/mee-rewards-daily-set-item-content/div/a"
-            )
-            WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                EC.presence_of_element_located((By.XPATH, offer_xpath))
-            )
-        except (TimeoutException, NoSuchElementException) as e:
+        if is_reward_page_loaded is False:
             if try_count == max_try_count:
-                raise (e)
+                raise WebDriverException(
+                    "Tried reloading rewards dashboard, but have exceeded try count"
+                )
+            print(
+                f"""Problem loading reward dashboard,
+                probably due to recent MS server issues.
+                Tries remaining: {max_try_count - try_count}\n"""
+            )
             self.__open_dashboard(try_count + 1)
 
     def find_between(self, s: str, first: str, last: str) -> str:
