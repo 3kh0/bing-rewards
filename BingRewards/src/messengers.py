@@ -13,6 +13,9 @@ class BaseMessenger(ABC):
     def send_message(message):
         pass
 
+    def truncate_message(self, message):
+        return message[: self.MAX_MESSAGE_LENGTH]
+
     def handle_resp(self, resp):
         if (resp.status_code == 200) or (
             self.messenger_type == "discord" and resp.status_code == 204
@@ -38,7 +41,6 @@ class BaseMessenger(ABC):
             + f"\nRun Log: {[run_hist_str]}"
         )
 
-        message = message[: self.MAX_MESSAGE_LENGTH]
         self.send_message(message)
 
 
@@ -49,9 +51,10 @@ class TelegramMessenger(BaseMessenger):
         self.userid = userid
 
     def send_message(self, message):
+        truncated_message = self.truncate_message(message)
         reply_url = (
             f"https://api.telegram.org/bot{self.api_token}/"
-            f"sendMessage?chat_id={self.userid}&text={message}"
+            f"sendMessage?chat_id={self.userid}&text={truncated_message}"
         )
         resp = requests.get(reply_url)
         self.handle_resp(resp)
@@ -63,6 +66,7 @@ class DiscordMessenger(BaseMessenger):
         self.webhook_url = webhook_url
 
     def send_message(self, message):
-        content = {"username": "Bing Rewards Bot", "content": message}
+        truncated_message = self.truncate_message(message)
+        content = {"username": "Bing Rewards Bot", "content": truncated_message}
         resp = requests.post(self.webhook_url, json=content)
         self.handle_resp(resp)
