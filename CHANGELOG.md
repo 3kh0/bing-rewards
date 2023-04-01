@@ -1,10 +1,12 @@
 # Changelog
 
-## v2.2.4
+## v2.3
 - add limited integration testing to ci/cd pipeline
+- Stop checking rewards dashboard after each search
+- Handle rewards dashboard page not loading
+	- print out page element on login failure
 - allow user to input confirmation code during login process
-- print out page element on login failure
-- remove error character limit when printing out error
+- stop enforcing character limit when printing to sysout on errors
 
 ## v2.2.3
 - fix CI/CD regex for when to push tag image:latest
