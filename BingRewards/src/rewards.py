@@ -365,10 +365,10 @@ class Rewards:
         Checks that the url is correct
         And all the offer elements are loaded
         """
-        max_try_count = 10
+        max_try_count = 5  # handle when MS server is having issues
         reward_page_loaded_regex = f"{self.__DASHBOARD_URL}$"
         self.driver.get(self.__DASHBOARD_URL)
-        self.driver.refresh()
+        # self.driver.refresh()
 
         is_reward_page_loaded = self.__check_dashboard_url(
             self.driver.current_url, reward_page_loaded_regex
@@ -506,33 +506,51 @@ class Rewards:
         cookieclear = 0
         prev_progress = -1
         try_count = 0
+        points_per_search = 5
+        checkpoint_interval = 25
 
         last_request_time = None
+
         if len(self.__queries) == 0:
             last_request_time = self.__update_search_queries(last_request_time)
+
+        try:
+            current_progress, complete_progress = self.__get_search_progress(
+                search_type
+            )
+            self.__sys_out(
+                f"Point progress updated per {checkpoint_interval} points", 2
+            )
+            self.__sys_out_progress(current_progress, complete_progress, 3)
+        except TypeError:  # TypeError: cannot unpack non-iterable bool object
+            return False  # mobile search not qualified yet
+
+        expected_current_progress = current_progress
+
         while True:
-            progress = self.__get_search_progress(search_type)
-            if not progress:
-                return False
-            else:
-                current_progress, complete_progress = progress
-            if complete_progress > 0:
-                self.__sys_out_progress(current_progress, complete_progress, 3)
-            if current_progress == complete_progress:
-                break
-            elif current_progress == prev_progress:
-                try_count += 1
-                self.driver.refresh()
-                if try_count == 4:
-                    self.__sys_out("Failed to complete search", 2, True, True)
+            # Poll dashboard for actual points
+            if (expected_current_progress % checkpoint_interval == 0) or (
+                expected_current_progress == complete_progress
+            ):
+                # Don't check dashboard again prior to first search
+                if expected_current_progress != 0:
+                    current_progress, complete_progress = self.__get_search_progress(
+                        search_type
+                    )
+                    expected_current_progress = current_progress
+                    self.__sys_out_progress(current_progress, complete_progress, 3)
+
+                if current_progress == complete_progress:
+                    break
+                elif current_progress == prev_progress:
+                    try_count += 1
+                    if try_count == 2:
+                        self.__sys_out(
+                            "Search progress stalled, aborting.", 2, True, True
+                        )
                     return False
-                # handle mobile blank search-bar bug
-                elif try_count >= 2:
-                    self.driver.refresh()
-                    time.sleep(2)
-            else:
-                prev_progress = current_progress
-                try_count = 0
+                else:
+                    prev_progress = current_progress
 
             search_box = WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
                 EC.visibility_of_element_located((By.ID, "sb_form_q"))
@@ -553,7 +571,8 @@ class Rewards:
             query = clean_query(query)
             search_box.send_keys(query, Keys.RETURN)  # unique search term
             self.search_hist.append(query)
-            time.sleep(random.uniform(2, 4.5))
+            time.sleep(random.uniform(1, 3))
+            expected_current_progress += points_per_search
 
             if cookieclear == 0:
                 try:
@@ -565,6 +584,9 @@ class Rewards:
                 cookieclear = 1
 
             self.__handle_alerts()
+            self.driver.refresh()  # refresh in case of mobile bug
+            time.sleep(random.uniform(0.5, 1.5))
+
         self.__sys_out("Successfully completed search", 2, True, True)
         return True
 
