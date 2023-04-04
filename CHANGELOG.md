@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.3.1
+- fix 'expected points', not all users earn 5 points per search
+
 ## v2.3
 - add limited integration testing to ci/cd pipeline
 - Stop checking rewards dashboard after each search

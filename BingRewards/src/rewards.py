@@ -492,7 +492,7 @@ class Rewards:
         last_request_time = datetime.now()
         return last_request_time
 
-    def __search(self, search_type):
+    def __input_search(self, search_type, last_request_time, cookieclear):
         def clean_query(query):
             # chromedriver 98+, special characters fail
             query = re.sub(r"[^a-zA-Z0-9\s]", "", query)
@@ -500,17 +500,72 @@ class Rewards:
             query = query.encode("ascii", "ignore").decode("ascii")
             return query
 
+        search_box = WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+            EC.visibility_of_element_located((By.ID, "sb_form_q"))
+        )
+        search_box.clear()
+
+        # send query
+        while True:
+            if len(self.__queries) > 0:
+                query = self.__queries[0]
+                self.__queries = self.__queries[1:]
+            else:
+                last_request_time = self.__update_search_queries(last_request_time)
+                continue
+            if query not in self.search_hist:
+                break
+
+        query = clean_query(query)
+        search_box.send_keys(query, Keys.RETURN)  # unique search term
+        self.search_hist.append(query)
+        time.sleep(random.uniform(1, 3))
+
+        if cookieclear == 0:
+            try:
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
+                ).click()
+            except TimeoutException:
+                pass
+            cookieclear = 1
+
+        self.__handle_alerts()
+        self.driver.refresh()  # refresh in case of mobile bug
+        time.sleep(random.uniform(0.5, 1.5))
+        return last_request_time, cookieclear
+
+    def __search(self, search_type):
+        """
+        Responsible for
+        1. Tracking current search progress
+        2. Calls __input_search()
+
+        In order to minimize requests to MS dashboard
+        which sometimes suffers from network issues
+        two methods are employed:
+
+        1. Keep track of 'expected' number of points.
+        However, this isn't always correct since
+        some countries earn more per search than others.
+
+        2. always check dashboard after 'x' searches.
+        This could have been standalone method, but may oversearch
+        if you had previously in the day earned search points
+        """
         self.__sys_out("Starting search", 2)
         self.driver.get(self.__BING_URL)
 
         cookieclear = 0
         prev_progress = -1
         try_count = 0
-        points_per_search = 5
-        checkpoint_interval = 25
+
+        points_per_search = 5  # This is not always true
+        # since above not true, also check after x searches
+        current_searches_before_checkpoint, max_searches_before_checkpoint = 0, 5
+        checkpoint_interval = points_per_search * max_searches_before_checkpoint
 
         last_request_time = None
-
         if len(self.__queries) == 0:
             last_request_time = self.__update_search_queries(last_request_time)
 
@@ -529,8 +584,14 @@ class Rewards:
 
         while True:
             # Poll dashboard for actual points
-            if (expected_current_progress % checkpoint_interval == 0) or (
-                expected_current_progress == complete_progress
+            if (
+                # reached checkpoint
+                (expected_current_progress % checkpoint_interval == 0)
+                or (expected_current_progress >= complete_progress)
+                # or haven't checked dashboard for too long
+                or (
+                    current_searches_before_checkpoint >= max_searches_before_checkpoint
+                )
             ):
                 # Don't check dashboard again prior to first search
                 if expected_current_progress != 0:
@@ -539,6 +600,7 @@ class Rewards:
                     )
                     expected_current_progress = current_progress
                     self.__sys_out_progress(current_progress, complete_progress, 3)
+                    current_searches_before_checkpoint = 0
 
                 if current_progress == complete_progress:
                     break
@@ -552,40 +614,11 @@ class Rewards:
                 else:
                     prev_progress = current_progress
 
-            search_box = WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                EC.visibility_of_element_located((By.ID, "sb_form_q"))
+            last_request_time, cookieclear = self.__input_search(
+                search_type, last_request_time, cookieclear
             )
-            search_box.clear()
-
-            # send query
-            while True:
-                if len(self.__queries) > 0:
-                    query = self.__queries[0]
-                    self.__queries = self.__queries[1:]
-                else:
-                    last_request_time = self.__update_search_queries(last_request_time)
-                    continue
-                if query not in self.search_hist:
-                    break
-
-            query = clean_query(query)
-            search_box.send_keys(query, Keys.RETURN)  # unique search term
-            self.search_hist.append(query)
-            time.sleep(random.uniform(1, 3))
             expected_current_progress += points_per_search
-
-            if cookieclear == 0:
-                try:
-                    WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
-                        EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
-                    ).click()
-                except TimeoutException:
-                    pass
-                cookieclear = 1
-
-            self.__handle_alerts()
-            self.driver.refresh()  # refresh in case of mobile bug
-            time.sleep(random.uniform(0.5, 1.5))
+            current_searches_before_checkpoint += 1
 
         self.__sys_out("Successfully completed search", 2, True, True)
         return True
