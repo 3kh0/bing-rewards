@@ -183,6 +183,14 @@ def parse_search_args():
         help="run punch card",
     )
     search_group.add_argument(
+        "-fv",
+        "--fitness-videos",
+        const="fitness videos",
+        action="store_const",
+        dest="search_type",
+        help="run fitness videos",
+    )
+    search_group.add_argument(
         "-a",
         "--all",
         const="all",

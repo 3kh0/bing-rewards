@@ -16,6 +16,7 @@ from selenium.common.exceptions import (
     JavascriptException,
     WebDriverException,
 )
+import os
 import time
 import sys
 import re
@@ -1619,6 +1620,106 @@ class Rewards:
         self.__sys_out(f"Overall punch card progress: {punchcard_progress}", 2)
         return is_complete_punchcard or is_complete_activity
 
+    def __do_fitness_videos(self, group_num):
+        """
+        In the driver, open a group of videos.
+        Need to refresh the video to get account reward status.
+        Once on the page there are 3 scenarios:
+            1. Already got points
+            2. Watch full video for points
+            3. Tried to watch video but didn't get points
+
+        Lastly, update the video state log
+        """
+        fitness_videos_metadata_file = os.path.join(
+            "src/", "data/", "fitness_videos_metadata.json"
+        )
+        with open(fitness_videos_metadata_file) as f:
+            videos_dict = json.load(f)
+        try:
+            videos = videos_dict[group_num]
+        except KeyError: # key doesn't exist, start from begininning
+            videos = videos_dict['group1']
+
+        completion_status_buffer = 15
+        ad_buffer = self.__WEB_DRIVER_WAIT_LONG  # max ads are 30 seconds
+        video_status_d = {}
+
+        for video in videos:
+            video_status = "Failed"
+            url = video["url"]
+            title = video["title"]
+            video_length_seconds = video["length_seconds"]
+
+            self.driver.get(url)
+            self.__sys_out(
+                f"Starting video '{title}' which is {video_length_seconds} seconds long.",
+                2,
+            )
+
+            # Sleep + refresh so that reward status can be loaded
+            time.sleep(completion_status_buffer)
+            self.driver.refresh()
+
+            # Already earned
+            try:
+                # check if valid badge
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.visibility_of_element_located((By.TAG_NAME, "div.pointsEarned"))
+                )
+                self.__sys_out("Points already earned for video", 3)
+                video_status = "Success"
+
+            # Not yet earned
+            except TimeoutException:
+                try:
+                    # wait until 'congrats' popup
+                    WebDriverWait(self.driver, video_length_seconds + ad_buffer).until(
+                        EC.visibility_of_element_located(
+                            (By.TAG_NAME, "span.rewardPoints")
+                        )
+                    )
+                    self.__sys_out("Points earned successfully", 3)
+                    video_status = "Success"
+                except TimeoutException:
+                    self.__sys_out("Unable to earn points", 3)
+            video_status_d[title] = video_status
+
+        # update the video state log
+        log_time = datetime.now().isoformat()
+        latest_fitness_log_entry = {
+            "write_date": log_time,
+            "group_num": group_num,
+            "status": video_status_d,
+        }
+        self.fitness_videos_hist.append(latest_fitness_log_entry)
+
+        # return True if all statuses were 'Success'
+        return all(status == "Success" for status in video_status_d.values())
+
+    def __fitness_videos(self):
+        """
+        Calculates which group of videos to do.
+        Assumes that at least one of the videos on the group
+        has failed based based on the Completion obj.
+        """
+        # Check that there is history
+        if self.fitness_videos_hist:
+            latest_fitness_log_entry = self.fitness_videos_hist[-1]
+            last_group_num = latest_fitness_log_entry["group_num"]
+            last_write_date = datetime.fromisoformat(
+                latest_fitness_log_entry["write_date"]
+            )
+            if last_write_date.date() == datetime.now().date():
+                group_num = last_group_num
+            else:
+                num_str = last_group_num.strip("group_num")
+                next_num = int(num_str) + 1
+                group_num = f"group{next_num}"
+        else:
+            group_num = "group1"
+        return self.__do_fitness_videos(group_num)
+
     def __print_stats(self, init_points=0):
         try:
             # dashboard dictionary data
@@ -1740,6 +1841,11 @@ class Rewards:
             mandatory_device_type=self.driver_factory.WEB_DEVICE,
         )
 
+    def __complete_fitness_videos(self):
+        self.completion.fitness_videos = self.__complete_action(
+            action=self.__fitness_videos, description="fitness videos"
+        )
+
     def complete_both_searches(self):
         self.__complete_edge_search()
         self.__complete_web_search()
@@ -1758,9 +1864,14 @@ class Rewards:
             self.__complete_offers()
         if not prev_completion.is_punchcard_completed() or is_search_all:
             self.__complete_punchcard()
+        if not prev_completion.is_fitness_videos_completed() or is_search_all:
+            self.__complete_fitness_videos()
 
-    def complete_search_type(self, search_type, prev_completion, search_hist):
+    def complete_search_type(
+        self, search_type, prev_completion, search_hist, fitness_videos_latest_hist
+    ):
         self.search_hist = search_hist
+        self.fitness_videos_hist = fitness_videos_latest_hist
 
         if (search_type in ("mobile", "remaining", "all")) and (
             not prev_completion.is_mobile_search_completed()
@@ -1786,6 +1897,8 @@ class Rewards:
             self.__complete_offers()
         elif search_type == "punch card":
             self.__complete_punchcard()
+        elif search_type == "fitness videos":
+            self.__complete_fitness_videos()
         elif search_type == "both":
             self.complete_both_searches()
 

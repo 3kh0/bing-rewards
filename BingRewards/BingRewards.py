@@ -15,6 +15,7 @@ ERROR_LOG = "error.log"
 RUN_LOG = "run.json"
 SEARCH_LOG = "search.json"
 STATS_LOG = "stats.json"
+FITNESS_VIDEOS_LOG = "fitness_videos.json"
 # CONFIG_FILE_PATH = "config/config.json"
 DEBUG = True
 
@@ -152,6 +153,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
         email,
         os.path.join(LOG_DIR, RUN_LOG),
         os.path.join(LOG_DIR, SEARCH_LOG),
+        os.path.join(LOG_DIR, FITNESS_VIDEOS_LOG),
     )
 
     print(
@@ -172,11 +174,14 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
         and current_attempts < args.max_attempts_per_account
     ):
         search_hist = hist_log.get_search_hist()
+        fitness_videos_hist = hist_log.get_fitness_videos_hist()
 
         print(f"\n\nRun {current_attempts+1} [{email}]:")
 
         try:
-            rewards.complete_search_type(args.search_type, completion, search_hist)
+            rewards.complete_search_type(
+                args.search_type, completion, search_hist, fitness_videos_hist
+            )
             hist_log.write(rewards.completion)
 
         except (Exception, KeyboardInterrupt) as e:  # catch *all* exceptions

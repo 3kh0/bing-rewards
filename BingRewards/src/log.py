@@ -45,12 +45,16 @@ class HistLog:
     __MOBILE_SEARCH_OPTION = "Mobile Search"
     __OFFERS_OPTION = "Offers"
     __PUNCHCARD_OPTION = "Latest Punch Card Activity"
+    __FITNESS_VIDEOS_OPTION = "Fitness Videos"
 
-    def __init__(self, email, run_path, search_path):
+    def __init__(self, email, run_path, search_path, fitness_videos_path):
         self.email = email
 
         self.__run_log = RunHistoryJsonLog(run_path, email)
         self.__search_log = SearchHistoryJsonLog(search_path, email)
+        self.__fitness_videos_log = FitnessVideosHistoryJsonLog(
+            fitness_videos_path, email
+        )
         self.__completion = Completion()
 
     def get_timestamp(self):
@@ -87,6 +91,7 @@ class HistLog:
                 self.__completion.mobile_search = True
                 self.__completion.offers = True
                 self.__completion.punchcard = True
+                self.__completion.fitness_videos = True
             else:
                 if self.__EDGE_SEARCH_OPTION not in completed:
                     self.__completion.edge_search = True
@@ -98,6 +103,8 @@ class HistLog:
                     self.__completion.offers = True
                 if self.__PUNCHCARD_OPTION not in completed:
                     self.__completion.punchcard = True
+                if self.__FITNESS_VIDEOS_OPTION not in completed:
+                    self.__completion.fitness_videos = True
         else:
             # clear search history if account's first run of the day
             self.__search_log.user_entries = []
@@ -109,6 +116,9 @@ class HistLog:
 
     def get_search_hist(self):
         return self.__search_log.user_entries
+
+    def get_fitness_videos_hist(self):
+        return self.__fitness_videos_log.user_entries
 
     def write(self, completion):
         self.__completion.update(completion)
@@ -125,6 +135,8 @@ class HistLog:
                 failed.append(self.__OFFERS_OPTION)
             if not self.__completion.is_punchcard_completed():
                 failed.append(self.__PUNCHCARD_OPTION)
+            if not self.__completion.is_fitness_videos_completed():
+                failed.append(self.__FITNESS_VIDEOS_OPTION)
             failed = ", ".join(failed)
             completion_msg = self.__COMPLETED_FALSE.format(failed)
         else:
@@ -144,6 +156,11 @@ class HistLog:
             self.__search_log.reattach_to_json(self.email)
             self.__search_log.write()
 
+        # write to fitness video history log
+        if self.__fitness_videos_log.user_entries:
+            self.__fitness_videos_log.reattach_to_json(self.email)
+            self.__fitness_videos_log.write()
+
 
 class Completion:
     def __init__(self):
@@ -152,6 +169,7 @@ class Completion:
         self.mobile_search = False
         self.offers = False
         self.punchcard = False
+        self.fitness_videos = False
 
     def is_edge_search_completed(self):
         return self.edge_search
@@ -176,6 +194,9 @@ class Completion:
 
     def is_punchcard_completed(self):
         return self.punchcard
+
+    def is_fitness_videos_completed(self):
+        return self.fitness_videos
 
     def is_web_device_completed(self):
         """These searches require web driver"""
@@ -210,6 +231,7 @@ class Completion:
         self.mobile_search = max(self.mobile_search, completion.mobile_search)
         self.offers = max(self.offers, completion.offers)
         self.punchcard = max(self.punchcard, completion.punchcard)
+        self.fitness_videos = max(self.fitness_videos, completion.fitness_videos)
 
     def is_search_type_completed(self, search_type):
         if search_type == "web":
@@ -222,6 +244,8 @@ class Completion:
             return self.is_offers_completed()
         elif search_type == "punch card":
             return self.is_punchcard_completed()
+        elif search_type == "fitness videos":
+            return self.is_fitness_videos_completed()
         elif search_type in ("all", "remaining"):
             return self.is_all_completed()
 
@@ -295,6 +319,13 @@ class RunHistoryJsonLog(BaseJsonLog):
 
 class SearchHistoryJsonLog(BaseJsonLog):
     MAX_SIZE = 1
+
+    def __init__(self, log_path, email):
+        super().__init__(log_path, email)
+
+
+class FitnessVideosHistoryJsonLog(BaseJsonLog):
+    MAX_SIZE = 100
 
     def __init__(self, log_path, email):
         super().__init__(log_path, email)
