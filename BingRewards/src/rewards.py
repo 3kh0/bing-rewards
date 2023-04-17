@@ -1565,6 +1565,8 @@ class Rewards:
                 )
                 and punchcard["parentPromotion"].get("pointProgressMax", 0) != 0
                 and punchcard.get("childPromotions")
+                and punchcard["childPromotions"][0].get("destinationUrl", "_")
+                != "https://rewards.bing.com/redeem"
             ):
                 has_valid_punch = True
                 parent_url = punchcard["parentPromotion"]["attributes"]["destination"]
