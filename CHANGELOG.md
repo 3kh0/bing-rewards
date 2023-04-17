@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.4
+- add `MSN fitness video` feature
+- allow user to exclude search types when running with 'remaining'
+- fix Edge driver regex issue
+- Handle Microsoft quirks
+	- exclude punchcards with "https://rewards.bing.com/redeem" url 
+	- handle privacy notice page
+
 ## v2.3.1
 - fix 'expected points', not all users earn 5 points per search
 

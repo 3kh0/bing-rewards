@@ -2,7 +2,7 @@ An automated solution using Python and Selenium for earning daily Microsoft Rewa
 
 Only `USA` website is guaranteed to be supported.
 
-In place of GitHub which disabled this project in Jan 2023, there is now a [Discord Server](https://discord.gg/xgFUcxnquD) to receive Bing Rewards updates and discuss the tool with other users.
+In place of GitHub which disabled this project in Jan 2023, there is now a [Discord Server](https://discord.gg/w326CR9gNv) to receive Bing Rewards updates and discuss the tool with other users.
 
 ## Getting Started (Local set-up)
 Note: If using Docker, go directly to `/docs/docker_setup` for further instructions
