@@ -23,6 +23,8 @@ Once docker is installed, follow these instructions to set up the BingRewards co
 	`-e TZ=<timezone>` Default: `America/New_York`
 	3. Set a preferred update schedule with 
 	`-e UPDATE=<cronexpression>` Default : `0 0 /1 * *`
+	3. Set your own -flag to be run with the cron jobs
+	`-e TAGS='-gs -di'  Default : `-nsb'
 4. Logs can be mounted to the host file system by using the following with docker run
  `-v <absolute-path-to-logs-directory>:/bing-rewards/BingRewards/logs`
 5. Images will be rebuilt daily at 12:26 PM UTC this will update chromium and other image dependencies. If your having issues with the container update it with the following [instructions](https://stackoverflow.com/a/26833005)

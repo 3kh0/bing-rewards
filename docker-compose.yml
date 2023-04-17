@@ -1,18 +1,19 @@
 version: '3.3'
 services:
-    bing-rewards:
-        container_name: bing-rewards
-        image: killerherts/bing-rewards
-        environment:
-          - PUID=99
-          - PGID=100  #PGID PUID UMASK should be updated to match your env this match unraid default
-          - UMASK=000
-          - TZ=<your-TZ> #list of TZ @ https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-          - SCH=<cronexpression> #cron expressions can be tested @ https://crontab.guru/
-          - UPDATE=<cronexpression>
-        volumes:
-            - '<absolute-path-to-config-directory>:/bing-rewards/BingRewards/config' #import your old config
-            - '<absolute-path-to-logs-directory>:/bing-rewards/BingRewards/logs' #import logs
-        stdin_open: true # docker run -i
-        tty: true        # docker run -t
-        restart: unless-stopped
+  bing-rewards:
+    container_name: bing-rewards
+    image: killerherts/bing-rewards
+    environment:
+      - PUID=99
+      - PGID=100 #PGID PUID UMASK should be updated to match your env this match unraid default
+      - UMASK=000
+      - TZ=<your-TZ> #list of TZ @ https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      - SCH=<cronexpression> #cron expressions can be tested @ https://crontab.guru/
+      - UPDATE=<cronexpression>
+      - TAGS="-nsb" #can be used to replace the default -nsb to any set of tags you want the cron job to use
+    volumes:
+      - '<absolute-path-to-config-directory>:/bing-rewards/BingRewards/config' #import your old config
+      - '<absolute-path-to-logs-directory>:/bing-rewards/BingRewards/logs' #import logs
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    restart: unless-stopped
