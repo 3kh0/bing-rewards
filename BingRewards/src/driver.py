@@ -346,7 +346,7 @@ class MsEdgeDriverFactory(DriverFactory):
         major_versions = []
         latest_major_version_num = "100"
         for current_version in all_versions:
-            current_version_num = current_version.decode().split()[1]
+            current_version_num = current_version.split()[1]
             current_major_version_num = current_version_num.split(".")[0]
             if current_major_version_num != latest_major_version_num:
                 major_versions.append(current_version_num)
@@ -366,8 +366,9 @@ class MsEdgeDriverFactory(DriverFactory):
         except ssl.SSLError:
             response = urllib.request.urlopen(EDGE_RELEASE_URL).read()
 
+        version_regex = r"Version: \d{2,3}\.0\.\d{4}\.\d+"
         all_versions = sorted(
-            list(set(re.findall(r"Version: \d{2,3}\.0\.\d{4}\.\d+", response))),
+            list(set(re.findall(version_regex, str(response)))),
             reverse=True,
         )
         major_versions = MsEdgeDriverFactory.get_major_edge_driver_versions(
