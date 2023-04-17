@@ -1638,8 +1638,8 @@ class Rewards:
             videos_dict = json.load(f)
         try:
             videos = videos_dict[group_num]
-        except KeyError: # key doesn't exist, start from begininning
-            videos = videos_dict['group1']
+        except KeyError:  # key doesn't exist, start from begininning
+            videos = videos_dict["group1"]
 
         completion_status_buffer = 15
         ad_buffer = self.__WEB_DRIVER_WAIT_LONG  # max ads are 30 seconds
@@ -1851,24 +1851,54 @@ class Rewards:
         self.__complete_web_search()
         self.__complete_mobile_search()
 
-    def complete_remaining_searches(self, search_type, prev_completion):
+    def complete_remaining_searches(
+        self, search_type, excluded_searches, prev_completion
+    ):
         is_search_all = search_type == "all"
 
-        if not prev_completion.is_edge_search_completed() or is_search_all:
+        if (
+            not prev_completion.is_edge_search_completed()
+            and "edge" not in excluded_searches
+        ) or is_search_all:
             self.__complete_edge_search()
-        if not prev_completion.is_mobile_search_completed() or is_search_all:
+
+        if (
+            not prev_completion.is_mobile_search_completed()
+            and "mobile" not in excluded_searches
+        ) or is_search_all:
             self.__complete_mobile_search()
-        if not prev_completion.is_web_search_completed() or is_search_all:
+
+        if (
+            not prev_completion.is_web_search_completed()
+            and "web" not in excluded_searches
+        ) or is_search_all:
             self.__complete_web_search()
-        if not prev_completion.is_offers_completed() or is_search_all:
+
+        if (
+            not prev_completion.is_offers_completed()
+            and "offers" not in excluded_searches
+        ) or is_search_all:
             self.__complete_offers()
-        if not prev_completion.is_punchcard_completed() or is_search_all:
+
+        if (
+            not prev_completion.is_punchcard_completed()
+            and "punchcard" not in excluded_searches
+        ) or is_search_all:
             self.__complete_punchcard()
-        if not prev_completion.is_fitness_videos_completed() or is_search_all:
+
+        if (
+            not prev_completion.is_fitness_videos_completed()
+            and "fitness_videos" not in excluded_searches
+        ) or is_search_all:
             self.__complete_fitness_videos()
 
     def complete_search_type(
-        self, search_type, prev_completion, search_hist, fitness_videos_latest_hist
+        self,
+        search_type,
+        excluded_searches,
+        prev_completion,
+        search_hist,
+        fitness_videos_latest_hist,
     ):
         self.search_hist = search_hist
         self.fitness_videos_hist = fitness_videos_latest_hist
@@ -1884,7 +1914,9 @@ class Rewards:
         init_points = self.__get_available_points()
 
         if search_type in ("remaining", "all"):
-            self.complete_remaining_searches(search_type, prev_completion)
+            self.complete_remaining_searches(
+                search_type, excluded_searches, prev_completion
+            )
         # if either web/mobile, check if edge is complete
         elif search_type in ("web", "mobile"):
             if not prev_completion.is_edge_search_completed():

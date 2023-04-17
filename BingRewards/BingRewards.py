@@ -166,6 +166,7 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
         print(f"{args.search_type.capitalize()} already completed\n")
         return
 
+    excluded_searches = list(args.exclude) if args.exclude else []
     current_attempts = 0
 
     # Run search 'n' times per account
@@ -180,7 +181,11 @@ def run_account(email, password, args, messengers, google_sheets_reporting):
 
         try:
             rewards.complete_search_type(
-                args.search_type, completion, search_hist, fitness_videos_hist
+                args.search_type,
+                excluded_searches,
+                completion,
+                search_hist,
+                fitness_videos_hist,
             )
             hist_log.write(rewards.completion)
 

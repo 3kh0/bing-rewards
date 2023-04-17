@@ -41,6 +41,11 @@ def check_is_valid_email_pw_combo(args):
         )
 
 
+def check_is_valid_exclusion(args):
+    if args.exclude and not args.search_type == "remaining":
+        print("Excluded searches NOT ignored- not using 'remaining' arg")
+
+
 def get_parent_parser():
     """
     parent parser - store default args
@@ -196,7 +201,15 @@ def parse_search_args():
         const="all",
         action="store_const",
         dest="search_type",
-        help="run web, mobile, offers, and punch cards",
+        help="run web, mobile, offers, punch cards, and fitness videos",
+    )
+
+    search_parser.add_argument(
+        "--exclude",
+        nargs="+",
+        help="when running 'remaining' exclude specified search type, \
+            can take multiple arguments",
+        choices=["web", "mobile", "offers", "punchcard", "fitness_videos"],
     )
 
     search_parser.add_argument(
@@ -350,6 +363,7 @@ def parse_search_args():
 
     args = search_parser.parse_args()
     check_is_valid_email_pw_combo(args)
+    check_is_valid_exclusion(args)
 
     print_args(args)
     return args
