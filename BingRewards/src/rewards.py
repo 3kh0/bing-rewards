@@ -259,6 +259,12 @@ class Rewards:
                     "You did not select code within Microsoft Authenticator in" " time."
                 )
 
+        # https://privacynotice.account.microsoft.com/notice?ru=https://login.live.com/login.srf%3f
+        elif "privacynotice" in current_url:
+            raise WebDriverException(
+                f"Made it to privacy notice page, will try again if there are runs remaining, url: {current_url}"
+            )
+
         else:
             self.print_page_content()
             raise RuntimeError(
