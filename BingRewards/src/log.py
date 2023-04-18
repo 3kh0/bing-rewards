@@ -208,6 +208,7 @@ class Completion:
             and self.mobile_search
             and self.offers
             and self.punchcard
+            and self.fitness_videos
         )
 
     def update(self, completion):

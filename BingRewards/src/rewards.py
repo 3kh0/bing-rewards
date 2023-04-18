@@ -261,9 +261,15 @@ class Rewards:
 
         # https://privacynotice.account.microsoft.com/notice?ru=https://login.live.com/login.srf%3f
         elif "privacynotice" in current_url:
-            raise WebDriverException(
-                f"Made it to privacy notice page, will try again if there are runs remaining, url: {current_url}"
-            )
+            # Click continue
+            try:
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.element_to_be_clickable((By.ID, "id__0"))
+                ).click()
+
+            except TimeoutException:
+                print("Unable to handle privacy policy notice page")
+                raise
 
         else:
             self.print_page_content()
@@ -273,6 +279,14 @@ class Rewards:
 
         # login process not complete yet
         return False
+
+    def __set_ms_market(self):
+        ms_market_regex = r"mkt=([A-Z]{2,}-[A-Z]{2,})"
+        ms_market_match = re.search(ms_market_regex, self.driver.current_url)
+        if ms_market_match:
+            self.ms_market = ms_market_match.group(1)
+        else:
+            self.ms_market = "EN-US"
 
     def __login(self):
         self.__sys_out("Logging in", 2)
@@ -296,6 +310,7 @@ class Rewards:
                 self.driver.current_url, login_page_loaded_regex
             )
 
+        self.__set_ms_market()
         self.__sys_out("Successfully logged in", 2, True)
 
     def __check_dashboard_url(self, current_url, final_url_regex_pattern):
@@ -1649,13 +1664,15 @@ class Rewards:
         except KeyError:  # key doesn't exist, start from begininning
             videos = videos_dict["group1"]
 
-        completion_status_buffer = 15
+        # need to make a blind estimate of the loading time for MS rewards
+        # fluent button as Selenium is unable to interact with Fluent elements.
+        reward_status_buffer = 20  # Wait for reward status to load
         ad_buffer = self.__WEB_DRIVER_WAIT_LONG  # max ads are 30 seconds
         video_status_d = {}
 
         for video in videos:
             video_status = "Failed"
-            url = video["url"]
+            url = video["url"].format(MS_MARKET=self.ms_market.lower())
             title = video["title"]
             video_length_seconds = video["length_seconds"]
 
@@ -1665,8 +1682,18 @@ class Rewards:
                 2,
             )
 
+            # Make sure user can access url, else auto fail
+            try:
+                WebDriverWait(self.driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "videoTitle"))
+                )
+            except TimeoutException:
+                self.__sys_out(f"url could not be loaded, aborting videos:\n{url}", 3)
+                return False
+
             # Sleep + refresh so that reward status can be loaded
-            time.sleep(completion_status_buffer)
+            time.sleep(reward_status_buffer)
+            self.__sys_out("Refreshing page for reward status", 3)
             self.driver.refresh()
 
             # Already earned
@@ -1681,6 +1708,7 @@ class Rewards:
             # Not yet earned
             except TimeoutException:
                 try:
+                    self.__sys_out("Watching video", 3)
                     # wait until 'congrats' popup
                     WebDriverWait(self.driver, video_length_seconds + ad_buffer).until(
                         EC.visibility_of_element_located(
@@ -1703,7 +1731,9 @@ class Rewards:
         self.fitness_videos_hist.append(latest_fitness_log_entry)
 
         # return True if all statuses were 'Success'
-        return all(status == "Success" for status in video_status_d.values())
+        return video_status_d and all(
+            status == "Success" for status in video_status_d.values()
+        )
 
     def __fitness_videos(self):
         """
