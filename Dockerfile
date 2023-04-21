@@ -28,7 +28,7 @@ ENV DISPLAY=:99
 ENV PATH="/home/root/.local/bin:${PATH}"
 ENV UPDATE="0 0 */1 * *"
 ENV SCH="0 */8 * * *"
-ENV TAGS="-nsb"
+ENV REWARDS_ARGS="-nsb"
 ENV TZ="America/New_York"
 SHELL ["/bin/bash", "-ec"]
 USER root

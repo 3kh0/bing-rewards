@@ -18,4 +18,4 @@ echo -e "${REWRITE}Done sleeping."
 
 sudo apt-get update --no-install-recommends && sudo apt-get install chromium -y
 
-/usr/local/bin/python /bing-rewards/BingRewards/BingRewards.py -nsb
+/usr/local/bin/python /bing-rewards/BingRewards/BingRewards.py $REWARDS_ARGS
