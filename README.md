@@ -1,5 +1,13 @@
 An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
 
+- [Getting Started (Local set-up)](#getting-started--local-set-up-)
+  * [Additional info](#additional-info)
+  * [Command Line Arguments](#command-line-arguments)
+    + [Examples](#examples)
+- [Acknowledgment](#acknowledgment)
+
+<small><i><a href='http://github.com/3kh0/readme-toc/'>Table of contents generated with readme-toc</a></i></small>
+
 Only `USA` website is guaranteed to be supported.
 
 In place of GitHub which disabled this project in Jan 2023, there is now a [Discord Server](https://discord.gg/w326CR9gNv) to receive Bing Rewards updates and discuss the tool with other users.
