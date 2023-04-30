@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 import os
 import platform
 
-# from urllib.request import urlopen
 import urllib
+import requests
 import ssl
 import zipfile
 import shutil
@@ -280,12 +280,7 @@ class ChromeDriverFactory(DriverFactory):
         CHROME_RELEASE_URL = (
             "https://sites.google.com/chromium.org/driver/downloads?authuser=0"
         )
-        try:
-            response = urllib.request.urlopen(
-                CHROME_RELEASE_URL, context=ssl.SSLContext(ssl.PROTOCOL_TLS)
-            ).read()
-        except ssl.SSLError:
-            response = urllib.request.urlopen(CHROME_RELEASE_URL).read()
+        response = requests.get(CHROME_RELEASE_URL).content
 
         version_regex = r"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+"
         latest_version = re.findall(f"{version_regex}", str(response))[
@@ -359,12 +354,7 @@ class MsEdgeDriverFactory(DriverFactory):
         EDGE_RELEASE_URL = (
             "https://developer.microsoft.com/en-us/" "microsoft-edge/tools/webdriver/"
         )
-        try:
-            response = urllib.request.urlopen(
-                EDGE_RELEASE_URL, context=ssl.SSLContext(ssl.PROTOCOL_TLS)
-            ).read()
-        except ssl.SSLError:
-            response = urllib.request.urlopen(EDGE_RELEASE_URL).read()
+        response = requests.get(EDGE_RELEASE_URL).content
 
         version_regex = r"Version: \d{2,3}\.0\.\d{4}\.\d+"
         all_versions = sorted(
