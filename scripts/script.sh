@@ -16,6 +16,10 @@ while [ $MAXTIME -gt 0 ]; do
 done
 echo -e "${REWRITE}Done sleeping."
 
-sudo apt-get update --no-install-recommends && sudo apt-get install chromium -y
+sudo apt-get update --no-install-recommends -y \
+&& apt-get install --no-install-recommends -y  \
+chromium \
+# used for arm64
+chromium-driver \
 
 /usr/local/bin/python /bing-rewards/BingRewards/BingRewards.py -nsb

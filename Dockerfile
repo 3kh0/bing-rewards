@@ -8,7 +8,8 @@ RUN set -ex \
     && apt-get update --no-install-recommends -y \
     && apt-get install --no-install-recommends -y  \
     chromium \ 
-		chromium-driver \ # arm64
+		# download driver for arm64
+		chromium-driver \ 
     git \ 
     vim \
     nano \
@@ -22,9 +23,10 @@ RUN set -ex \
     && chmod +x /bing-rewards/scripts/update.sh \
     && chmod u+s /usr/sbin/cron \
 		&& pip install --upgrade pip \
-		&& pip install --no-warn-script-location -r /bing-rewards/BingRewards/requirements.txt
-		&& mkdir -p /usr/lib/chromium-browser/ \ # arm64 driver location
-		&& ln -s /usr/bin/chromedriver /usr/lib/chromium-browser/chromedriver \
+		&& pip install --no-warn-script-location -r /bing-rewards/BingRewards/requirements.txt \
+		# arm64 driver location
+		&& mkdir -p /usr/lib/chromium-browser/ \ 
+		&& ln -s /usr/bin/chromedriver /usr/lib/chromium-browser/chromedriver
 	
 # Set display port as an environment variable
 ENV DISPLAY=:99
