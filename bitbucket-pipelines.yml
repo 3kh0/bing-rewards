@@ -12,7 +12,7 @@ pipelines:
           - export IMAGE_TAG_LATEST=$DOCKER_HUB_REPO:latest
            
           - docker login -u jwong235 -p $DOCKER_PASSWORD
-          - docker buildx create --use
+          - docker buildx create --name mybuilder --use --driver docker-container
           - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t $IMAGE_TAG -t $IMAGE_TAG_LATEST --load .
           - docker push $IMAGE_TAG
    
