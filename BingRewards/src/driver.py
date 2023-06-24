@@ -220,7 +220,7 @@ class DriverFactory(ABC):
             # Instantiate before dling bc driver may already exist
             try:
                 if os.path.exists(driver_path):
-                    driver = cls.WebDriverCls(driver_path, options=options)
+                    driver = cls.WebDriverCls(options=options)
                     return Driver(driver, EventListener(), device)
 
             except SessionNotCreatedException as se:
