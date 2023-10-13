@@ -541,7 +541,7 @@ class Rewards:
         query = clean_query(query)
         search_box.send_keys(query, Keys.RETURN)  # unique search term
         self.search_hist.append(query)
-        time.sleep(random.uniform(1, 3))
+        time.sleep(random.uniform(30, 120))
 
         if cookieclear == 0:
             try:
@@ -554,7 +554,7 @@ class Rewards:
 
         self.__handle_alerts()
         self.driver.refresh()  # refresh in case of mobile bug
-        time.sleep(random.uniform(0.5, 1.5))
+        time.sleep(random.uniform(30, 120))
         return last_request_time, cookieclear
 
     def __search(self, search_type):
