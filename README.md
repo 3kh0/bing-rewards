@@ -60,6 +60,7 @@ Here's an example of running non-default arguments
 
 ## Acknowledgment
 - The original author took down the code from their GitHub back in July 2018. The author gave me permission to re-upload and maintain but wishes to stay anonymous. I will continue to maintain it until this page says otherwise.
+- GitHub hosting and Discord server by `3kh0`
 - UK quiz updates by `chris987789`
 - 2FA code by `revolutionisme`
 - Telegram notifications by `hoseininjast`
