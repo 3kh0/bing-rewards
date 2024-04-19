@@ -1,3 +1,16 @@
+# Goodbye
+
+This project has been inactive for quite some time and there really has been no progress on it. The original maintainer has lost interest in maintaining it and I just have too much on my plate to maintain it. That being said, you are welcome to reuse the code for any of your own projects since this is a open source project.
+
+As for this discord, we will be moving to a read-only state so no new messages can be sent. Feel free to leave if you so desire.
+
+If you still want a working rewards script, I would recommend a program written by jack-mil. Here is the link to check it out: https://github.com/jack-mil/bing-rewards
+
+Thank you for supporting this project while it was active from 3kh0 and jjjchens. Goodbye and fuck Microsoft <3
+
+- Echo (3kh0)
+
+
 An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
 
 - [Getting Started (Local set-up)](#getting-started--local-set-up-)
